@@ -82,8 +82,8 @@ async def login(
             detail="Invalid email or password",
         )
 
-    # Update last login
-    user.last_login = datetime.now(timezone.utc)
+    # Update last login (naive datetime for DB compatibility)
+    user.last_login = datetime.utcnow()
 
     # Create tokens
     tokens = create_token_pair(user.id, user.tenant_id, user.role)
