@@ -25,15 +25,18 @@ export default function Login() {
     setLoading(true)
 
     try {
-      // Login
+      // Login and get tokens
       const tokenResponse = await authApi.login(email, password, tenantSlug)
       const tokens = tokenResponse.data
 
-      // Get user info
+      // Store tokens first so the interceptor can use them
+      useAuthStore.getState().setTokens(tokens)
+
+      // Now get user info (token is available in interceptor)
       const userResponse = await authApi.me()
       const user = userResponse.data
 
-      // Store in auth state
+      // Complete login with user info
       login(user, tokens, user.tenant_id)
 
       navigate('/')
