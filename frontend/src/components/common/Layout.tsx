@@ -11,6 +11,8 @@ import {
   BeakerIcon,
   ClipboardDocumentListIcon,
   Cog6ToothIcon,
+  UsersIcon,
+  UserCircleIcon,
 } from '@heroicons/react/24/outline'
 import { useAuthStore } from '../../stores/authStore'
 
@@ -22,7 +24,15 @@ const navigation = [
   { name: 'Risks', href: '/risks', icon: ExclamationTriangleIcon },
   { name: 'Scenarios', href: '/scenarios', icon: BeakerIcon },
   { name: 'Audit Log', href: '/audit', icon: ClipboardDocumentListIcon },
+]
+
+const adminNavigation = [
+  { name: 'User Management', href: '/admin/users', icon: UsersIcon },
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
+]
+
+const userNavigation = [
+  { name: 'Profile', href: '/profile', icon: UserCircleIcon },
 ]
 
 function classNames(...classes: string[]) {
@@ -125,8 +135,49 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   ))}
                 </ul>
               </li>
+              {user?.role?.toUpperCase() === 'ADMIN' && (
+                <li>
+                  <div className="text-xs font-semibold leading-6 text-primary-400 uppercase">Admin</div>
+                  <ul role="list" className="-mx-2 mt-2 space-y-1">
+                    {adminNavigation.map((item) => (
+                      <li key={item.name}>
+                        <Link
+                          to={item.href}
+                          className={classNames(
+                            location.pathname === item.href
+                              ? 'bg-primary-800 text-white'
+                              : 'text-primary-200 hover:text-white hover:bg-primary-800',
+                            'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                          )}
+                        >
+                          <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                          {item.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              )}
               <li className="mt-auto">
-                <div className="text-primary-200 text-sm mb-2">
+                <ul role="list" className="-mx-2 space-y-1 mb-4">
+                  {userNavigation.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        to={item.href}
+                        className={classNames(
+                          location.pathname === item.href
+                            ? 'bg-primary-800 text-white'
+                            : 'text-primary-200 hover:text-white hover:bg-primary-800',
+                          'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                        )}
+                      >
+                        <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <div className="text-primary-200 text-sm mb-2 border-t border-primary-700 pt-4">
                   {user?.full_name}
                   <span className="text-primary-400 block text-xs">{user?.email}</span>
                 </div>

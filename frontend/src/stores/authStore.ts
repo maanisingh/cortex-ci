@@ -18,6 +18,7 @@ interface AuthState {
   login: (user: User, tokens: { access_token: string; refresh_token: string }, tenantId: string) => void
   logout: () => void
   setTokens: (tokens: { access_token: string; refresh_token: string }) => void
+  setUser: (user: User) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -52,6 +53,9 @@ export const useAuthStore = create<AuthState>()(
           accessToken: tokens.access_token,
           refreshToken: tokens.refresh_token,
         }),
+
+      setUser: (user) =>
+        set({ user }),
     }),
     {
       name: 'cortex-auth',

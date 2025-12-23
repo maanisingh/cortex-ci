@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -90,24 +91,28 @@ export default function Dashboard() {
       value: entitiesData?.total || 0,
       icon: BuildingOfficeIcon,
       color: 'bg-blue-500',
+      href: '/entities',
     },
     {
       name: 'Active Constraints',
       value: constraintsSummary?.total || 0,
       icon: DocumentTextIcon,
       color: 'bg-purple-500',
+      href: '/constraints',
     },
     {
       name: 'Dependencies',
       value: graphData?.stats?.total_edges || 0,
       icon: LinkIcon,
       color: 'bg-green-500',
+      href: '/dependencies',
     },
     {
       name: 'Critical Risks',
       value: riskSummary?.critical_count || 0,
       icon: ExclamationTriangleIcon,
       color: 'bg-red-500',
+      href: '/risks',
     },
   ]
 
@@ -159,7 +164,7 @@ export default function Dashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
         {stats.map((stat) => (
-          <div key={stat.name} className="card">
+          <Link key={stat.name} to={stat.href} className="card hover:shadow-lg transition-shadow cursor-pointer">
             <div className="flex items-center">
               <div className={classNames('flex-shrink-0 rounded-md p-3', stat.color)}>
                 <stat.icon className="h-6 w-6 text-white" aria-hidden="true" />
@@ -173,7 +178,7 @@ export default function Dashboard() {
                 </dl>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

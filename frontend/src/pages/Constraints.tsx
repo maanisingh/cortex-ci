@@ -1,10 +1,14 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { constraintsApi } from '../services/api'
+import ConstraintForm from '../components/forms/ConstraintForm'
 
 export default function Constraints() {
   const [search, setSearch] = useState('')
+  const [showForm, setShowForm] = useState(false)
+  const [editConstraint, setEditConstraint] = useState<any>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['constraints', search],
@@ -49,12 +53,18 @@ export default function Constraints() {
           </p>
         </div>
         <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-          <button type="button" className="btn-primary">
+          <button type="button" className="btn-primary" onClick={() => { setEditConstraint(null); setShowForm(true); }}>
             <PlusIcon className="h-5 w-5 mr-2" />
             Add Constraint
           </button>
         </div>
       </div>
+
+      <ConstraintForm
+        isOpen={showForm}
+        onClose={() => { setShowForm(false); setEditConstraint(null); }}
+        constraint={editConstraint}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-4 mb-6">
@@ -119,9 +129,11 @@ export default function Constraints() {
                 </tr>
               ) : (
                 data?.items?.map((constraint: any) => (
-                  <tr key={constraint.id} className="hover:bg-gray-50">
+                  <tr key={constraint.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/constraints/${constraint.id}`}>
                     <td className="table-cell">
-                      <div className="font-medium">{constraint.name}</div>
+                      <Link to={`/constraints/${constraint.id}`} className="font-medium text-primary-600 hover:text-primary-800">
+                        {constraint.name}
+                      </Link>
                       {constraint.reference_code && (
                         <div className="text-xs text-gray-500">
                           Ref: {constraint.reference_code}
@@ -131,7 +143,7 @@ export default function Constraints() {
                     <td className="table-cell">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                          typeColors[constraint.type] || 'bg-gray-100 text-gray-800'
+                          typeColors[constraint.type?.toLowerCase()] || 'bg-gray-100 text-gray-800'
                         }`}
                       >
                         {constraint.type}
@@ -140,7 +152,7 @@ export default function Constraints() {
                     <td className="table-cell">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                          severityColors[constraint.severity] || 'bg-gray-100 text-gray-800'
+                          severityColors[constraint.severity?.toLowerCase()] || 'bg-gray-100 text-gray-800'
                         }`}
                       >
                         {constraint.severity}
@@ -157,9 +169,9 @@ export default function Constraints() {
                         : 'No expiry'}
                     </td>
                     <td className="table-cell">
-                      <button className="text-primary-600 hover:text-primary-900 text-sm">
-                        View
-                      </button>
+                      <Link to={`/constraints/${constraint.id}`} className="text-primary-600 hover:text-primary-900 text-sm">
+                        View Details
+                      </Link>
                     </td>
                   </tr>
                 ))

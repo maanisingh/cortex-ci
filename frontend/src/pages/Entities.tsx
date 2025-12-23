@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { entitiesApi } from '../services/api'
+import EntityForm from '../components/forms/EntityForm'
 
 export default function Entities() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+  const [showForm, setShowForm] = useState(false)
+  const [editEntity, setEditEntity] = useState<any>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['entities', page, search],
@@ -32,12 +36,18 @@ export default function Entities() {
           </p>
         </div>
         <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-          <button type="button" className="btn-primary">
+          <button type="button" className="btn-primary" onClick={() => { setEditEntity(null); setShowForm(true); }}>
             <PlusIcon className="h-5 w-5 mr-2" />
             Add Entity
           </button>
         </div>
       </div>
+
+      <EntityForm
+        isOpen={showForm}
+        onClose={() => { setShowForm(false); setEditEntity(null); }}
+        entity={editEntity}
+      />
 
       {/* Search */}
       <div className="mb-6">
@@ -82,12 +92,16 @@ export default function Entities() {
                 </tr>
               ) : (
                 data?.items?.map((entity: any) => (
-                  <tr key={entity.id} className="hover:bg-gray-50">
-                    <td className="table-cell font-medium">{entity.name}</td>
+                  <tr key={entity.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/entities/${entity.id}`}>
+                    <td className="table-cell">
+                      <Link to={`/entities/${entity.id}`} className="font-medium text-primary-600 hover:text-primary-800">
+                        {entity.name}
+                      </Link>
+                    </td>
                     <td className="table-cell">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          typeColors[entity.type] || 'bg-gray-100 text-gray-800'
+                          typeColors[entity.type?.toLowerCase()] || 'bg-gray-100 text-gray-800'
                         }`}
                       >
                         {entity.type}
@@ -110,9 +124,9 @@ export default function Entities() {
                       {new Date(entity.created_at).toLocaleDateString()}
                     </td>
                     <td className="table-cell">
-                      <button className="text-primary-600 hover:text-primary-900 text-sm">
-                        View
-                      </button>
+                      <Link to={`/entities/${entity.id}`} className="text-primary-600 hover:text-primary-900 text-sm">
+                        View Details
+                      </Link>
                     </td>
                   </tr>
                 ))

@@ -1,8 +1,13 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import { PlusIcon, PlayIcon } from '@heroicons/react/24/outline'
 import { scenariosApi } from '../services/api'
+import ScenarioForm from '../components/forms/ScenarioForm'
 
 export default function Scenarios() {
+  const [showForm, setShowForm] = useState(false)
+  const [editScenario, setEditScenario] = useState<any>(null)
   const { data, isLoading } = useQuery({
     queryKey: ['scenarios'],
     queryFn: async () => {
@@ -38,12 +43,18 @@ export default function Scenarios() {
           </p>
         </div>
         <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-          <button type="button" className="btn-primary">
+          <button type="button" className="btn-primary" onClick={() => { setEditScenario(null); setShowForm(true); }}>
             <PlusIcon className="h-5 w-5 mr-2" />
             New Scenario
           </button>
         </div>
       </div>
+
+      <ScenarioForm
+        isOpen={showForm}
+        onClose={() => { setShowForm(false); setEditScenario(null); }}
+        scenario={editScenario}
+      />
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
@@ -72,9 +83,11 @@ export default function Scenarios() {
                 </tr>
               ) : (
                 data?.items?.map((scenario: any) => (
-                  <tr key={scenario.id} className="hover:bg-gray-50">
+                  <tr key={scenario.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/scenarios/${scenario.id}`}>
                     <td className="table-cell">
-                      <div className="font-medium">{scenario.name}</div>
+                      <Link to={`/scenarios/${scenario.id}`} className="font-medium text-primary-600 hover:text-primary-800">
+                        {scenario.name}
+                      </Link>
                       {scenario.description && (
                         <div className="text-xs text-gray-500 truncate max-w-xs">
                           {scenario.description}
@@ -87,7 +100,7 @@ export default function Scenarios() {
                     <td className="table-cell">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          statusColors[scenario.status] || 'bg-gray-100 text-gray-800'
+                          statusColors[scenario.status?.toLowerCase()] || 'bg-gray-100 text-gray-800'
                         }`}
                       >
                         {scenario.status}
@@ -100,16 +113,21 @@ export default function Scenarios() {
                       {scenario.status === 'draft' && (
                         <button
                           className="text-primary-600 hover:text-primary-900 text-sm flex items-center"
-                          onClick={() => scenariosApi.run(scenario.id)}
+                          onClick={(e) => { e.stopPropagation(); scenariosApi.run(scenario.id); }}
                         >
                           <PlayIcon className="h-4 w-4 mr-1" />
                           Run
                         </button>
                       )}
                       {scenario.status === 'completed' && (
-                        <button className="text-primary-600 hover:text-primary-900 text-sm">
+                        <Link to={`/scenarios/${scenario.id}`} className="text-primary-600 hover:text-primary-900 text-sm" onClick={(e) => e.stopPropagation()}>
                           View Results
-                        </button>
+                        </Link>
+                      )}
+                      {scenario.status !== 'draft' && scenario.status !== 'completed' && (
+                        <Link to={`/scenarios/${scenario.id}`} className="text-primary-600 hover:text-primary-900 text-sm" onClick={(e) => e.stopPropagation()}>
+                          View Details
+                        </Link>
                       )}
                     </td>
                   </tr>
