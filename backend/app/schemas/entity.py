@@ -20,7 +20,7 @@ class EntityBase(BaseModel):
     subcategory: Optional[str] = None
     tags: List[str] = []
     criticality: int = Field(3, ge=1, le=5)
-    metadata: Dict[str, Any] = {}
+    custom_data: Dict[str, Any] = {}
 
 
 class EntityCreate(EntityBase):
@@ -41,7 +41,7 @@ class EntityUpdate(BaseModel):
     subcategory: Optional[str] = None
     tags: Optional[List[str]] = None
     criticality: Optional[int] = Field(None, ge=1, le=5)
-    metadata: Optional[Dict[str, Any]] = None
+    custom_data: Optional[Dict[str, Any]] = None
     is_active: Optional[bool] = None
     notes: Optional[str] = None
 

@@ -15,7 +15,7 @@ class DependencyBase(BaseModel):
     criticality: int = Field(3, ge=1, le=5)
     description: Optional[str] = None
     is_bidirectional: bool = False
-    metadata: Dict[str, Any] = {}
+    custom_data: Dict[str, Any] = {}
 
 
 class DependencyCreate(DependencyBase):
@@ -30,7 +30,7 @@ class DependencyUpdate(BaseModel):
     criticality: Optional[int] = Field(None, ge=1, le=5)
     description: Optional[str] = None
     is_bidirectional: Optional[bool] = None
-    metadata: Optional[Dict[str, Any]] = None
+    custom_data: Optional[Dict[str, Any]] = None
     is_active: Optional[bool] = None
 
 

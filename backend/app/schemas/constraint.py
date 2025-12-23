@@ -25,7 +25,7 @@ class ConstraintBase(BaseModel):
     requirements: Dict[str, Any] = {}
     is_mandatory: bool = True
     tags: List[str] = []
-    metadata: Dict[str, Any] = {}
+    custom_data: Dict[str, Any] = {}
 
 
 class ConstraintCreate(ConstraintBase):
@@ -53,7 +53,7 @@ class ConstraintUpdate(BaseModel):
     is_mandatory: Optional[bool] = None
     is_active: Optional[bool] = None
     tags: Optional[List[str]] = None
-    metadata: Optional[Dict[str, Any]] = None
+    custom_data: Optional[Dict[str, Any]] = None
 
 
 class ConstraintResponse(ConstraintBase):
