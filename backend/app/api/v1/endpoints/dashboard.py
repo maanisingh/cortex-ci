@@ -58,8 +58,8 @@ async def get_dashboard_stats(
 
     # Risk scores summary
     risk_query = select(
-        func.avg(RiskScore.composite_score).label("avg_risk"),
-        func.max(RiskScore.composite_score).label("max_risk"),
+        func.avg(RiskScore.score).label("avg_risk"),
+        func.max(RiskScore.score).label("max_risk"),
         func.count(RiskScore.id).label("count")
     ).where(RiskScore.tenant_id == tenant.id)
 
@@ -68,7 +68,7 @@ async def get_dashboard_stats(
     # High risk entities (score >= 70)
     high_risk_query = select(func.count(RiskScore.id)).where(
         RiskScore.tenant_id == tenant.id,
-        RiskScore.composite_score >= 70
+        RiskScore.score >= 70
     )
     high_risk_count = (await db.execute(high_risk_query)).scalar() or 0
 
@@ -125,14 +125,14 @@ async def get_risk_overview(
     # Get risk score distribution
     risk_query = select(
         RiskScore.entity_id,
-        RiskScore.composite_score,
+        RiskScore.score,
         Entity.name,
         Entity.type
     ).join(
         Entity, RiskScore.entity_id == Entity.id
     ).where(
         RiskScore.tenant_id == tenant.id
-    ).order_by(RiskScore.composite_score.desc()).limit(20)
+    ).order_by(RiskScore.score.desc()).limit(20)
 
     result = await db.execute(risk_query)
     top_risks = [
@@ -140,7 +140,7 @@ async def get_risk_overview(
             "entity_id": str(row.entity_id),
             "entity_name": row.name,
             "entity_type": str(row.type),
-            "risk_score": round(row.composite_score, 2),
+            "risk_score": float(row.score),
         }
         for row in result
     ]
@@ -157,8 +157,8 @@ async def get_risk_overview(
     for name, low, high in buckets:
         query = select(func.count(RiskScore.id)).where(
             RiskScore.tenant_id == tenant.id,
-            RiskScore.composite_score >= low,
-            RiskScore.composite_score < high
+            RiskScore.score >= low,
+            RiskScore.score < high
         )
         count = (await db.execute(query)).scalar() or 0
         distribution[name] = count
