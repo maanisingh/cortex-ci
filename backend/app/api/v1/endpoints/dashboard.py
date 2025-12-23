@@ -167,3 +167,41 @@ async def get_risk_overview(
         "top_risks": top_risks,
         "distribution": distribution,
     }
+
+
+@router.get("/sync-status")
+async def get_sync_status(
+    current_user: CurrentUser,
+) -> Dict[str, Any]:
+    """Get data sync status and history."""
+    from pathlib import Path
+    import json
+
+    sync_log_file = Path("/root/cortex-ci/data/sanctions/sync_log.json")
+
+    if not sync_log_file.exists():
+        return {
+            "status": "no_sync_history",
+            "message": "No sync has been performed yet",
+            "last_sync": None,
+            "history": [],
+        }
+
+    try:
+        with open(sync_log_file, 'r') as f:
+            sync_log = json.load(f)
+
+        syncs = sync_log.get("syncs", [])
+        last_sync = syncs[-1] if syncs else None
+
+        return {
+            "status": "ok",
+            "last_sync": last_sync,
+            "total_syncs": len(syncs),
+            "history": syncs[-10:],  # Last 10 syncs
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+        }
