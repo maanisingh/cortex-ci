@@ -245,7 +245,78 @@ def import_un_entities(tenant_id: str, limit: int = 300):
     print(f"Imported {count} UN entities")
 
 
+def import_opensanctions(tenant_id: str, limit: int = 1000):
+    """Import OpenSanctions entities."""
+    opensanctions_file = DATA_DIR / "opensanctions_default.json"
+    if not opensanctions_file.exists():
+        print(f"OpenSanctions file not found: {opensanctions_file}")
+        return
+
+    print(f"Parsing OpenSanctions (limit: {limit})...")
+
+    count = 0
+    imported = 0
+
+    with open(opensanctions_file, 'r') as f:
+        for line in f:
+            if imported >= limit:
+                break
+
+            try:
+                record = json.loads(line.strip())
+            except:
+                continue
+
+            # Only process Person, Company, Organization schemas
+            schema = record.get("schema", "")
+            if schema not in ["Person", "Company", "Organization", "LegalEntity"]:
+                continue
+
+            # Skip non-targets
+            if not record.get("target", True):
+                continue
+
+            props = record.get("properties", {})
+            names = props.get("name", [])
+            if not names:
+                continue
+
+            name = names[0][:500] if names else "Unknown"
+            external_id = record.get("id", "")[:255]
+
+            # Determine entity type
+            entity_type = "INDIVIDUAL" if schema == "Person" else "ORGANIZATION"
+
+            # Get datasets as tags
+            datasets = record.get("datasets", [])[:3]
+
+            sql = f"""
+            INSERT INTO entities (id, tenant_id, type, name, aliases, external_id,
+                                  category, subcategory, tags, criticality, is_active, notes,
+                                  custom_data, created_at, updated_at)
+            SELECT '{uuid.uuid4()}', '{tenant_id}', '{entity_type}', '{escape_sql(name)}',
+                   ARRAY[]::varchar[], '{escape_sql(external_id)}',
+                   'sanctioned_entity', 'opensanctions',
+                   ARRAY[{','.join([f"'{escape_sql(t)}'" for t in datasets])}]::varchar[],
+                   5, true, 'OpenSanctions: {schema}',
+                   '{{"source": "OpenSanctions", "schema": "{schema}"}}'::jsonb, NOW(), NOW()
+            WHERE NOT EXISTS (
+                SELECT 1 FROM entities WHERE tenant_id = '{tenant_id}' AND external_id = '{escape_sql(external_id)}'
+            );
+            """
+            run_sql(sql)
+            imported += 1
+            count += 1
+
+            if imported % 500 == 0:
+                print(f"  Imported {imported} OpenSanctions entities...")
+
+    print(f"Imported {imported} OpenSanctions entities")
+
+
 def main():
+    import sys
+
     print("=" * 60)
     print("CORTEX-CI Real Sanctions Data Import")
     print("=" * 60)
@@ -257,18 +328,38 @@ def main():
 
     print(f"Using tenant: {tenant_id}")
 
-    # Import constraints
+    # Parse command line args
+    source = "all"
+    limit = 5000
+
+    if len(sys.argv) > 1:
+        for i, arg in enumerate(sys.argv):
+            if arg == "--source" and i + 1 < len(sys.argv):
+                source = sys.argv[i + 1]
+            if arg == "--limit" and i + 1 < len(sys.argv):
+                limit = int(sys.argv[i + 1])
+
+    print(f"Source: {source}, Limit: {limit}")
+
+    # Import constraints (always)
     import_constraints(tenant_id)
 
-    # Import entities
-    import_ofac_entities(tenant_id, limit=500)
-    import_un_entities(tenant_id, limit=300)
+    # Import entities based on source
+    if source in ["ofac", "all"]:
+        import_ofac_entities(tenant_id, limit=limit)
+
+    if source in ["un", "all"]:
+        import_un_entities(tenant_id, limit=min(limit, 1000))
+
+    if source in ["opensanctions", "all"]:
+        import_opensanctions(tenant_id, limit=limit)
 
     # Show final counts
     print("\n" + "=" * 60)
     print("Import Complete! Final counts:")
     print(run_sql("SELECT COUNT(*) as entities FROM entities;"))
     print(run_sql("SELECT COUNT(*) as constraints FROM constraints;"))
+    print(run_sql("SELECT type, COUNT(*) FROM entities GROUP BY type;"))
     print("=" * 60)
 
 

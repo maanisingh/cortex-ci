@@ -12,11 +12,20 @@ from app.models.base import TimestampMixin, TenantMixin
 
 class EntityType(str, Enum):
     """Types of entities that can be monitored."""
-    ORGANIZATION = "organization"
-    INDIVIDUAL = "individual"
-    LOCATION = "location"
-    ASSET = "asset"
-    SYSTEM = "system"
+    ORGANIZATION = "ORGANIZATION"
+    INDIVIDUAL = "INDIVIDUAL"
+    LOCATION = "LOCATION"
+    FINANCIAL = "FINANCIAL"
+    VESSEL = "VESSEL"
+    AIRCRAFT = "AIRCRAFT"
+    AI_MODEL = "AI_MODEL"
+    DATA_SYSTEM = "DATA_SYSTEM"
+    PROCESS = "PROCESS"
+    TEAM = "TEAM"
+    INFRASTRUCTURE = "INFRASTRUCTURE"
+    VENDOR = "VENDOR"
+    APPLICATION = "APPLICATION"
+    DATASET = "DATASET"
 
 
 class Entity(Base, TimestampMixin, TenantMixin):

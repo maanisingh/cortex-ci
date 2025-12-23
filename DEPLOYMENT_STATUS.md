@@ -156,11 +156,11 @@ SECRET_KEY=x7K9mP2qR5tW8yB3nF6jL1vC4hA0sE2uN9dG7kI5oQ3mZ8xY
 
 ## Next Steps / TODO
 
-1. **Dashboard Stats Endpoint** - Returns 404, needs to be implemented or fixed
-2. **OpenAPI Docs** - `/api/docs` returns 404, may need to enable Swagger UI
+1. ~~**Dashboard Stats Endpoint**~~ - ✅ FIXED (now at `/api/v1/dashboard/stats`)
+2. ~~**OpenAPI Docs**~~ - ✅ Working at `/api/v1/docs` (not `/api/docs`)
 3. **Additional Users** - Currently only 1 admin user exists
-4. **Populate More Data** - Run `populate_data.py` to add more demo entities
-5. **Monitor Logs** - Check for any runtime errors
+4. **Real Data Integration** - Current data is demo/synthetic
+5. **Phase 2 Features** - Multi-layer dependency modeling, scenario chains, etc.
 
 ---
 
