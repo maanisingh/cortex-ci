@@ -86,37 +86,44 @@ async def get_risk_trends(
     days: int = Query(30, ge=7, le=365),
 ):
     """Get risk trends over time."""
-    start_date = datetime.now(timezone.utc) - timedelta(days=days)
+    from sqlalchemy import case
 
-    # Get daily aggregates
+    start_date = datetime.now(timezone.utc) - timedelta(days=days)
+    date_col = func.date_trunc("day", RiskScore.calculated_at)
+
+    # Get daily aggregates using CASE WHEN for conditional counts
     query = (
         select(
-            func.date_trunc("day", RiskScore.calculated_at).label("date"),
+            date_col.label("date"),
             func.avg(RiskScore.score).label("avg_score"),
-            func.count(RiskScore.id).filter(RiskScore.level == RiskLevel.CRITICAL).label("critical"),
-            func.count(RiskScore.id).filter(RiskScore.level == RiskLevel.HIGH).label("high"),
-            func.count(RiskScore.id).filter(RiskScore.level == RiskLevel.MEDIUM).label("medium"),
-            func.count(RiskScore.id).filter(RiskScore.level == RiskLevel.LOW).label("low"),
+            func.sum(case((RiskScore.level == RiskLevel.CRITICAL, 1), else_=0)).label("critical"),
+            func.sum(case((RiskScore.level == RiskLevel.HIGH, 1), else_=0)).label("high"),
+            func.sum(case((RiskScore.level == RiskLevel.MEDIUM, 1), else_=0)).label("medium"),
+            func.sum(case((RiskScore.level == RiskLevel.LOW, 1), else_=0)).label("low"),
         )
         .where(
             RiskScore.tenant_id == tenant.id,
             RiskScore.calculated_at >= start_date,
         )
-        .group_by(func.date_trunc("day", RiskScore.calculated_at))
-        .order_by(func.date_trunc("day", RiskScore.calculated_at))
+        .group_by(date_col)
+        .order_by(date_col)
     )
 
     result = await db.execute(query)
     rows = result.all()
 
+    # Return empty list if no data
+    if not rows:
+        return []
+
     return [
         RiskTrend(
             date=row.date,
             average_score=float(row.avg_score) if row.avg_score else 0,
-            critical_count=row.critical or 0,
-            high_count=row.high or 0,
-            medium_count=row.medium or 0,
-            low_count=row.low or 0,
+            critical_count=int(row.critical or 0),
+            high_count=int(row.high or 0),
+            medium_count=int(row.medium or 0),
+            low_count=int(row.low or 0),
         )
         for row in rows
     ]

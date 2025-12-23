@@ -26,7 +26,7 @@ async def list_entities(
     current_user: CurrentUser,
     tenant: CurrentTenant,
     page: int = Query(1, ge=1),
-    page_size: int = Query(50, ge=1, le=100),
+    page_size: int = Query(50, ge=1, le=500),
     type: Optional[EntityType] = None,
     search: Optional[str] = None,
     country_code: Optional[str] = None,
