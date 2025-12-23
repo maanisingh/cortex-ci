@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: cortex
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-CortexCI_Secure_2024!}
