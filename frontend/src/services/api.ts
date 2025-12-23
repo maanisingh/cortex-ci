@@ -196,3 +196,114 @@ export const adminApi = {
       api.put('/admin/settings/risk-weights', weights),
   },
 }
+
+// ============= PHASE 2 APIs =============
+
+// Scenario Chains API (Phase 2.2)
+export const scenarioChainsApi = {
+  list: (params?: { page?: number; page_size?: number }) =>
+    api.get('/scenarios/chains', { params }),
+
+  get: (id: string) => api.get(`/scenarios/chains/${id}`),
+
+  create: (data: { name: string; description?: string; trigger_event: string; trigger_entity_id?: string }) =>
+    api.post('/scenarios/chains', data),
+
+  getEffects: (chainId: string) => api.get(`/scenarios/chains/${chainId}/effects`),
+
+  addEffect: (chainId: string, data: any) =>
+    api.post(`/scenarios/chains/${chainId}/effects`, data),
+
+  simulate: (chainId: string, maxDepth?: number) =>
+    api.post(`/scenarios/chains/${chainId}/simulate`, null, { params: { max_depth: maxDepth } }),
+
+  delete: (id: string) => api.delete(`/scenarios/chains/${id}`),
+}
+
+// Risk Justification API (Phase 2.3)
+export const riskJustificationApi = {
+  get: (entityId: string) => api.get(`/risks/justification/${entityId}`),
+
+  export: (entityId: string, format?: string) =>
+    api.get(`/risks/justification/${entityId}/export`, { params: { format } }),
+
+  override: (entityId: string, data: { new_score: number; reason: string }) =>
+    api.post(`/risks/justification/${entityId}/override`, data),
+
+  history: (entityId: string) => api.get(`/risks/justification/${entityId}/history`),
+}
+
+// Dependencies Layer API (Phase 2.1)
+export const dependencyLayersApi = {
+  summary: () => api.get('/dependencies/layers/summary'),
+
+  crossLayerImpact: (entityId: string) =>
+    api.get(`/dependencies/cross-layer-impact/${entityId}`),
+}
+
+// History API (Phase 2.4)
+export const historyApi = {
+  entityTimeline: (entityId: string, days?: number) =>
+    api.get(`/history/entity/${entityId}/timeline`, { params: { days } }),
+
+  createSnapshot: () => api.post('/history/snapshot'),
+
+  constraintChanges: (days?: number) =>
+    api.get('/history/constraints/changes', { params: { days } }),
+
+  decisions: {
+    list: (params?: { include_resolved?: boolean; page?: number; page_size?: number }) =>
+      api.get('/history/decisions', { params }),
+
+    create: (data: {
+      decision_date: string;
+      decision_summary: string;
+      decision_type: string;
+      entities_involved?: string[];
+    }) => api.post('/history/decisions', data),
+
+    recordOutcome: (decisionId: string, params: {
+      outcome_summary: string;
+      outcome_success: boolean;
+      lessons_learned?: string;
+    }) => api.put(`/history/decisions/${decisionId}/outcome`, null, { params }),
+  },
+
+  transitionReport: (data: {
+    title: string;
+    period_start: string;
+    period_end: string;
+    executive_summary: string;
+  }) => api.post('/history/transition-report', data),
+}
+
+// AI Analysis API (Phase 2.5)
+export const aiApi = {
+  list: (params?: { status_filter?: string; page?: number; page_size?: number }) =>
+    api.get('/ai', { params }),
+
+  get: (id: string) => api.get(`/ai/${id}`),
+
+  request: (data: {
+    analysis_type: 'anomaly' | 'pattern' | 'summary' | 'scenario' | 'clustering';
+    description: string;
+    entity_ids?: string[];
+    parameters?: Record<string, any>;
+  }) => api.post('/ai', data),
+
+  approve: (id: string, notes?: string) =>
+    api.post(`/ai/${id}/approve`, null, { params: { notes } }),
+
+  reject: (id: string, reason: string) =>
+    api.post(`/ai/${id}/reject`, null, { params: { reason } }),
+
+  anomalies: {
+    pending: (params?: { page?: number; page_size?: number }) =>
+      api.get('/ai/anomalies/pending', { params }),
+
+    review: (anomalyId: string, params: { is_confirmed: boolean; notes?: string }) =>
+      api.post(`/ai/anomalies/${anomalyId}/review`, null, { params }),
+  },
+
+  modelCard: (analysisType: string) => api.get(`/ai/model-card/${analysisType}`),
+}

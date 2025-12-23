@@ -17,6 +17,12 @@ import Settings from './pages/Settings'
 import UserManagement from './pages/UserManagement'
 import Profile from './pages/Profile'
 
+// Phase 2 pages
+import ScenarioChains from './pages/ScenarioChains'
+import RiskJustification from './pages/RiskJustification'
+import History from './pages/History'
+import AIAnalysis from './pages/AIAnalysis'
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
 
@@ -51,6 +57,11 @@ function App() {
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/admin/users" element={<UserManagement />} />
                 <Route path="/profile" element={<Profile />} />
+                {/* Phase 2 routes */}
+                <Route path="/scenario-chains" element={<ScenarioChains />} />
+                <Route path="/risk-justification" element={<RiskJustification />} />
+                <Route path="/history" element={<History />} />
+                <Route path="/ai-analysis" element={<AIAnalysis />} />
               </Routes>
             </Layout>
           </ProtectedRoute>
