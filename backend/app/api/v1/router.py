@@ -1,10 +1,11 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, entities, constraints, dependencies, risks, scenarios, audit, admin
+from app.api.v1.endpoints import auth, entities, constraints, dependencies, risks, scenarios, audit, admin, dashboard
 
 api_router = APIRouter()
 
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
 api_router.include_router(entities.router, prefix="/entities", tags=["Entities"])
 api_router.include_router(constraints.router, prefix="/constraints", tags=["Constraints"])
 api_router.include_router(dependencies.router, prefix="/dependencies", tags=["Dependencies"])
