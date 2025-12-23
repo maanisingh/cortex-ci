@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     APP_DESCRIPTION: str = "Government-grade Constraint Intelligence Platform"
     DEBUG: bool = False
-    API_V1_PREFIX: str = "/api/v1"
+    API_V1_PREFIX: str = "/v1"
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@db:5432/cortex_ci"
