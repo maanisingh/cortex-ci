@@ -1,0 +1,70 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: cortex
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-CortexCI_Secure_2024!}
+      POSTGRES_DB: cortex_ci
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cortex-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cortex -d cortex_ci"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - cortex-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://cortex:${POSTGRES_PASSWORD:-CortexCI_Secure_2024!}@db:5432/cortex_ci
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-your-production-secret-key-change-this}
+      - DEBUG=false
+      - APP_NAME=CORTEX-CI
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cortex-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=/api/v1
+    depends_on:
+      - backend
+    networks:
+      - cortex-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  cortex-network:
+    driver: bridge
