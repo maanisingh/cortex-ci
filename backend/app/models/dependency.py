@@ -102,8 +102,8 @@ class Dependency(Base, TimestampMixin, TenantMixin):
     # For reversible relationships
     is_bidirectional: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    # Flexible metadata (contract numbers, amounts, dates, etc.)
-    metadata: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
+    # Flexible custom data (contract numbers, amounts, dates, etc.)
+    custom_data: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

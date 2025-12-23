@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from app.models import (
-    Entity, Constraint, EntityMatch, Dependency, RiskScore, RiskLevel, Tenant
+    Entity, Constraint, Dependency, RiskScore, RiskLevel, Tenant
 )
 
 logger = structlog.get_logger()
@@ -138,25 +138,27 @@ class RiskEngine:
         return risk_score
 
     async def _calculate_direct_match_score(self, entity: Entity) -> float:
-        """Calculate score based on direct matches with sanctions lists."""
-        # Get confirmed matches
+        """Calculate score based on constraint compliance status."""
+        # Get constraints applicable to this entity type
         result = await self.db.execute(
-            select(EntityMatch)
+            select(Constraint)
             .where(
-                EntityMatch.entity_id == entity.id,
-                EntityMatch.status == "confirmed",
+                Constraint.tenant_id == self.tenant.id,
+                Constraint.is_active == True,
             )
         )
-        matches = result.scalars().all()
+        constraints = result.scalars().all()
 
-        if not matches:
+        if not constraints:
             return 0.0
 
-        # Score based on match count and confidence
+        # Score based on constraint severity and count
         score = 0.0
-        for match in matches:
-            match_contribution = float(match.match_score) * 100
-            score += match_contribution
+        for constraint in constraints:
+            # Check if entity type matches constraint applicability
+            if constraint.applies_to_entity_types and entity.type.value in constraint.applies_to_entity_types:
+                severity_weights = {"low": 10, "medium": 25, "high": 50, "critical": 75}
+                score += severity_weights.get(constraint.severity.value, 25)
 
         # Cap at 100
         return min(100, score)

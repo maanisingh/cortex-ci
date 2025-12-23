@@ -88,9 +88,9 @@ class Constraint(Base, TimestampMixin, TenantMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_mandatory: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    # Metadata
+    # Custom data
     tags: Mapped[List[str]] = mapped_column(ARRAY(String), default=list, nullable=False)
-    metadata: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
+    custom_data: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
 
     # Created by
     created_by: Mapped[Optional[UUID]] = mapped_column(

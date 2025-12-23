@@ -55,8 +55,8 @@ class Entity(Base, TimestampMixin, TenantMixin):
     # Criticality (1-5, where 5 is most critical)
     criticality: Mapped[int] = mapped_column(default=3, nullable=False)
 
-    # Flexible metadata
-    metadata: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
+    # Flexible custom data
+    custom_data: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
 
     # Status
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
@@ -64,7 +64,7 @@ class Entity(Base, TimestampMixin, TenantMixin):
 
     # Relationships
     tenant = relationship("Tenant", back_populates="entities")
-    matches = relationship("EntityMatch", back_populates="entity", cascade="all, delete-orphan")
+    entity_constraints = relationship("EntityConstraint", back_populates="entity", cascade="all, delete-orphan")
     risk_scores = relationship("RiskScore", back_populates="entity", cascade="all, delete-orphan")
 
     # Dependencies (as source)

@@ -104,7 +104,7 @@ class AuditLog(Base, TenantMixin):
 
     # Context
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    metadata: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
+    context_data: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
 
     # Request info
     ip_address: Mapped[Optional[str]] = mapped_column(INET, nullable=True)
