@@ -113,13 +113,22 @@ fqmDOfkeSKrhEEBkoLcrIeozmDufqsVqyNJXRtPoYtDKuJADodhLXlKrMJBIkWKC
 
 ### API Examples
 ```bash
+# Dokploy API URL
+DOKPLOY_URL="https://dok.alexandratechlab.com"
+
 # Get all projects
-curl http://localhost:4000/api/project.all \
+curl -k "$DOKPLOY_URL/api/project.all" \
   -H "x-api-key: fqmDOfkeSKrhEEBkoLcrIeozmDufqsVqyNJXRtPoYtDKuJADodhLXlKrMJBIkWKC"
 
 # Get compose details
-curl "http://localhost:4000/api/compose.one?composeId=0QaRLk1tWGlKwj-6y5zty" \
+curl -k "$DOKPLOY_URL/api/compose.one?composeId=0QaRLk1tWGlKwj-6y5zty" \
   -H "x-api-key: fqmDOfkeSKrhEEBkoLcrIeozmDufqsVqyNJXRtPoYtDKuJADodhLXlKrMJBIkWKC"
+
+# Trigger deployment
+curl -k -X POST "$DOKPLOY_URL/api/compose.deploy" \
+  -H "x-api-key: fqmDOfkeSKrhEEBkoLcrIeozmDufqsVqyNJXRtPoYtDKuJADodhLXlKrMJBIkWKC" \
+  -H "Content-Type: application/json" \
+  -d '{"composeId":"0QaRLk1tWGlKwj-6y5zty"}'
 ```
 
 ---
