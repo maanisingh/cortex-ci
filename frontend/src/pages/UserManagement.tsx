@@ -14,7 +14,7 @@ interface User {
   last_login: string | null
 }
 
-const roles = ['ADMIN', 'ANALYST', 'APPROVER', 'VIEWER']
+const roles = ['admin', 'analyst', 'approver', 'viewer']
 
 export default function UserManagement() {
   const queryClient = useQueryClient()
@@ -46,7 +46,14 @@ export default function UserManagement() {
       resetForm()
     },
     onError: (err: any) => {
-      setFormError(err.response?.data?.detail || 'Failed to create user')
+      const detail = err.response?.data?.detail
+      if (Array.isArray(detail)) {
+        setFormError(detail.map((e: any) => e.msg || e.message || JSON.stringify(e)).join(', '))
+      } else if (typeof detail === 'object') {
+        setFormError(JSON.stringify(detail))
+      } else {
+        setFormError(detail || 'Failed to create user')
+      }
     },
   })
 
@@ -59,7 +66,14 @@ export default function UserManagement() {
       resetForm()
     },
     onError: (err: any) => {
-      setFormError(err.response?.data?.detail || 'Failed to update user')
+      const detail = err.response?.data?.detail
+      if (Array.isArray(detail)) {
+        setFormError(detail.map((e: any) => e.msg || e.message || JSON.stringify(e)).join(', '))
+      } else if (typeof detail === 'object') {
+        setFormError(JSON.stringify(detail))
+      } else {
+        setFormError(detail || 'Failed to update user')
+      }
     },
   })
 
