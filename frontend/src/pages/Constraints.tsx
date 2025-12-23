@@ -9,7 +9,7 @@ export default function Constraints() {
   const { data, isLoading } = useQuery({
     queryKey: ['constraints', search],
     queryFn: async () => {
-      const response = await constraintsApi.list({ page_size: 50, search: search || undefined })
+      const response = await constraintsApi.list({ page: 1, search: search || undefined })
       return response.data
     },
   })

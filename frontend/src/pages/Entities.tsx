@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { entitiesApi } from '../services/api'
 
 export default function Entities() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const queryClient = useQueryClient()
 
   const { data, isLoading } = useQuery({
     queryKey: ['entities', page, search],

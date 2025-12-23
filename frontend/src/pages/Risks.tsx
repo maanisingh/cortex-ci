@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { risksApi, entitiesApi } from '../services/api'
+import { risksApi } from '../services/api'
 
 export default function Risks() {
   const { data: summary } = useQuery({

@@ -5,7 +5,7 @@ export default function AuditLog() {
   const { data, isLoading } = useQuery({
     queryKey: ['audit'],
     queryFn: async () => {
-      const response = await auditApi.list({ page_size: 50 })
+      const response = await auditApi.list({ page: 1 })
       return response.data
     },
   })

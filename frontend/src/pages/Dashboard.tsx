@@ -271,8 +271,8 @@ export default function Dashboard() {
         <div className="card">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Constraints by Type</h3>
           <div className="space-y-3">
-            {constraintsSummary?.by_type && Object.entries(constraintsSummary.by_type).map(([type, count]) => (
-              count > 0 && (
+            {constraintsSummary?.by_type && Object.entries(constraintsSummary.by_type).map(([type, count]: [string, unknown]) => (
+              (count as number) > 0 && (
                 <div key={type} className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-600 capitalize">{type}</span>
                   <span className="text-sm font-semibold text-gray-900">{count as number}</span>
@@ -296,8 +296,8 @@ export default function Dashboard() {
         <div className="card">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Dependencies by Layer</h3>
           <div className="space-y-3">
-            {graphData?.stats?.layers && Object.entries(graphData.stats.layers).map(([layer, count]) => (
-              count > 0 && (
+            {graphData?.stats?.layers && Object.entries(graphData.stats.layers).map(([layer, count]: [string, unknown]) => (
+              (count as number) > 0 && (
                 <div key={layer} className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-600 capitalize">{layer}</span>
                   <span className="text-sm font-semibold text-gray-900">{count as number}</span>
