@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import auth, entities, constraints, dependencies, risks, scenarios, audit, admin, dashboard
 
 # Phase 2 endpoints
-from app.api.v1.endpoints import scenario_chains, risk_justification, history, ai_analysis
+from app.api.v1.endpoints import scenario_chains, risk_justification, history, ai_analysis, monitoring
 
 api_router = APIRouter()
 
@@ -38,4 +38,9 @@ api_router.include_router(
     ai_analysis.router,
     prefix="/ai",
     tags=["Phase 2 - AI Analysis"]
+)
+api_router.include_router(
+    monitoring.router,
+    prefix="/monitoring",
+    tags=["Monitoring & Alerts"]
 )

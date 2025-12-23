@@ -18,6 +18,7 @@ import {
   ScaleIcon,
   ClockIcon,
   SparklesIcon,
+  ChartBarSquareIcon,
 } from '@heroicons/react/24/outline'
 import { useAuthStore } from '../../stores/authStore'
 
@@ -36,6 +37,7 @@ const phase2Navigation = [
   { name: 'Risk Justification', href: '/risk-justification', icon: ScaleIcon },
   { name: 'Institutional Memory', href: '/history', icon: ClockIcon },
   { name: 'AI Analysis', href: '/ai-analysis', icon: SparklesIcon },
+  { name: 'Monitoring', href: '/monitoring', icon: ChartBarSquareIcon },
 ]
 
 const adminNavigation = [

@@ -22,6 +22,7 @@ import ScenarioChains from './pages/ScenarioChains'
 import RiskJustification from './pages/RiskJustification'
 import History from './pages/History'
 import AIAnalysis from './pages/AIAnalysis'
+import Monitoring from './pages/Monitoring'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore()
@@ -62,6 +63,7 @@ function App() {
                 <Route path="/risk-justification" element={<RiskJustification />} />
                 <Route path="/history" element={<History />} />
                 <Route path="/ai-analysis" element={<AIAnalysis />} />
+                <Route path="/monitoring" element={<Monitoring />} />
               </Routes>
             </Layout>
           </ProtectedRoute>

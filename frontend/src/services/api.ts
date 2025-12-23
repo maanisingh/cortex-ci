@@ -277,6 +277,15 @@ export const historyApi = {
   }) => api.post('/history/transition-report', data),
 }
 
+// Monitoring API
+export const monitoringApi = {
+  health: () => api.get('/monitoring/health'),
+  metrics: () => api.get('/monitoring/metrics'),
+  alerts: (params?: { severity?: string; acknowledged?: boolean }) =>
+    api.get('/monitoring/alerts', { params }),
+  dashboard: () => api.get('/monitoring/dashboard'),
+}
+
 // AI Analysis API (Phase 2.5)
 export const aiApi = {
   list: (params?: { status_filter?: string; page?: number; page_size?: number }) =>
