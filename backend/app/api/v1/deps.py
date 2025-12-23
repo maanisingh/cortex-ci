@@ -18,9 +18,17 @@ async def get_current_tenant(
     request: Request,
     db: AsyncSession = Depends(get_db),
     x_tenant_id: Optional[str] = Header(None),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
 ) -> Tenant:
-    """Get current tenant from header or subdomain."""
+    """Get current tenant from header, token, or subdomain."""
     tenant_id = x_tenant_id
+
+    # Try to get from JWT token if no header provided
+    if not tenant_id and credentials:
+        token = credentials.credentials
+        payload = decode_token(token)
+        if payload and payload.tenant_id:
+            tenant_id = payload.tenant_id
 
     if not tenant_id:
         # Try to get from subdomain
