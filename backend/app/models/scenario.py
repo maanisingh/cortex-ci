@@ -15,17 +15,15 @@ class ScenarioStatus(str, Enum):
     DRAFT = "draft"
     RUNNING = "running"
     COMPLETED = "completed"
-    FAILED = "failed"
     ARCHIVED = "archived"
 
 
 class ScenarioType(str, Enum):
     """Type of scenario being simulated."""
-    ENTITY_SANCTIONED = "entity_sanctioned"
+    ENTITY_RESTRICTION = "entity_restriction"
     COUNTRY_EMBARGO = "country_embargo"
-    SUPPLIER_UNAVAILABLE = "supplier_unavailable"
-    FINANCIAL_RESTRICTION = "financial_restriction"
-    REGULATORY_CHANGE = "regulatory_change"
+    SUPPLIER_LOSS = "supplier_loss"
+    DEPENDENCY_FAILURE = "dependency_failure"
     CUSTOM = "custom"
 
 

@@ -15,9 +15,8 @@ class EntityType(str, Enum):
     ORGANIZATION = "organization"
     INDIVIDUAL = "individual"
     LOCATION = "location"
-    FINANCIAL = "financial"
-    VESSEL = "vessel"
-    AIRCRAFT = "aircraft"
+    ASSET = "asset"
+    SYSTEM = "system"
 
 
 class Entity(Base, TimestampMixin, TenantMixin):
