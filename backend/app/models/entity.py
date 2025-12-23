@@ -64,7 +64,6 @@ class Entity(Base, TimestampMixin, TenantMixin):
 
     # Relationships
     tenant = relationship("Tenant", back_populates="entities")
-    entity_constraints = relationship("EntityConstraint", back_populates="entity", cascade="all, delete-orphan")
     risk_scores = relationship("RiskScore", back_populates="entity", cascade="all, delete-orphan")
 
     # Dependencies (as source)
