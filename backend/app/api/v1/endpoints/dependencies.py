@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status, Query
@@ -315,3 +315,151 @@ async def delete_dependency(
     )
     db.add(audit)
     await db.commit()
+
+
+# Phase 2.1: Multi-Layer Dependency Modeling endpoints
+
+@router.get("/layers/summary")
+async def get_layer_summary(
+    db: DB,
+    current_user: CurrentUser,
+    tenant: CurrentTenant,
+) -> Dict[str, Any]:
+    """Get summary statistics for each dependency layer."""
+    # Count by layer
+    layer_query = select(
+        Dependency.layer,
+        func.count(Dependency.id).label("count"),
+        func.avg(Dependency.criticality).label("avg_criticality"),
+    ).where(
+        Dependency.tenant_id == tenant.id,
+        Dependency.is_active == True,
+    ).group_by(Dependency.layer)
+
+    result = await db.execute(layer_query)
+    layer_stats = {}
+
+    for row in result:
+        layer_stats[row.layer.value] = {
+            "count": row.count,
+            "avg_criticality": round(float(row.avg_criticality or 0), 2),
+            "risk_weight": _get_layer_risk_weight(row.layer),
+        }
+
+    # Fill in missing layers
+    for layer in DependencyLayer:
+        if layer.value not in layer_stats:
+            layer_stats[layer.value] = {
+                "count": 0,
+                "avg_criticality": 0,
+                "risk_weight": _get_layer_risk_weight(layer),
+            }
+
+    return {
+        "layers": layer_stats,
+        "total_dependencies": sum(s["count"] for s in layer_stats.values()),
+        "layer_descriptions": {
+            "legal": "Contracts, grants, legal obligations",
+            "financial": "Banks, currencies, payment corridors",
+            "operational": "Suppliers, logistics, IT systems",
+            "human": "Key personnel, irreplaceable staff",
+            "academic": "Research partners, funding sources",
+        },
+    }
+
+
+@router.get("/cross-layer-impact/{entity_id}")
+async def get_cross_layer_impact(
+    entity_id: UUID,
+    db: DB,
+    current_user: CurrentUser,
+    tenant: CurrentTenant,
+) -> Dict[str, Any]:
+    """
+    Calculate cross-layer impact for an entity.
+
+    Shows how disruption to this entity would cascade across different layers.
+    """
+    # Verify entity exists
+    entity_result = await db.execute(
+        select(Entity).where(Entity.id == entity_id, Entity.tenant_id == tenant.id)
+    )
+    entity = entity_result.scalar_one_or_none()
+    if not entity:
+        raise HTTPException(status_code=404, detail="Entity not found")
+
+    # Get all dependencies where this entity is the source (outgoing)
+    outgoing_query = select(Dependency).where(
+        Dependency.tenant_id == tenant.id,
+        Dependency.source_entity_id == entity_id,
+        Dependency.is_active == True,
+    )
+    outgoing_result = await db.execute(outgoing_query)
+    outgoing_deps = outgoing_result.scalars().all()
+
+    # Get all dependencies where this entity is the target (incoming)
+    incoming_query = select(Dependency).where(
+        Dependency.tenant_id == tenant.id,
+        Dependency.target_entity_id == entity_id,
+        Dependency.is_active == True,
+    )
+    incoming_result = await db.execute(incoming_query)
+    incoming_deps = incoming_result.scalars().all()
+
+    # Calculate impact by layer
+    layer_impact = {layer.value: {"outgoing": 0, "incoming": 0, "risk_score": 0.0} for layer in DependencyLayer}
+
+    for dep in outgoing_deps:
+        layer_impact[dep.layer.value]["outgoing"] += 1
+        layer_impact[dep.layer.value]["risk_score"] += dep.criticality * _get_layer_risk_weight(dep.layer)
+
+    for dep in incoming_deps:
+        layer_impact[dep.layer.value]["incoming"] += 1
+        layer_impact[dep.layer.value]["risk_score"] += dep.criticality * _get_layer_risk_weight(dep.layer) * 0.5
+
+    # Calculate total cross-layer risk
+    total_risk = sum(li["risk_score"] for li in layer_impact.values())
+    primary_layer = max(layer_impact.items(), key=lambda x: x[1]["risk_score"])[0] if layer_impact else "operational"
+
+    # Get affected entities
+    affected_entity_ids = set()
+    for dep in outgoing_deps:
+        affected_entity_ids.add(dep.target_entity_id)
+    for dep in incoming_deps:
+        affected_entity_ids.add(dep.source_entity_id)
+
+    return {
+        "entity_id": str(entity_id),
+        "entity_name": entity.name,
+        "layer_impact": layer_impact,
+        "total_cross_layer_risk": round(total_risk, 2),
+        "primary_exposure_layer": primary_layer,
+        "total_outgoing": len(outgoing_deps),
+        "total_incoming": len(incoming_deps),
+        "unique_entities_affected": len(affected_entity_ids),
+        "recommendation": _get_risk_recommendation(total_risk, primary_layer),
+    }
+
+
+def _get_layer_risk_weight(layer: DependencyLayer) -> float:
+    """Get risk weight multiplier for each layer."""
+    weights = {
+        DependencyLayer.LEGAL: 1.5,
+        DependencyLayer.FINANCIAL: 1.4,
+        DependencyLayer.OPERATIONAL: 1.0,
+        DependencyLayer.HUMAN: 1.2,
+        DependencyLayer.ACADEMIC: 0.8,
+    }
+    return weights.get(layer, 1.0)
+
+
+def _get_risk_recommendation(total_risk: float, primary_layer: str) -> str:
+    """Generate risk recommendation based on cross-layer analysis."""
+    if total_risk > 50:
+        return f"HIGH PRIORITY: Entity has significant cross-layer exposure, primarily in {primary_layer}. Recommend immediate diversification strategy."
+    elif total_risk > 25:
+        return f"MEDIUM PRIORITY: Notable dependency concentration in {primary_layer} layer. Consider backup arrangements."
+    elif total_risk > 10:
+        return f"LOW PRIORITY: Moderate {primary_layer} dependencies. Monitor for changes."
+    else:
+        return "MINIMAL: Low cross-layer exposure. Standard monitoring sufficient."
