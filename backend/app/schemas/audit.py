@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from uuid import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, field_serializer
 
 from app.models.audit import AuditAction
 
@@ -11,21 +11,25 @@ class AuditLogResponse(BaseModel):
     id: UUID
     tenant_id: UUID
     created_at: datetime
-    user_id: Optional[UUID]
-    user_email: Optional[str]
-    user_role: Optional[str]
+    user_id: Optional[UUID] = None
+    user_email: Optional[str] = None
+    user_role: Optional[str] = None
     action: AuditAction
-    resource_type: Optional[str]
-    resource_id: Optional[UUID]
-    resource_name: Optional[str]
-    before_state: Optional[Dict[str, Any]]
-    after_state: Optional[Dict[str, Any]]
-    changes: Optional[Dict[str, Any]]
-    description: Optional[str]
-    metadata: Dict[str, Any]
-    ip_address: Optional[str]
+    resource_type: Optional[str] = None
+    resource_id: Optional[UUID] = None
+    resource_name: Optional[str] = None
+    before_state: Optional[Dict[str, Any]] = None
+    after_state: Optional[Dict[str, Any]] = None
+    changes: Optional[Dict[str, Any]] = None
+    description: Optional[str] = None
+    context_data: Optional[Dict[str, Any]] = None
+    ip_address: Optional[str] = None
     success: bool
-    error_message: Optional[str]
+    error_message: Optional[str] = None
+
+    @field_serializer('ip_address')
+    def serialize_ip(self, v):
+        return str(v) if v else None
 
     class Config:
         from_attributes = True
