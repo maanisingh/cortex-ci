@@ -229,6 +229,110 @@ test.describe('CORTEX-CI Platform Tests', () => {
     });
   });
 
+  // ============= PHASE 2 TESTS =============
+
+  test.describe('Phase 2: Monitoring API Tests', () => {
+
+    test('Monitoring health endpoint returns system status', async ({ request }) => {
+      const token = await getAuthToken(request);
+      const response = await request.get(`${API_BASE}/monitoring/health`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      expect(response.status()).toBe(200);
+      const health = await response.json();
+      expect(health.status).toBeDefined();
+      expect(health.database).toBeDefined();
+      expect(health.version).toBeDefined();
+      console.log(`Monitoring Health: ${health.status}, DB: ${health.database}, Version: ${health.version}`);
+    });
+
+    test('Monitoring metrics returns system counts', async ({ request }) => {
+      const token = await getAuthToken(request);
+      const response = await request.get(`${API_BASE}/monitoring/metrics`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      expect(response.status()).toBe(200);
+      const metrics = await response.json();
+      expect(metrics.entities_count).toBeGreaterThan(0);
+      expect(metrics.constraints_count).toBeGreaterThan(0);
+      console.log(`Metrics: ${metrics.entities_count} entities, ${metrics.constraints_count} constraints`);
+    });
+
+    test('Monitoring alerts returns alert list', async ({ request }) => {
+      const token = await getAuthToken(request);
+      const response = await request.get(`${API_BASE}/monitoring/alerts`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      expect(response.status()).toBe(200);
+      const alerts = await response.json();
+      expect(alerts.alerts).toBeDefined();
+      expect(alerts.total_count).toBeDefined();
+      console.log(`Alerts: ${alerts.total_count} total, ${alerts.unacknowledged_count} unacknowledged`);
+    });
+
+    test('Monitoring dashboard returns aggregated data', async ({ request }) => {
+      const token = await getAuthToken(request);
+      const response = await request.get(`${API_BASE}/monitoring/dashboard`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      expect(response.status()).toBe(200);
+      const dashboard = await response.json();
+      expect(dashboard.health).toBeDefined();
+      expect(dashboard.metrics).toBeDefined();
+      expect(dashboard.alerts).toBeDefined();
+      console.log('Monitoring dashboard loaded successfully');
+    });
+  });
+
+  test.describe('Phase 2: Scenario Chains API Tests', () => {
+
+    test('Can list scenario chains', async ({ request }) => {
+      const token = await getAuthToken(request);
+      const response = await request.get(`${API_BASE}/scenarios/chains`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      expect(response.status()).toBe(200);
+    });
+  });
+
+  test.describe('Phase 2: AI Analysis API Tests', () => {
+
+    test('Can list AI analyses', async ({ request }) => {
+      const token = await getAuthToken(request);
+      const response = await request.get(`${API_BASE}/ai`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      expect(response.status()).toBe(200);
+    });
+
+    test('Can get pending anomalies', async ({ request }) => {
+      const token = await getAuthToken(request);
+      const response = await request.get(`${API_BASE}/ai/anomalies/pending`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      expect(response.status()).toBe(200);
+    });
+  });
+
+  test.describe('Phase 2: History API Tests', () => {
+
+    test('Can list decisions', async ({ request }) => {
+      const token = await getAuthToken(request);
+      const response = await request.get(`${API_BASE}/history/decisions`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      expect(response.status()).toBe(200);
+    });
+
+    test('Can get constraint changes', async ({ request }) => {
+      const token = await getAuthToken(request);
+      const response = await request.get(`${API_BASE}/history/constraints/changes`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      expect(response.status()).toBe(200);
+    });
+  });
+
   test.describe('Platform Summary Test', () => {
 
     test('Generate complete platform status report', async ({ request }) => {
