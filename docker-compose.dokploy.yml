@@ -47,6 +47,7 @@ services:
         condition: service_healthy
     networks:
       - cortex-network
+      - dokploy-network
     restart: unless-stopped
 
   frontend:
@@ -55,12 +56,11 @@ services:
       dockerfile: Dockerfile
       args:
         - VITE_API_URL=/api/v1
-    ports:
-      - "80:80"
     depends_on:
       - backend
     networks:
       - cortex-network
+      - dokploy-network
     restart: unless-stopped
 
 volumes:
@@ -70,3 +70,5 @@ volumes:
 networks:
   cortex-network:
     driver: bridge
+  dokploy-network:
+    external: true
