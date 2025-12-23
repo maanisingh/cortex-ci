@@ -7,6 +7,12 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [tenantSlug, setTenantSlug] = useState('default')
+
+  const fillDemoCredentials = () => {
+    setEmail('admin@cortex.io')
+    setPassword('Admin123!')
+    setTenantSlug('default')
+  }
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -107,7 +113,7 @@ export default function Login() {
               />
             </div>
 
-            <div>
+            <div className="space-y-3">
               <button
                 type="submit"
                 disabled={loading}
@@ -115,8 +121,22 @@ export default function Login() {
               >
                 {loading ? 'Signing in...' : 'Sign in'}
               </button>
+
+              <button
+                type="button"
+                onClick={fillDemoCredentials}
+                className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              >
+                Use Demo Account
+              </button>
             </div>
           </form>
+
+          <div className="mt-4 p-3 bg-gray-50 rounded-md">
+            <p className="text-xs text-gray-500 text-center">
+              Demo: admin@cortex.io / Admin123!
+            </p>
+          </div>
         </div>
 
         <p className="text-center text-primary-200 text-sm">
