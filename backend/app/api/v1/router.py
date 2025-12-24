@@ -13,22 +13,24 @@ api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboar
 api_router.include_router(entities.router, prefix="/entities", tags=["Entities"])
 api_router.include_router(constraints.router, prefix="/constraints", tags=["Constraints"])
 api_router.include_router(dependencies.router, prefix="/dependencies", tags=["Dependencies"])
-api_router.include_router(risks.router, prefix="/risks", tags=["Risks"])
-api_router.include_router(scenarios.router, prefix="/scenarios", tags=["Scenarios"])
-api_router.include_router(audit.router, prefix="/audit", tags=["Audit"])
-api_router.include_router(admin.router, prefix="/admin", tags=["Administration"])
-
-# Phase 2: Advanced Features
-api_router.include_router(
-    scenario_chains.router,
-    prefix="/scenarios/chains",
-    tags=["Phase 2 - Scenario Chains"]
-)
+# Risk justification must be registered BEFORE risks to avoid route conflict
 api_router.include_router(
     risk_justification.router,
     prefix="/risks/justification",
     tags=["Phase 2 - Risk Justification"]
 )
+api_router.include_router(risks.router, prefix="/risks", tags=["Risks"])
+# Scenario chains must be registered BEFORE scenarios to avoid route conflict
+api_router.include_router(
+    scenario_chains.router,
+    prefix="/scenarios/chains",
+    tags=["Phase 2 - Scenario Chains"]
+)
+api_router.include_router(scenarios.router, prefix="/scenarios", tags=["Scenarios"])
+api_router.include_router(audit.router, prefix="/audit", tags=["Audit"])
+api_router.include_router(admin.router, prefix="/admin", tags=["Administration"])
+
+# Phase 2: Additional Features (scenario_chains and risk_justification registered above)
 api_router.include_router(
     history.router,
     prefix="/history",
