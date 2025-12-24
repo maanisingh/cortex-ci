@@ -111,11 +111,18 @@ async def get_system_metrics(db: AsyncSession = Depends(get_db)):
         )
         high_risk_entities = high_risk_result.scalar() or 0
 
-        # Critical constraints
-        critical_result = await db.execute(
-            text("SELECT COUNT(*) FROM constraints WHERE severity = 'critical' AND is_active = true")
-        )
-        critical_constraints = critical_result.scalar() or 0
+        # Critical/High constraints (critical may not exist in older databases)
+        try:
+            critical_result = await db.execute(
+                text("SELECT COUNT(*) FROM constraints WHERE severity IN ('critical', 'high') AND is_active = true")
+            )
+            critical_constraints = critical_result.scalar() or 0
+        except:
+            # Fallback if critical enum doesn't exist
+            critical_result = await db.execute(
+                text("SELECT COUNT(*) FROM constraints WHERE severity = 'high' AND is_active = true")
+            )
+            critical_constraints = critical_result.scalar() or 0
 
         # Scenario chains count (Phase 2)
         try:
