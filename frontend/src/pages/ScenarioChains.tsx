@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
 import { PlusIcon, PlayIcon, LinkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { scenarioChainsApi } from '../services/api'
 
@@ -33,7 +32,6 @@ interface SimulationResult {
 
 export default function ScenarioChains() {
   const [showForm, setShowForm] = useState(false)
-  const [selectedChain, setSelectedChain] = useState<string | null>(null)
   const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(null)
   const [formData, setFormData] = useState({ name: '', description: '', trigger_event: '' })
 
