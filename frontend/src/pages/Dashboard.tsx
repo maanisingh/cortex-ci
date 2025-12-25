@@ -21,6 +21,10 @@ import {
   ArrowTrendingDownIcon,
   LinkIcon,
   InformationCircleIcon,
+  PlusIcon,
+  BeakerIcon,
+  DocumentMagnifyingGlassIcon,
+  ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 
 import {
@@ -222,6 +226,44 @@ export default function Dashboard() {
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="mb-8">
+        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 flex items-center">
+          Quick Actions
+          <InfoTooltip text="Common actions for managing your compliance workflow. Click any button to get started." />
+        </h3>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            to="/entities?action=new"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+          >
+            <PlusIcon className="h-4 w-4 mr-2" />
+            Add Entity
+          </Link>
+          <Link
+            to="/scenarios?action=new"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
+          >
+            <BeakerIcon className="h-4 w-4 mr-2" />
+            New Scenario
+          </Link>
+          <Link
+            to="/audit"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+          >
+            <DocumentMagnifyingGlassIcon className="h-4 w-4 mr-2" />
+            View Audit Log
+          </Link>
+          <Link
+            to="/risks"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+          >
+            <ArrowPathIcon className="h-4 w-4 mr-2" />
+            Recalculate Risks
+          </Link>
+        </div>
       </div>
 
       {/* Charts Row */}
