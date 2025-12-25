@@ -11,7 +11,6 @@ Risk factors:
 
 import subprocess
 import uuid
-from datetime import datetime
 
 DB_CONTAINER = "compose-input-solid-state-array-q9m3z5-db-1"
 DB_USER = "cortex"
@@ -36,11 +35,21 @@ HIGH_RISK_COUNTRIES = {
     "CN": 50,  # China (elevated)
 }
 
+
 def run_sql(sql: str):
     """Execute SQL in the database container."""
     cmd = [
-        "docker", "exec", "-i", DB_CONTAINER,
-        "psql", "-U", DB_USER, "-d", DB_NAME, "-c", sql
+        "docker",
+        "exec",
+        "-i",
+        DB_CONTAINER,
+        "psql",
+        "-U",
+        DB_USER,
+        "-d",
+        DB_NAME,
+        "-c",
+        sql,
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0 and "ERROR" in result.stderr:
@@ -51,9 +60,9 @@ def run_sql(sql: str):
 def get_tenant_id():
     """Get the default tenant ID."""
     result = run_sql("SELECT id FROM tenants WHERE slug = 'default';")
-    for line in result.split('\n'):
+    for line in result.split("\n"):
         line = line.strip()
-        if line and '-' in line and len(line) == 36:
+        if line and "-" in line and len(line) == 36:
             return line
     return None
 
@@ -83,7 +92,7 @@ def calculate_scores():
         LIMIT 20000;
     """)
 
-    lines = result.strip().split('\n')
+    lines = result.strip().split("\n")
     if len(lines) < 3:
         print("No entities need scoring!")
         return
@@ -91,18 +100,20 @@ def calculate_scores():
     # Parse results (skip header and separator)
     entities = []
     for line in lines[2:]:  # Skip header and ---
-        if '|' not in line or line.strip().startswith('('):
+        if "|" not in line or line.strip().startswith("("):
             continue
-        parts = [p.strip() for p in line.split('|')]
+        parts = [p.strip() for p in line.split("|")]
         if len(parts) >= 6:
-            entities.append({
-                'id': parts[0],
-                'type': parts[1],
-                'country_code': parts[2] if parts[2] else None,
-                'criticality': int(parts[3]) if parts[3].isdigit() else 3,
-                'subcategory': parts[4],
-                'tags': parts[5],
-            })
+            entities.append(
+                {
+                    "id": parts[0],
+                    "type": parts[1],
+                    "country_code": parts[2] if parts[2] else None,
+                    "criticality": int(parts[3]) if parts[3].isdigit() else 3,
+                    "subcategory": parts[4],
+                    "tags": parts[5],
+                }
+            )
 
     print(f"Found {len(entities)} entities to score")
 
@@ -113,33 +124,33 @@ def calculate_scores():
 
         # Country risk factor
         country_score = 0.0
-        if entity['country_code'] and entity['country_code'] in HIGH_RISK_COUNTRIES:
-            country_score = HIGH_RISK_COUNTRIES[entity['country_code']]
+        if entity["country_code"] and entity["country_code"] in HIGH_RISK_COUNTRIES:
+            country_score = HIGH_RISK_COUNTRIES[entity["country_code"]]
 
         # Criticality factor (1-5 scale -> 0-25 points)
-        criticality_score = (entity['criticality'] / 5) * 25
+        criticality_score = (entity["criticality"] / 5) * 25
 
         # Source factor
         source_score = 0.0
-        if entity['subcategory'] == 'ofac_sdn':
+        if entity["subcategory"] == "ofac_sdn":
             source_score = 30.0  # OFAC = high risk
-        elif entity['subcategory'] == 'un_consolidated':
+        elif entity["subcategory"] == "un_consolidated":
             source_score = 25.0  # UN = high risk
-        elif entity['subcategory'] == 'opensanctions':
+        elif entity["subcategory"] == "opensanctions":
             source_score = 20.0  # OpenSanctions = elevated
 
         # Entity type factor
         type_score = 0.0
-        if entity['type'] == 'INDIVIDUAL':
+        if entity["type"] == "INDIVIDUAL":
             type_score = 5.0  # Individuals slightly higher
 
         # Calculate composite score (weighted average)
         composite = (
-            base_score * 0.10 +
-            country_score * 0.35 +
-            criticality_score * 0.15 +
-            source_score * 0.30 +
-            type_score * 0.10
+            base_score * 0.10
+            + country_score * 0.35
+            + criticality_score * 0.15
+            + source_score * 0.30
+            + type_score * 0.10
         )
 
         # Normalize to 0-100
@@ -164,7 +175,7 @@ def calculate_scores():
             factors, calculated_at, calculation_version,
             created_at, updated_at
         ) VALUES (
-            '{uuid.uuid4()}', '{tenant_id}', '{entity['id']}',
+            '{uuid.uuid4()}', '{tenant_id}', '{entity["id"]}',
             {composite:.2f}, '{level}',
             {source_score:.2f}, 0.0,
             {country_score:.2f}, 0.0,
@@ -183,23 +194,27 @@ def calculate_scores():
 
     # Show distribution
     print("\nRisk Score Distribution:")
-    print(run_sql("""
+    print(
+        run_sql("""
         SELECT level, COUNT(*) as count,
                ROUND(AVG(score)::numeric, 2) as avg_score
         FROM risk_scores
         GROUP BY level
         ORDER BY avg_score DESC;
-    """))
+    """)
+    )
 
     # Show top 10 highest risk
     print("\nTop 10 Highest Risk Entities:")
-    print(run_sql("""
+    print(
+        run_sql("""
         SELECT e.name, rs.score, rs.level, e.country_code
         FROM risk_scores rs
         JOIN entities e ON rs.entity_id = e.id
         ORDER BY rs.score DESC
         LIMIT 10;
-    """))
+    """)
+    )
 
 
 if __name__ == "__main__":

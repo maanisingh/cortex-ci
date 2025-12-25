@@ -12,8 +12,6 @@ Schedule with cron:
     0 6 * * * /usr/bin/python3 /app/sync_sanctions.py >> /var/log/cortex-sync.log 2>&1
 """
 
-import os
-import sys
 import json
 import subprocess
 import urllib.request
@@ -59,8 +57,17 @@ def log(message: str):
 def run_sql(sql: str) -> str:
     """Execute SQL in database container."""
     cmd = [
-        "docker", "exec", "-i", DB_CONTAINER,
-        "psql", "-U", DB_USER, "-d", DB_NAME, "-c", sql
+        "docker",
+        "exec",
+        "-i",
+        DB_CONTAINER,
+        "psql",
+        "-U",
+        DB_USER,
+        "-d",
+        DB_NAME,
+        "-c",
+        sql,
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
     return result.stdout
@@ -70,7 +77,7 @@ def get_file_hash(filepath: Path) -> str:
     """Get MD5 hash of file."""
     if not filepath.exists():
         return ""
-    with open(filepath, 'rb') as f:
+    with open(filepath, "rb") as f:
         return hashlib.md5(f.read()).hexdigest()
 
 
@@ -89,23 +96,23 @@ def download_file(url: str, filepath: Path) -> bool:
 def load_sync_log() -> dict:
     """Load sync history."""
     if SYNC_LOG_FILE.exists():
-        with open(SYNC_LOG_FILE, 'r') as f:
+        with open(SYNC_LOG_FILE, "r") as f:
             return json.load(f)
     return {"syncs": []}
 
 
 def save_sync_log(log_data: dict):
     """Save sync history."""
-    with open(SYNC_LOG_FILE, 'w') as f:
+    with open(SYNC_LOG_FILE, "w") as f:
         json.dump(log_data, f, indent=2, default=str)
 
 
 def get_tenant_id() -> str:
     """Get default tenant ID."""
     result = run_sql("SELECT id FROM tenants WHERE slug = 'default';")
-    for line in result.split('\n'):
+    for line in result.split("\n"):
         line = line.strip()
-        if line and '-' in line and len(line) == 36:
+        if line and "-" in line and len(line) == 36:
             return line
     return None
 
@@ -123,7 +130,9 @@ def sync_ofac_sdn(tenant_id: str, filepath: Path) -> dict:
         return {"source": "ofac_sdn", "status": "error", "message": "File not found"}
 
     log("Parsing OFAC SDN...")
-    ns = {"sdn": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML"}
+    ns = {
+        "sdn": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML"
+    }
 
     try:
         tree = ET.parse(filepath)
@@ -146,9 +155,11 @@ def sync_ofac_sdn(tenant_id: str, filepath: Path) -> dict:
     log(f"OFAC SDN: Published {pub_date}, {record_count} records")
 
     # Count existing
-    result = run_sql(f"SELECT COUNT(*) FROM entities WHERE tenant_id = '{tenant_id}' AND subcategory = 'ofac_sdn';")
+    result = run_sql(
+        f"SELECT COUNT(*) FROM entities WHERE tenant_id = '{tenant_id}' AND subcategory = 'ofac_sdn';"
+    )
     existing = 0
-    for line in result.split('\n'):
+    for line in result.split("\n"):
         if line.strip().isdigit():
             existing = int(line.strip())
             break
@@ -162,7 +173,9 @@ def sync_ofac_sdn(tenant_id: str, filepath: Path) -> dict:
         external_id = f"OFAC-{uid.text}"
 
         # Check if exists
-        check = run_sql(f"SELECT 1 FROM entities WHERE external_id = '{external_id}' AND tenant_id = '{tenant_id}';")
+        check = run_sql(
+            f"SELECT 1 FROM entities WHERE external_id = '{external_id}' AND tenant_id = '{tenant_id}';"
+        )
         if "1" in check:
             continue
 
@@ -215,7 +228,11 @@ def sync_ofac_sdn(tenant_id: str, filepath: Path) -> dict:
 def sync_un_sanctions(tenant_id: str, filepath: Path) -> dict:
     """Sync UN sanctions data."""
     if not filepath.exists():
-        return {"source": "un_sanctions", "status": "error", "message": "File not found"}
+        return {
+            "source": "un_sanctions",
+            "status": "error",
+            "message": "File not found",
+        }
 
     log("Parsing UN Sanctions...")
 
@@ -235,7 +252,9 @@ def sync_un_sanctions(tenant_id: str, filepath: Path) -> dict:
             external_id = f"UN-{dataid}"
 
             # Check if exists
-            check = run_sql(f"SELECT 1 FROM entities WHERE external_id = '{external_id}' AND tenant_id = '{tenant_id}';")
+            check = run_sql(
+                f"SELECT 1 FROM entities WHERE external_id = '{external_id}' AND tenant_id = '{tenant_id}';"
+            )
             if "1" in check:
                 continue
 
@@ -306,10 +325,12 @@ def run_sync():
 
             if old_hash == new_hash:
                 log(f"No changes detected for {source_name}")
-                sync_results["sources"].append({
-                    "source": source_name,
-                    "status": "unchanged",
-                })
+                sync_results["sources"].append(
+                    {
+                        "source": source_name,
+                        "status": "unchanged",
+                    }
+                )
                 continue
 
             # Sync based on source
@@ -322,14 +343,16 @@ def run_sync():
 
             sync_results["sources"].append(result)
         else:
-            sync_results["sources"].append({
-                "source": source_name,
-                "status": "download_failed",
-            })
+            sync_results["sources"].append(
+                {
+                    "source": source_name,
+                    "status": "download_failed",
+                }
+            )
 
     # Get final counts
     result = run_sql("SELECT COUNT(*) FROM entities;")
-    for line in result.split('\n'):
+    for line in result.split("\n"):
         if line.strip().isdigit():
             sync_results["total_entities"] = int(line.strip())
             break

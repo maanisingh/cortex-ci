@@ -1,18 +1,23 @@
 """Phase 2.2: Scenario Chains API - Cascading effect simulation."""
+
 from typing import Optional, List
 from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, status, Query
-from pydantic import BaseModel, Field
-from sqlalchemy import select, func
-from sqlalchemy.orm import selectinload
+from pydantic import BaseModel
+from sqlalchemy import select
 
 from app.models import (
-    ScenarioChain, ChainEffect, EffectSeverity,
-    Entity, Dependency, DependencyLayer, RiskScore,
-    AuditLog, AuditAction,
+    ScenarioChain,
+    ChainEffect,
+    EffectSeverity,
+    Entity,
+    Dependency,
+    DependencyLayer,
+    AuditLog,
+    AuditAction,
 )
 from app.api.v1.deps import DB, CurrentUser, CurrentTenant, RequireWriter
 
@@ -96,16 +101,23 @@ async def list_scenario_chains(
     page_size: int = Query(20, ge=1, le=100),
 ):
     """List all scenario chains."""
-    query = select(ScenarioChain).where(
-        ScenarioChain.tenant_id == tenant.id,
-        ScenarioChain.is_active == True,
-    ).offset((page - 1) * page_size).limit(page_size)
+    query = (
+        select(ScenarioChain)
+        .where(
+            ScenarioChain.tenant_id == tenant.id,
+            ScenarioChain.is_active,
+        )
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
 
     result = await db.execute(query)
     return result.scalars().all()
 
 
-@router.post("", response_model=ScenarioChainResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", response_model=ScenarioChainResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_scenario_chain(
     data: ScenarioChainCreate,
     db: DB,
@@ -182,32 +194,39 @@ async def get_chain_effects(
 
     # Get effects with entity names
     result = await db.execute(
-        select(ChainEffect, Entity.name).join(
-            Entity, ChainEffect.entity_id == Entity.id
-        ).where(
+        select(ChainEffect, Entity.name)
+        .join(Entity, ChainEffect.entity_id == Entity.id)
+        .where(
             ChainEffect.scenario_chain_id == chain_id,
-        ).order_by(ChainEffect.cascade_depth, ChainEffect.time_delay_days)
+        )
+        .order_by(ChainEffect.cascade_depth, ChainEffect.time_delay_days)
     )
 
     effects = []
     for effect, entity_name in result:
-        effects.append(ChainEffectResponse(
-            id=effect.id,
-            entity_id=effect.entity_id,
-            entity_name=entity_name,
-            effect_description=effect.effect_description,
-            severity=effect.severity.value,
-            cascade_depth=effect.cascade_depth,
-            time_delay_days=effect.time_delay_days,
-            risk_score_delta=float(effect.risk_score_delta),
-            probability=float(effect.probability),
-            caused_by_effect_id=effect.caused_by_effect_id,
-        ))
+        effects.append(
+            ChainEffectResponse(
+                id=effect.id,
+                entity_id=effect.entity_id,
+                entity_name=entity_name,
+                effect_description=effect.effect_description,
+                severity=effect.severity.value,
+                cascade_depth=effect.cascade_depth,
+                time_delay_days=effect.time_delay_days,
+                risk_score_delta=float(effect.risk_score_delta),
+                probability=float(effect.probability),
+                caused_by_effect_id=effect.caused_by_effect_id,
+            )
+        )
 
     return effects
 
 
-@router.post("/{chain_id}/effects", response_model=ChainEffectResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{chain_id}/effects",
+    response_model=ChainEffectResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def add_chain_effect(
     chain_id: UUID,
     data: ChainEffectCreate,
@@ -300,9 +319,9 @@ async def simulate_cascade(
 
     # Get existing effects (first-order)
     effects_result = await db.execute(
-        select(ChainEffect, Entity.name).join(
-            Entity, ChainEffect.entity_id == Entity.id
-        ).where(ChainEffect.scenario_chain_id == chain_id)
+        select(ChainEffect, Entity.name)
+        .join(Entity, ChainEffect.entity_id == Entity.id)
+        .where(ChainEffect.scenario_chain_id == chain_id)
     )
     existing_effects = list(effects_result)
 
@@ -340,11 +359,11 @@ async def simulate_cascade(
     for depth in range(2, max_depth + 1):
         # Find entities that depend on currently affected entities
         deps_result = await db.execute(
-            select(Dependency, Entity).join(
-                Entity, Dependency.target_entity_id == Entity.id
-            ).where(
+            select(Dependency, Entity)
+            .join(Entity, Dependency.target_entity_id == Entity.id)
+            .where(
                 Dependency.tenant_id == tenant.id,
-                Dependency.is_active == True,
+                Dependency.is_active,
                 Dependency.source_entity_id.in_(current_depth_entities),
                 ~Dependency.target_entity_id.in_(affected_entities),
             )
@@ -383,7 +402,7 @@ async def simulate_cascade(
                 cascade_depth=depth,
                 time_delay_days=time_delay,
                 risk_score_delta=round(base_risk_delta, 2),
-                probability=round(0.9 ** depth, 2),
+                probability=round(0.9**depth, 2),
                 caused_by_effect_id=None,
             )
 

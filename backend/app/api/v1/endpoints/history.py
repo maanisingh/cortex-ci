@@ -1,17 +1,24 @@
 """Phase 2.4: Institutional Memory - Historical tracking API."""
+
 from typing import Optional, List, Dict, Any
 from uuid import UUID
 from decimal import Decimal
 from datetime import datetime, date, timedelta
 
-from fastapi import APIRouter, HTTPException, status, Query
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy import select, func, and_
 
 from app.models import (
-    HistoricalSnapshot, DecisionOutcome, ConstraintChange, TransitionReport,
-    Entity, RiskScore, Constraint, Dependency,
-    AuditLog, AuditAction,
+    HistoricalSnapshot,
+    DecisionOutcome,
+    ConstraintChange,
+    TransitionReport,
+    Entity,
+    RiskScore,
+    Constraint,
+    AuditLog,
+    AuditAction,
 )
 from app.api.v1.deps import DB, CurrentUser, CurrentTenant, RequireWriter
 
@@ -106,11 +113,13 @@ async def get_entity_timeline(
     # Get historical snapshots
     cutoff = date.today() - timedelta(days=days)
     snapshots_result = await db.execute(
-        select(HistoricalSnapshot).where(
+        select(HistoricalSnapshot)
+        .where(
             HistoricalSnapshot.entity_id == entity_id,
             HistoricalSnapshot.tenant_id == tenant.id,
             HistoricalSnapshot.snapshot_date >= cutoff,
-        ).order_by(HistoricalSnapshot.snapshot_date)
+        )
+        .order_by(HistoricalSnapshot.snapshot_date)
     )
     snapshots = snapshots_result.scalars().all()
 
@@ -125,13 +134,15 @@ async def get_entity_timeline(
         risk_score = risk_result.scalar_one_or_none()
         current_score = float(risk_score.score) if risk_score else 0.0
 
-        timeline = [TimelinePoint(
-            date=date.today().isoformat(),
-            risk_score=current_score,
-            risk_level=_get_risk_level(current_score),
-            constraint_count=0,
-            notes="Current state",
-        )]
+        timeline = [
+            TimelinePoint(
+                date=date.today().isoformat(),
+                risk_score=current_score,
+                risk_level=_get_risk_level(current_score),
+                constraint_count=0,
+                notes="Current state",
+            )
+        ]
         trend = "stable"
     else:
         timeline = [
@@ -163,8 +174,12 @@ async def get_entity_timeline(
         entity_name=entity.name,
         timeline=timeline,
         trend=trend,
-        first_seen=entity.created_at.isoformat() if entity.created_at else date.today().isoformat(),
-        last_updated=entity.updated_at.isoformat() if entity.updated_at else date.today().isoformat(),
+        first_seen=entity.created_at.isoformat()
+        if entity.created_at
+        else date.today().isoformat(),
+        last_updated=entity.updated_at.isoformat()
+        if entity.updated_at
+        else date.today().isoformat(),
     )
 
 
@@ -183,14 +198,17 @@ async def create_snapshot(
 
     # Get all entities with risk scores
     result = await db.execute(
-        select(Entity, RiskScore).outerjoin(
-            RiskScore, and_(
+        select(Entity, RiskScore)
+        .outerjoin(
+            RiskScore,
+            and_(
                 Entity.id == RiskScore.entity_id,
                 RiskScore.tenant_id == tenant.id,
-            )
-        ).where(
+            ),
+        )
+        .where(
             Entity.tenant_id == tenant.id,
-            Entity.is_active == True,
+            Entity.is_active,
         )
     )
 
@@ -245,25 +263,28 @@ async def get_constraint_changes(
     cutoff = date.today() - timedelta(days=days)
 
     result = await db.execute(
-        select(ConstraintChange, Constraint.name).outerjoin(
-            Constraint, ConstraintChange.constraint_id == Constraint.id
-        ).where(
+        select(ConstraintChange, Constraint.name)
+        .outerjoin(Constraint, ConstraintChange.constraint_id == Constraint.id)
+        .where(
             ConstraintChange.tenant_id == tenant.id,
             ConstraintChange.change_date >= cutoff,
-        ).order_by(ConstraintChange.change_date.desc())
+        )
+        .order_by(ConstraintChange.change_date.desc())
     )
 
     changes = []
     for change, constraint_name in result:
-        changes.append(ConstraintChangeResponse(
-            id=change.id,
-            constraint_id=change.constraint_id,
-            constraint_name=constraint_name,
-            change_date=change.change_date.isoformat(),
-            change_type=change.change_type,
-            change_summary=change.change_summary,
-            entities_affected=change.entities_affected,
-        ))
+        changes.append(
+            ConstraintChangeResponse(
+                id=change.id,
+                constraint_id=change.constraint_id,
+                constraint_name=constraint_name,
+                change_date=change.change_date.isoformat(),
+                change_type=change.change_type,
+                change_summary=change.change_summary,
+                entities_affected=change.entities_affected,
+            )
+        )
 
     return changes
 
@@ -328,7 +349,9 @@ async def create_decision_outcome(
         outcome_success=None,
         lessons_learned=None,
         is_resolved=False,
-        created_at=decision.created_at.isoformat() if decision.created_at else datetime.utcnow().isoformat(),
+        created_at=decision.created_at.isoformat()
+        if decision.created_at
+        else datetime.utcnow().isoformat(),
     )
 
 
@@ -347,7 +370,7 @@ async def list_decisions(
     )
 
     if not include_resolved:
-        query = query.where(DecisionOutcome.is_resolved == False)
+        query = query.where(not DecisionOutcome.is_resolved)
 
     query = query.order_by(DecisionOutcome.decision_date.desc())
     query = query.offset((page - 1) * page_size).limit(page_size)
@@ -368,7 +391,9 @@ async def list_decisions(
                 outcome_success=d.outcome_success,
                 lessons_learned=d.lessons_learned,
                 is_resolved=d.is_resolved,
-                created_at=d.created_at.isoformat() if d.created_at else datetime.utcnow().isoformat(),
+                created_at=d.created_at.isoformat()
+                if d.created_at
+                else datetime.utcnow().isoformat(),
             )
             for d in decisions
         ],
@@ -414,12 +439,16 @@ async def record_decision_outcome(
         decision_summary=decision.decision_summary,
         decision_type=decision.decision_type,
         entities_involved=decision.entities_involved,
-        outcome_date=decision.outcome_date.isoformat() if decision.outcome_date else None,
+        outcome_date=decision.outcome_date.isoformat()
+        if decision.outcome_date
+        else None,
         outcome_summary=decision.outcome_summary,
         outcome_success=decision.outcome_success,
         lessons_learned=decision.lessons_learned,
         is_resolved=decision.is_resolved,
-        created_at=decision.created_at.isoformat() if decision.created_at else datetime.utcnow().isoformat(),
+        created_at=decision.created_at.isoformat()
+        if decision.created_at
+        else datetime.utcnow().isoformat(),
     )
 
 
@@ -432,16 +461,20 @@ async def generate_transition_report(
 ) -> Dict[str, Any]:
     """Generate a leadership transition report."""
     # Gather statistics for the period
-    stats = await _gather_period_statistics(db, tenant.id, data.period_start, data.period_end)
+    stats = await _gather_period_statistics(
+        db, tenant.id, data.period_start, data.period_end
+    )
 
     # Get high-risk entities
     high_risk_result = await db.execute(
-        select(Entity, RiskScore).join(
-            RiskScore, Entity.id == RiskScore.entity_id
-        ).where(
+        select(Entity, RiskScore)
+        .join(RiskScore, Entity.id == RiskScore.entity_id)
+        .where(
             Entity.tenant_id == tenant.id,
             RiskScore.score >= 60,
-        ).order_by(RiskScore.score.desc()).limit(10)
+        )
+        .order_by(RiskScore.score.desc())
+        .limit(10)
     )
     critical_entities = [
         {"id": str(e.id), "name": e.name, "risk_score": float(rs.score)}
@@ -452,7 +485,7 @@ async def generate_transition_report(
     pending_result = await db.execute(
         select(DecisionOutcome).where(
             DecisionOutcome.tenant_id == tenant.id,
-            DecisionOutcome.is_resolved == False,
+            not DecisionOutcome.is_resolved,
         )
     )
     pending = [
@@ -462,11 +495,14 @@ async def generate_transition_report(
 
     # Get recent lessons learned
     lessons_result = await db.execute(
-        select(DecisionOutcome).where(
+        select(DecisionOutcome)
+        .where(
             DecisionOutcome.tenant_id == tenant.id,
-            DecisionOutcome.is_resolved == True,
+            DecisionOutcome.is_resolved,
             DecisionOutcome.lessons_learned.isnot(None),
-        ).order_by(DecisionOutcome.outcome_date.desc()).limit(5)
+        )
+        .order_by(DecisionOutcome.outcome_date.desc())
+        .limit(5)
     )
     lessons = [
         {"decision": d.decision_summary, "lesson": d.lessons_learned}

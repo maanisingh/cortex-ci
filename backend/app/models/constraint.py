@@ -1,8 +1,8 @@
-from datetime import datetime, date, timezone
+from datetime import date
 from uuid import UUID, uuid4
 from typing import Optional, List
 from enum import Enum
-from sqlalchemy import String, Text, Date, DateTime, Enum as SQLEnum, Boolean, ForeignKey
+from sqlalchemy import String, Text, Date, Enum as SQLEnum, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB, ARRAY
 
@@ -11,7 +11,9 @@ from app.models.base import TimestampMixin, TenantMixin
 
 
 class ConstraintType(str, Enum):
-    """Types of internal constraints."""
+    """Types of internal constraints - comprehensive compliance categories."""
+
+    # Core Regulatory Categories
     POLICY = "policy"
     REGULATION = "regulation"
     COMPLIANCE = "compliance"
@@ -19,11 +21,44 @@ class ConstraintType(str, Enum):
     OPERATIONAL = "operational"
     FINANCIAL = "financial"
     SECURITY = "security"
+
+    # Trade & International
+    SANCTIONS = "sanctions"
+    EXPORT_CONTROL = "export_control"
+    TRADE_RESTRICTION = "trade_restriction"
+    IMPORT_REGULATION = "import_regulation"
+
+    # Data & Privacy
+    DATA_PRIVACY = "data_privacy"
+    DATA_PROTECTION = "data_protection"
+    GDPR = "gdpr"
+    CCPA = "ccpa"
+
+    # Industry-Specific
+    ENVIRONMENTAL = "environmental"
+    HEALTH_SAFETY = "health_safety"
+    LABOR = "labor"
+    ANTI_CORRUPTION = "anti_corruption"
+    AML = "aml"  # Anti-Money Laundering
+    KYC = "kyc"  # Know Your Customer
+
+    # Licensing & Certification
+    LICENSE = "license"
+    CERTIFICATION = "certification"
+    ACCREDITATION = "accreditation"
+
+    # AI/ML Specific
+    AI_GOVERNANCE = "ai_governance"
+    ALGORITHMIC_ACCOUNTABILITY = "algorithmic_accountability"
+    MODEL_RISK = "model_risk"
+
+    # Other
     CUSTOM = "custom"
 
 
 class ConstraintSeverity(str, Enum):
     """Severity levels for constraints."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"

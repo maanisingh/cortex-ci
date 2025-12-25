@@ -1,8 +1,7 @@
-from datetime import datetime, timezone
 from uuid import UUID, uuid4
 from typing import Optional, List
 from enum import Enum
-from sqlalchemy import String, Text, ForeignKey, Enum as SQLEnum
+from sqlalchemy import String, Text, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB, ARRAY
 
@@ -12,6 +11,7 @@ from app.models.base import TimestampMixin, TenantMixin
 
 class EntityType(str, Enum):
     """Types of entities that can be monitored."""
+
     ORGANIZATION = "ORGANIZATION"
     INDIVIDUAL = "INDIVIDUAL"
     LOCATION = "LOCATION"
@@ -48,11 +48,15 @@ class Entity(Base, TimestampMixin, TenantMixin):
 
     # Additional identifiers
     external_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    registration_number: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    registration_number: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
     tax_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
     # Location
-    country_code: Mapped[Optional[str]] = mapped_column(String(3), nullable=True, index=True)
+    country_code: Mapped[Optional[str]] = mapped_column(
+        String(3), nullable=True, index=True
+    )
     address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Classification
@@ -72,7 +76,9 @@ class Entity(Base, TimestampMixin, TenantMixin):
 
     # Relationships
     tenant = relationship("Tenant", back_populates="entities")
-    risk_scores = relationship("RiskScore", back_populates="entity", cascade="all, delete-orphan")
+    risk_scores = relationship(
+        "RiskScore", back_populates="entity", cascade="all, delete-orphan"
+    )
 
     # Dependencies (as source)
     outgoing_dependencies = relationship(

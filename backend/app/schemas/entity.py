@@ -8,6 +8,7 @@ from app.models.entity import EntityType
 
 class EntityBase(BaseModel):
     """Base entity schema."""
+
     type: EntityType
     name: str = Field(..., min_length=1, max_length=500)
     aliases: List[str] = []
@@ -25,11 +26,13 @@ class EntityBase(BaseModel):
 
 class EntityCreate(EntityBase):
     """Entity creation schema."""
+
     pass
 
 
 class EntityUpdate(BaseModel):
     """Entity update schema."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=500)
     aliases: Optional[List[str]] = None
     external_id: Optional[str] = None
@@ -48,6 +51,7 @@ class EntityUpdate(BaseModel):
 
 class EntityResponse(EntityBase):
     """Entity response schema."""
+
     id: UUID
     tenant_id: UUID
     is_active: bool
@@ -61,6 +65,7 @@ class EntityResponse(EntityBase):
 
 class EntityListResponse(BaseModel):
     """Paginated entity list response."""
+
     items: List[EntityResponse]
     total: int
     page: int
@@ -70,6 +75,7 @@ class EntityListResponse(BaseModel):
 
 class EntityScreenRequest(BaseModel):
     """Request to screen an entity or list of entities."""
+
     entity_ids: Optional[List[UUID]] = None  # Screen specific entities
     name: Optional[str] = None  # Screen a name (without creating entity)
     aliases: List[str] = []
@@ -77,12 +83,14 @@ class EntityScreenRequest(BaseModel):
 
 class EntityBulkImportRequest(BaseModel):
     """Bulk import request."""
+
     entities: List[EntityCreate]
     skip_duplicates: bool = True
 
 
 class EntityBulkImportResponse(BaseModel):
     """Bulk import response."""
+
     imported: int
     skipped: int
     errors: List[Dict[str, Any]]

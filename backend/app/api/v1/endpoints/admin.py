@@ -8,13 +8,14 @@ from app.models import Tenant, User, AuditLog, AuditAction
 from app.schemas.tenant import TenantCreate, TenantUpdate, TenantResponse
 from app.schemas.user import UserCreate, UserUpdate, UserResponse, UserListResponse
 from app.core.security import hash_password, Role
-from app.api.v1.deps import DB, CurrentUser, CurrentTenant, RequireAdmin
+from app.api.v1.deps import DB, CurrentTenant, RequireAdmin
 
 
 router = APIRouter()
 
 
 # Tenant Management
+
 
 @router.get("/tenants", response_model=List[TenantResponse])
 async def list_tenants(
@@ -25,7 +26,7 @@ async def list_tenants(
     """List all tenants (super admin only)."""
     query = select(Tenant)
     if not include_inactive:
-        query = query.where(Tenant.is_active == True)
+        query = query.where(Tenant.is_active)
 
     result = await db.execute(query.order_by(Tenant.created_at.desc()))
     tenants = result.scalars().all()
@@ -33,7 +34,9 @@ async def list_tenants(
     return tenants
 
 
-@router.post("/tenants", response_model=TenantResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/tenants", response_model=TenantResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_tenant(
     tenant_data: TenantCreate,
     db: DB,
@@ -41,9 +44,7 @@ async def create_tenant(
 ):
     """Create a new tenant."""
     # Check if slug already exists
-    result = await db.execute(
-        select(Tenant).where(Tenant.slug == tenant_data.slug)
-    )
+    result = await db.execute(select(Tenant).where(Tenant.slug == tenant_data.slug))
     if result.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -80,9 +81,7 @@ async def get_tenant(
     current_user: RequireAdmin,
 ):
     """Get a specific tenant."""
-    result = await db.execute(
-        select(Tenant).where(Tenant.id == tenant_id)
-    )
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
     tenant = result.scalar_one_or_none()
 
     if not tenant:
@@ -102,9 +101,7 @@ async def update_tenant(
     current_user: RequireAdmin,
 ):
     """Update a tenant."""
-    result = await db.execute(
-        select(Tenant).where(Tenant.id == tenant_id)
-    )
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
     tenant = result.scalar_one_or_none()
 
     if not tenant:
@@ -141,6 +138,7 @@ async def update_tenant(
 
 
 # User Management
+
 
 @router.get("/users", response_model=UserListResponse)
 async def list_users(
@@ -377,6 +375,7 @@ async def deactivate_user(
 
 
 # System Settings
+
 
 @router.get("/settings")
 async def get_tenant_settings(

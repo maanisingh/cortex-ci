@@ -1,13 +1,14 @@
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from uuid import UUID
-from pydantic import BaseModel, field_validator, field_serializer
+from pydantic import BaseModel, field_serializer
 
 from app.models.audit import AuditAction
 
 
 class AuditLogResponse(BaseModel):
     """Audit log entry response schema."""
+
     id: UUID
     tenant_id: UUID
     created_at: datetime
@@ -27,7 +28,7 @@ class AuditLogResponse(BaseModel):
     success: bool
     error_message: Optional[str] = None
 
-    @field_serializer('ip_address')
+    @field_serializer("ip_address")
     def serialize_ip(self, v):
         return str(v) if v else None
 
@@ -37,6 +38,7 @@ class AuditLogResponse(BaseModel):
 
 class AuditLogListResponse(BaseModel):
     """Paginated audit log list response."""
+
     items: List[AuditLogResponse]
     total: int
     page: int
@@ -46,6 +48,7 @@ class AuditLogListResponse(BaseModel):
 
 class AuditLogSearchRequest(BaseModel):
     """Search audit logs."""
+
     user_id: Optional[UUID] = None
     actions: Optional[List[AuditAction]] = None
     resource_type: Optional[str] = None
@@ -57,6 +60,7 @@ class AuditLogSearchRequest(BaseModel):
 
 class AuditExportRequest(BaseModel):
     """Request to export audit logs."""
+
     start_date: datetime
     end_date: datetime
     actions: Optional[List[AuditAction]] = None
@@ -65,6 +69,7 @@ class AuditExportRequest(BaseModel):
 
 class AuditExportResponse(BaseModel):
     """Audit export response."""
+
     export_id: str
     status: str
     download_url: Optional[str] = None

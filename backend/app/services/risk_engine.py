@@ -1,14 +1,11 @@
-from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from uuid import UUID
 import structlog
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select
 
-from app.models import (
-    Entity, Constraint, Dependency, RiskScore, RiskLevel, Tenant
-)
+from app.models import Entity, Constraint, Dependency, RiskScore, Tenant
 
 logger = structlog.get_logger()
 
@@ -54,7 +51,7 @@ class RiskEngine:
         result = await self.db.execute(
             select(Entity.id).where(
                 Entity.tenant_id == self.tenant.id,
-                Entity.is_active == True,
+                Entity.is_active,
             )
         )
         entity_ids = [row[0] for row in result.all()]
@@ -64,9 +61,7 @@ class RiskEngine:
     async def _calculate_entity_risk(self, entity_id: UUID) -> RiskScore:
         """Calculate risk score for a single entity."""
         # Get entity
-        result = await self.db.execute(
-            select(Entity).where(Entity.id == entity_id)
-        )
+        result = await self.db.execute(select(Entity).where(Entity.id == entity_id))
         entity = result.scalar_one_or_none()
 
         if not entity:
@@ -92,10 +87,10 @@ class RiskEngine:
 
         # Weighted total
         total_score = (
-            self.weights.get("direct_match", 0.4) * direct_score +
-            self.weights.get("indirect_match", 0.25) * indirect_score +
-            self.weights.get("country_risk", 0.2) * country_score +
-            self.weights.get("dependency", 0.15) * dependency_score
+            self.weights.get("direct_match", 0.4) * direct_score
+            + self.weights.get("indirect_match", 0.25) * indirect_score
+            + self.weights.get("country_risk", 0.2) * country_score
+            + self.weights.get("dependency", 0.15) * dependency_score
         )
 
         # Normalize to 0-100
@@ -141,10 +136,9 @@ class RiskEngine:
         """Calculate score based on constraint compliance status."""
         # Get constraints applicable to this entity type
         result = await self.db.execute(
-            select(Constraint)
-            .where(
+            select(Constraint).where(
                 Constraint.tenant_id == self.tenant.id,
-                Constraint.is_active == True,
+                Constraint.is_active,
             )
         )
         constraints = result.scalars().all()
@@ -156,7 +150,10 @@ class RiskEngine:
         score = 0.0
         for constraint in constraints:
             # Check if entity type matches constraint applicability
-            if constraint.applies_to_entity_types and entity.type.value in constraint.applies_to_entity_types:
+            if (
+                constraint.applies_to_entity_types
+                and entity.type.value in constraint.applies_to_entity_types
+            ):
                 severity_weights = {"low": 10, "medium": 25, "high": 50, "critical": 75}
                 score += severity_weights.get(constraint.severity.value, 25)
 
@@ -167,12 +164,11 @@ class RiskEngine:
         """Calculate score based on connections to high-risk entities."""
         # Get connected entities via dependencies
         result = await self.db.execute(
-            select(Dependency)
-            .where(
+            select(Dependency).where(
                 Dependency.tenant_id == self.tenant.id,
-                Dependency.is_active == True,
-                (Dependency.source_entity_id == entity.id) |
-                (Dependency.target_entity_id == entity.id),
+                Dependency.is_active,
+                (Dependency.source_entity_id == entity.id)
+                | (Dependency.target_entity_id == entity.id),
             )
         )
         dependencies = result.scalars().all()
@@ -221,10 +217,9 @@ class RiskEngine:
         """Calculate score based on dependency criticality."""
         # Get dependencies where entity is critical
         result = await self.db.execute(
-            select(Dependency)
-            .where(
+            select(Dependency).where(
                 Dependency.tenant_id == self.tenant.id,
-                Dependency.is_active == True,
+                Dependency.is_active,
                 Dependency.source_entity_id == entity.id,
                 Dependency.criticality >= 4,  # High criticality
             )

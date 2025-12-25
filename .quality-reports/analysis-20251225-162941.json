@@ -1,0 +1,2013 @@
+{
+  "project": "/root/cortex-ci",
+  "timestamp": "2025-12-25T16:29:41+00:00",
+  "issues": [
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/deps.py",
+      "line": "39",
+      "message": " Avoid equality comparisons to `True`; use `Tenant.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/deps.py",
+      "line": "55",
+      "message": " Avoid equality comparisons to `True`; use `Tenant.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/deps.py",
+      "line": "66",
+      "message": " Avoid equality comparisons to `True`; use `Tenant.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/deps.py",
+      "line": "109",
+      "message": " Avoid equality comparisons to `True`; use `User.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/admin.py",
+      "line": "11",
+      "message": " `app.api.v1.deps.CurrentUser` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/admin.py",
+      "line": "28",
+      "message": " Avoid equality comparisons to `True`; use `Tenant.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/ai_analysis.py",
+      "line": "6",
+      "message": " `random` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/ai_analysis.py",
+      "line": "334",
+      "message": " Avoid equality comparisons to `False`; use `not AnomalyDetection.is_reviewed:` for false checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/ai_analysis.py",
+      "line": "592",
+      "message": " Avoid equality comparisons to `True`; use `Dependency.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/audit.py",
+      "line": "129",
+      "message": " Avoid equality comparisons to `True`; use `AuditLog.success:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/auth.py",
+      "line": "1",
+      "message": " `datetime.timezone` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/auth.py",
+      "line": "3",
+      "message": " `typing.Optional` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/auth.py",
+      "line": "6",
+      "message": " `sqlalchemy.ext.asyncio.AsyncSession` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/auth.py",
+      "line": "9",
+      "message": " `app.core.database.get_db` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/auth.py",
+      "line": "40",
+      "message": " Avoid equality comparisons to `True`; use `Tenant.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/auth.py",
+      "line": "61",
+      "message": " Avoid equality comparisons to `True`; use `User.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/auth.py",
+      "line": "98",
+      "message": " f-string without any placeholders ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/auth.py",
+      "line": "183",
+      "message": " Avoid equality comparisons to `True`; use `User.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/constraints.py",
+      "line": "2",
+      "message": " `typing.List` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/constraints.py",
+      "line": "89",
+      "message": " Avoid equality comparisons to `True`; use `Constraint.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/dashboard.py",
+      "line": "1",
+      "message": " `typing.List` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/dashboard.py",
+      "line": "5",
+      "message": " `sqlalchemy.and_` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/dashboard.py",
+      "line": "28",
+      "message": " Avoid equality comparisons to `True`; use `Entity.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/dashboard.py",
+      "line": "43",
+      "message": " Avoid equality comparisons to `True`; use `Constraint.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/dashboard.py",
+      "line": "55",
+      "message": " Avoid equality comparisons to `True`; use `Dependency.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/dashboard.py",
+      "line": "79",
+      "message": " Avoid equality comparisons to `True`; use `Constraint.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/dependencies.py",
+      "line": "1",
+      "message": " `typing.List` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/dependencies.py",
+      "line": "5",
+      "message": " `sqlalchemy.and_` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/dependencies.py",
+      "line": "6",
+      "message": " `sqlalchemy.orm.selectinload` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/dependencies.py",
+      "line": "8",
+      "message": " `app.models.RelationshipType` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/dependencies.py",
+      "line": "85",
+      "message": " Avoid equality comparisons to `True`; use `Dependency.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/dependencies.py",
+      "line": "336",
+      "message": " Avoid equality comparisons to `True`; use `Dependency.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/dependencies.py",
+      "line": "395",
+      "message": " Avoid equality comparisons to `True`; use `Dependency.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/dependencies.py",
+      "line": "404",
+      "message": " Avoid equality comparisons to `True`; use `Dependency.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/entities.py",
+      "line": "1",
+      "message": " `typing.List` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/entities.py",
+      "line": "6",
+      "message": " `sqlalchemy.orm.selectinload` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/history.py",
+      "line": "7",
+      "message": " `fastapi.status` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/history.py",
+      "line": "8",
+      "message": " `pydantic.Field` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/history.py",
+      "line": "13",
+      "message": " `app.models.Dependency` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/history.py",
+      "line": "193",
+      "message": " Avoid equality comparisons to `True`; use `Entity.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/history.py",
+      "line": "350",
+      "message": " Avoid equality comparisons to `False`; use `not DecisionOutcome.is_resolved:` for false checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/history.py",
+      "line": "455",
+      "message": " Avoid equality comparisons to `False`; use `not DecisionOutcome.is_resolved:` for false checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/history.py",
+      "line": "467",
+      "message": " Avoid equality comparisons to `True`; use `DecisionOutcome.is_resolved:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "5",
+      "message": " `datetime.timedelta` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "8",
+      "message": " `sqlalchemy.func` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "13",
+      "message": " `app.models.entity.Entity` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "14",
+      "message": " `app.models.constraint.Constraint` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "15",
+      "message": " `app.models.dependency.Dependency` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "16",
+      "message": " `app.models.risk.RiskScore` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "17",
+      "message": " `app.models.audit.AuditLog` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "18",
+      "message": " `app.models.scenario_chain.ScenarioChain` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "19",
+      "message": " `app.models.ai_analysis.AIAnalysis` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "19",
+      "message": " `app.models.ai_analysis.AnomalyDetection` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "120",
+      "message": " Do not use bare `except` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "133",
+      "message": " Do not use bare `except` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "142",
+      "message": " Do not use bare `except` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "151",
+      "message": " Do not use bare `except` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "231",
+      "message": " Do not use bare `except` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/monitoring.py",
+      "line": "254",
+      "message": " Do not use bare `except` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/risk_justification.py",
+      "line": "7",
+      "message": " `fastapi.status` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/risk_justification.py",
+      "line": "8",
+      "message": " `fastapi.responses.JSONResponse` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/risk_justification.py",
+      "line": "10",
+      "message": " `sqlalchemy.func` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/risk_justification.py",
+      "line": "13",
+      "message": " `app.models.Constraint` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/risk_justification.py",
+      "line": "351",
+      "message": " f-string without any placeholders ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/risk_justification.py",
+      "line": "358",
+      "message": " f-string without any placeholders ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/risks.py",
+      "line": "1",
+      "message": " `typing.Optional` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/risks.py",
+      "line": "8",
+      "message": " `app.models.Entity` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/risks.py",
+      "line": "62",
+      "message": " Local variable `thirty_days_ago` is assigned to but never used ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/scenario_chains.py",
+      "line": "8",
+      "message": " `pydantic.Field` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/scenario_chains.py",
+      "line": "9",
+      "message": " `sqlalchemy.func` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/scenario_chains.py",
+      "line": "10",
+      "message": " `sqlalchemy.orm.selectinload` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/scenario_chains.py",
+      "line": "14",
+      "message": " `app.models.RiskScore` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/scenario_chains.py",
+      "line": "101",
+      "message": " Avoid equality comparisons to `True`; use `ScenarioChain.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/scenario_chains.py",
+      "line": "347",
+      "message": " Avoid equality comparisons to `True`; use `Dependency.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/api/v1/endpoints/scenarios.py",
+      "line": "1",
+      "message": " `typing.List` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/core/config.py",
+      "line": "3",
+      "message": " `typing.Optional` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/core/security.py",
+      "line": "2",
+      "message": " `typing.Any` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/ai_analysis.py",
+      "line": "2",
+      "message": " `datetime.timezone` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/ai_analysis.py",
+      "line": "97",
+      "message": " Undefined name `User` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/ai_analysis.py",
+      "line": "100",
+      "message": " Undefined name `User` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/ai_analysis.py",
+      "line": "217",
+      "message": " Undefined name `Entity` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/ai_analysis.py",
+      "line": "219",
+      "message": " Undefined name `User` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/base.py",
+      "line": "2",
+      "message": " `uuid.uuid4` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/constraint.py",
+      "line": "1",
+      "message": " `datetime.datetime` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/constraint.py",
+      "line": "1",
+      "message": " `datetime.timezone` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/constraint.py",
+      "line": "5",
+      "message": " `sqlalchemy.DateTime` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/dependency.py",
+      "line": "1",
+      "message": " `datetime.datetime` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/dependency.py",
+      "line": "1",
+      "message": " `datetime.timezone` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/dependency.py",
+      "line": "5",
+      "message": " `sqlalchemy.String` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/entity.py",
+      "line": "1",
+      "message": " `datetime.datetime` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/entity.py",
+      "line": "1",
+      "message": " `datetime.timezone` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/entity.py",
+      "line": "5",
+      "message": " `sqlalchemy.ForeignKey` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/historical.py",
+      "line": "2",
+      "message": " `datetime.datetime` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/historical.py",
+      "line": "2",
+      "message": " `datetime.timezone` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/historical.py",
+      "line": "4",
+      "message": " `typing.List` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/historical.py",
+      "line": "7",
+      "message": " `sqlalchemy.Enum` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/historical.py",
+      "line": "9",
+      "message": " `sqlalchemy.dialects.postgresql.ARRAY` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/historical.py",
+      "line": "56",
+      "message": " Undefined name `Entity` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/historical.py",
+      "line": "104",
+      "message": " Undefined name `User` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/historical.py",
+      "line": "148",
+      "message": " Undefined name `Constraint` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/historical.py",
+      "line": "149",
+      "message": " Undefined name `User` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/historical.py",
+      "line": "190",
+      "message": " Undefined name `User` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/risk_justification.py",
+      "line": "2",
+      "message": " `datetime.timezone` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/risk_justification.py",
+      "line": "4",
+      "message": " `typing.List` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/risk_justification.py",
+      "line": "7",
+      "message": " `sqlalchemy.Enum` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/risk_justification.py",
+      "line": "79",
+      "message": " Undefined name `Entity` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/risk_justification.py",
+      "line": "80",
+      "message": " Undefined name `RiskScore` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/scenario.py",
+      "line": "1",
+      "message": " `datetime.timezone` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/scenario_chain.py",
+      "line": "2",
+      "message": " `datetime.timezone` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/scenario_chain.py",
+      "line": "10",
+      "message": " `sqlalchemy.dialects.postgresql.JSONB` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/scenario_chain.py",
+      "line": "10",
+      "message": " `sqlalchemy.dialects.postgresql.ARRAY` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/scenario_chain.py",
+      "line": "132",
+      "message": " Undefined name `Entity` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/tenant.py",
+      "line": "1",
+      "message": " `datetime.datetime` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/tenant.py",
+      "line": "1",
+      "message": " `datetime.timezone` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/user.py",
+      "line": "1",
+      "message": " `datetime.timezone` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/user.py",
+      "line": "4",
+      "message": " `sqlalchemy.ForeignKey` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/models/user.py",
+      "line": "4",
+      "message": " `sqlalchemy.Text` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/schemas/audit.py",
+      "line": "4",
+      "message": " `pydantic.field_validator` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/schemas/auth.py",
+      "line": "3",
+      "message": " `uuid.UUID` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/risk_engine.py",
+      "line": "1",
+      "message": " `datetime.datetime` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/risk_engine.py",
+      "line": "1",
+      "message": " `datetime.timezone` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/risk_engine.py",
+      "line": "2",
+      "message": " `typing.Optional` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/risk_engine.py",
+      "line": "7",
+      "message": " `sqlalchemy.func` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/risk_engine.py",
+      "line": "10",
+      "message": " `app.models.RiskLevel` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/risk_engine.py",
+      "line": "57",
+      "message": " Avoid equality comparisons to `True`; use `Entity.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/risk_engine.py",
+      "line": "147",
+      "message": " Avoid equality comparisons to `True`; use `Constraint.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/risk_engine.py",
+      "line": "173",
+      "message": " Avoid equality comparisons to `True`; use `Dependency.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/risk_engine.py",
+      "line": "227",
+      "message": " Avoid equality comparisons to `True`; use `Dependency.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/scenario_simulator.py",
+      "line": "2",
+      "message": " `typing.Optional` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/scenario_simulator.py",
+      "line": "10",
+      "message": " `app.models.Constraint` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/scenario_simulator.py",
+      "line": "12",
+      "message": " `app.services.risk_engine.RiskEngine` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/scenario_simulator.py",
+      "line": "84",
+      "message": " Avoid equality comparisons to `True`; use `Entity.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/scenario_simulator.py",
+      "line": "141",
+      "message": " Avoid equality comparisons to `True`; use `Dependency.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/scenario_simulator.py",
+      "line": "205",
+      "message": " Avoid equality comparisons to `True`; use `Entity.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/scenario_simulator.py",
+      "line": "228",
+      "message": " Avoid equality comparisons to `True`; use `Dependency.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/scenario_simulator.py",
+      "line": "287",
+      "message": " Avoid equality comparisons to `True`; use `Dependency.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/app/services/scenario_simulator.py",
+      "line": "361",
+      "message": " Avoid equality comparisons to `True`; use `Dependency.is_active:` for truth checks ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/calculate_risk_scores.py",
+      "line": "14",
+      "message": " `datetime.datetime` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/import_sanctions_data.py",
+      "line": "20",
+      "message": " `datetime.datetime` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/import_sanctions_data.py",
+      "line": "20",
+      "message": " `datetime.date` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/import_sanctions_data.py",
+      "line": "23",
+      "message": " `uuid.UUID` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/import_sanctions_data.py",
+      "line": "280",
+      "message": " f-string without any placeholders ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/import_sanctions_data.py",
+      "line": "308",
+      "message": " f-string without any placeholders ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/import_via_sql.py",
+      "line": "12",
+      "message": " `datetime.datetime` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/import_via_sql.py",
+      "line": "267",
+      "message": " Do not use bare `except` ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/populate_data.py",
+      "line": "5",
+      "message": " `json` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/populate_data.py",
+      "line": "6",
+      "message": " `datetime.datetime` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/populate_data.py",
+      "line": "6",
+      "message": " `datetime.timedelta` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/populate_data.py",
+      "line": "7",
+      "message": " `random` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/populate_data.py",
+      "line": "35",
+      "message": " f-string without any placeholders ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/sync_sanctions.py",
+      "line": "15",
+      "message": " `os` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "ruff",
+      "type": "lint",
+      "file": "/root/cortex-ci/backend/sync_sanctions.py",
+      "line": "16",
+      "message": " `sys` imported but unused ",
+      "context": " ",
+      "suggestion": "Run: ruff check --fix "
+    },
+    {
+      "tool": "vulture",
+      "type": "dead_code",
+      "file": "backend/app/api/v1/endpoints/ai_analysis.py",
+      "line": "6",
+      "message": " unused import 'random' (90% confidence) ",
+      "context": "Found references: ./backend/app/api/v1/endpoints/ai_analysis.py:6:import random ./backend/alembic/versions/001_initial_schema.py:36:        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text('gen_random_uuid()')), ./backend/alembic/versions/001_initial_schema.py:49:        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text('gen_random_uuid()')), ./backend/alembic/versions/001_initial_schema.py:66:        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text('gen_random_uuid()')), ./backend/alembic/versions/001_initial_schema.py:89:        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text('gen_random_uuid()')), ",
+      "suggestion": "Verify if intentionally unused or remove "
+    },
+    {
+      "tool": "vulture",
+      "type": "dead_code",
+      "file": "backend/app/api/v1/endpoints/dependencies.py",
+      "line": "6",
+      "message": " unused import 'selectinload' (90% confidence) ",
+      "context": "Found references: ./backend/app/api/v1/endpoints/scenario_chains.py:10:from sqlalchemy.orm import selectinload ./backend/app/api/v1/endpoints/dependencies.py:6:from sqlalchemy.orm import selectinload ./backend/app/api/v1/endpoints/entities.py:6:from sqlalchemy.orm import selectinload ",
+      "suggestion": "Verify if intentionally unused or remove "
+    },
+    {
+      "tool": "vulture",
+      "type": "dead_code",
+      "file": "backend/app/api/v1/endpoints/entities.py",
+      "line": "6",
+      "message": " unused import 'selectinload' (90% confidence) ",
+      "context": "Found references: ./backend/app/api/v1/endpoints/scenario_chains.py:10:from sqlalchemy.orm import selectinload ./backend/app/api/v1/endpoints/dependencies.py:6:from sqlalchemy.orm import selectinload ./backend/app/api/v1/endpoints/entities.py:6:from sqlalchemy.orm import selectinload ",
+      "suggestion": "Verify if intentionally unused or remove "
+    },
+    {
+      "tool": "vulture",
+      "type": "dead_code",
+      "file": "backend/app/api/v1/endpoints/monitoring.py",
+      "line": "182",
+      "message": " unused variable 'acknowledged' (100% confidence) ",
+      "context": "Found references: ./backend/app/api/v1/endpoints/monitoring.py:52:    is_acknowledged: bool = False ./backend/app/api/v1/endpoints/monitoring.py:58:    unacknowledged_count: int ./backend/app/api/v1/endpoints/monitoring.py:182:    acknowledged: Optional[bool] = None, ./backend/app/api/v1/endpoints/monitoring.py:208:                is_acknowledged=False ./backend/app/api/v1/endpoints/monitoring.py:229:                    is_acknowledged=False ",
+      "suggestion": "Verify if intentionally unused or remove "
+    },
+    {
+      "tool": "vulture",
+      "type": "dead_code",
+      "file": "backend/app/api/v1/endpoints/risk_justification.py",
+      "line": "8",
+      "message": " unused import 'JSONResponse' (90% confidence) ",
+      "context": "Found references: ./backend/app/api/v1/endpoints/risk_justification.py:8:from fastapi.responses import JSONResponse ",
+      "suggestion": "Verify if intentionally unused or remove "
+    },
+    {
+      "tool": "vulture",
+      "type": "dead_code",
+      "file": "backend/app/api/v1/endpoints/scenario_chains.py",
+      "line": "10",
+      "message": " unused import 'selectinload' (90% confidence) ",
+      "context": "Found references: ./backend/app/api/v1/endpoints/scenario_chains.py:10:from sqlalchemy.orm import selectinload ./backend/app/api/v1/endpoints/dependencies.py:6:from sqlalchemy.orm import selectinload ./backend/app/api/v1/endpoints/entities.py:6:from sqlalchemy.orm import selectinload ",
+      "suggestion": "Verify if intentionally unused or remove "
+    },
+    {
+      "tool": "vulture",
+      "type": "dead_code",
+      "file": "backend/app/schemas/audit.py",
+      "line": "4",
+      "message": " unused import 'field_validator' (90% confidence) ",
+      "context": "Found references: ./backend/app/schemas/audit.py:4:from pydantic import BaseModel, field_validator, field_serializer ",
+      "suggestion": "Verify if intentionally unused or remove "
+    },
+    {
+      "tool": "vulture",
+      "type": "dead_code",
+      "file": "backend/populate_data.py",
+      "line": "7",
+      "message": " unused import 'random' (90% confidence) ",
+      "context": "Found references: ./backend/app/api/v1/endpoints/ai_analysis.py:6:import random ./backend/alembic/versions/001_initial_schema.py:36:        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text('gen_random_uuid()')), ./backend/alembic/versions/001_initial_schema.py:49:        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text('gen_random_uuid()')), ./backend/alembic/versions/001_initial_schema.py:66:        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text('gen_random_uuid()')), ./backend/alembic/versions/001_initial_schema.py:89:        sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text('gen_random_uuid()')), ",
+      "suggestion": "Verify if intentionally unused or remove "
+    },
+    {
+      "tool": "vulture",
+      "type": "dead_code",
+      "file": "backend/sync_sanctions.py",
+      "line": "15",
+      "message": " unused import 'os' (90% confidence) ",
+      "context": "Found references: ./frontend/node_modules/flatted/python/flatted.py:6:# purpose with or without fee is hereby granted, provided that the above ./backend/app/services/risk_engine.py:284:                f\\\"Critical dependency exposure (score: {dependency:.1f})\\\" ./backend/app/services/scenario_simulator.py:258:                \\\"Assess financial exposure and payment corridors\\\", ./backend/app/services/scenario_simulator.py:314:            \\\"summary\\\": f\\\"Loss of supplier {supplier.name} would affect {len(impacted)} dependent entities\\\", ./backend/app/services/scenario_simulator.py:409:            recommendations.append(\\\"Review financial exposure and payment alternatives\\\") ",
+      "suggestion": "Verify if intentionally unused or remove "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/import_sanctions_data.py",
+      "line": "34 - Cannot import from app.core.config",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/import_sanctions_data.py",
+      "line": "35 - Cannot import from app.models",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/services/risk_engine.py",
+      "line": "9 - Cannot import from app.models",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/services/scenario_simulator.py",
+      "line": "9 - Cannot import from app.models",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/services/scenario_simulator.py",
+      "line": "12 - Cannot import from app.services.risk_engine",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/audit.py",
+      "line": "6 - Cannot import from app.models.audit",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/risk.py",
+      "line": "6 - Cannot import from app.models.risk",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/constraint.py",
+      "line": "6 - Cannot import from app.models.constraint",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/scenario.py",
+      "line": "6 - Cannot import from app.models.scenario",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/dependency.py",
+      "line": "6 - Cannot import from app.models.dependency",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "1 - Cannot import from app.schemas.auth",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "9 - Cannot import from app.schemas.user",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "10 - Cannot import from app.schemas.tenant",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "11 - Cannot import from app.schemas.entity",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "12 - Cannot import from app.schemas.constraint",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "13 - Cannot import from app.schemas.dependency",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "14 - Cannot import from app.schemas.risk",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "15 - Cannot import from app.schemas.scenario",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "16 - Cannot import from app.schemas.audit",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/entity.py",
+      "line": "6 - Cannot import from app.models.entity",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/scenario_chain.py",
+      "line": "12 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/scenario_chain.py",
+      "line": "13 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/audit.py",
+      "line": "9 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/audit.py",
+      "line": "10 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/risk.py",
+      "line": "9 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/risk.py",
+      "line": "10 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/tenant.py",
+      "line": "8 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/tenant.py",
+      "line": "9 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/risk_justification.py",
+      "line": "11 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/risk_justification.py",
+      "line": "12 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/constraint.py",
+      "line": "9 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/constraint.py",
+      "line": "10 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/scenario.py",
+      "line": "9 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/scenario.py",
+      "line": "10 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/user.py",
+      "line": "8 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/user.py",
+      "line": "9 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/user.py",
+      "line": "10 - Cannot import from app.core.security",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/dependency.py",
+      "line": "9 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/dependency.py",
+      "line": "10 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "1 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "2 - Cannot import from app.models.tenant",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "3 - Cannot import from app.models.user",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "4 - Cannot import from app.models.entity",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "5 - Cannot import from app.models.constraint",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "6 - Cannot import from app.models.dependency",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "7 - Cannot import from app.models.risk",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "8 - Cannot import from app.models.scenario",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "9 - Cannot import from app.models.audit",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "12 - Cannot import from app.models.scenario_chain",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "13 - Cannot import from app.models.risk_justification",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "14 - Cannot import from app.models.historical",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "20 - Cannot import from app.models.ai_analysis",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/entity.py",
+      "line": "9 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/entity.py",
+      "line": "10 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/ai_analysis.py",
+      "line": "12 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/ai_analysis.py",
+      "line": "13 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/historical.py",
+      "line": "11 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/historical.py",
+      "line": "12 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/core/security.py",
+      "line": "9 - Cannot import from app.core.config",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/core/database.py",
+      "line": "6 - Cannot import from app.core.config",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/alembic/env.py",
+      "line": "10 - Cannot import from app.core.config",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/alembic/env.py",
+      "line": "11 - Cannot import from app.models",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    }
+  ]
+}

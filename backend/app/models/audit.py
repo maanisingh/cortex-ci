@@ -12,12 +12,25 @@ from app.models.base import TenantMixin
 
 class AuditAction(str, Enum):
     """Types of auditable actions."""
+
     # Auth
     LOGIN = "login"
     LOGOUT = "logout"
     LOGIN_FAILED = "login_failed"
     PASSWORD_CHANGE = "password_change"
     TOKEN_REFRESH = "token_refresh"
+
+    # MFA (Phase 3 Security)
+    MFA_REQUIRED = "mfa_required"
+    MFA_VERIFIED = "mfa_verified"
+    MFA_FAILED = "mfa_failed"
+    MFA_SETUP_STARTED = "mfa_setup_started"
+    MFA_SETUP_FAILED = "mfa_setup_failed"
+    MFA_ENABLED = "mfa_enabled"
+    MFA_DISABLED = "mfa_disabled"
+    MFA_DISABLE_FAILED = "mfa_disable_failed"
+    MFA_BACKUP_USED = "mfa_backup_used"
+    MFA_BACKUP_REGENERATED = "mfa_backup_regenerated"
 
     # CRUD
     CREATE = "create"
@@ -91,7 +104,9 @@ class AuditLog(Base, TenantMixin):
     action: Mapped[AuditAction] = mapped_column(
         SQLEnum(AuditAction), nullable=False, index=True
     )
-    resource_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+    resource_type: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True, index=True
+    )
     resource_id: Mapped[Optional[UUID]] = mapped_column(
         PGUUID(as_uuid=True), nullable=True
     )
@@ -119,6 +134,8 @@ class AuditLog(Base, TenantMixin):
     user = relationship("User", foreign_keys=[user_id])
 
     def __repr__(self) -> str:
-        return f"<AuditLog {self.action.value} by {self.user_email} at {self.created_at}>"
+        return (
+            f"<AuditLog {self.action.value} by {self.user_email} at {self.created_at}>"
+        )
 
     # Note: This table is append-only. No updates or deletes should ever be performed.

@@ -1,11 +1,10 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, Dict, Any
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status, Query
-from sqlalchemy import select, func, or_, and_
-from sqlalchemy.orm import selectinload
+from sqlalchemy import select, func, or_
 
-from app.models import Dependency, DependencyLayer, RelationshipType, Entity, AuditLog, AuditAction
+from app.models import Dependency, DependencyLayer, Entity, AuditLog, AuditAction
 from app.schemas.dependency import (
     DependencyCreate,
     DependencyUpdate,
@@ -82,7 +81,7 @@ async def get_dependency_graph(
     # Get all relevant dependencies
     query = select(Dependency).where(
         Dependency.tenant_id == tenant.id,
-        Dependency.is_active == True,
+        Dependency.is_active,
     )
 
     if layer:
@@ -98,37 +97,39 @@ async def get_dependency_graph(
         entity_ids.add(dep.target_entity_id)
 
     # Get entity details
-    entity_result = await db.execute(
-        select(Entity).where(Entity.id.in_(entity_ids))
-    )
+    entity_result = await db.execute(select(Entity).where(Entity.id.in_(entity_ids)))
     entities = {e.id: e for e in entity_result.scalars().all()}
 
     # Build nodes
     nodes = []
     for entity_id, entity in entities.items():
-        nodes.append(DependencyGraphNode(
-            id=str(entity_id),
-            label=entity.name,
-            type=entity.type.value,
-            criticality=entity.criticality,
-            metadata={
-                "country": entity.country_code,
-                "category": entity.category,
-            },
-        ))
+        nodes.append(
+            DependencyGraphNode(
+                id=str(entity_id),
+                label=entity.name,
+                type=entity.type.value,
+                criticality=entity.criticality,
+                metadata={
+                    "country": entity.country_code,
+                    "category": entity.category,
+                },
+            )
+        )
 
     # Build edges
     edges = []
     for dep in dependencies:
-        edges.append(DependencyGraphEdge(
-            id=str(dep.id),
-            source=str(dep.source_entity_id),
-            target=str(dep.target_entity_id),
-            layer=dep.layer.value,
-            relationship=dep.relationship_type.value,
-            criticality=dep.criticality,
-            is_bidirectional=dep.is_bidirectional,
-        ))
+        edges.append(
+            DependencyGraphEdge(
+                id=str(dep.id),
+                source=str(dep.source_entity_id),
+                target=str(dep.target_entity_id),
+                layer=dep.layer.value,
+                relationship=dep.relationship_type.value,
+                criticality=dep.criticality,
+                is_bidirectional=dep.is_bidirectional,
+            )
+        )
 
     # Stats
     stats = {
@@ -180,7 +181,10 @@ async def create_dependency(
 ):
     """Create a new dependency."""
     # Verify both entities exist and belong to tenant
-    for entity_id in [dependency_data.source_entity_id, dependency_data.target_entity_id]:
+    for entity_id in [
+        dependency_data.source_entity_id,
+        dependency_data.target_entity_id,
+    ]:
         result = await db.execute(
             select(Entity).where(
                 Entity.id == entity_id,
@@ -319,6 +323,7 @@ async def delete_dependency(
 
 # Phase 2.1: Multi-Layer Dependency Modeling endpoints
 
+
 @router.get("/layers/summary")
 async def get_layer_summary(
     db: DB,
@@ -327,14 +332,18 @@ async def get_layer_summary(
 ) -> Dict[str, Any]:
     """Get summary statistics for each dependency layer."""
     # Count by layer
-    layer_query = select(
-        Dependency.layer,
-        func.count(Dependency.id).label("count"),
-        func.avg(Dependency.criticality).label("avg_criticality"),
-    ).where(
-        Dependency.tenant_id == tenant.id,
-        Dependency.is_active == True,
-    ).group_by(Dependency.layer)
+    layer_query = (
+        select(
+            Dependency.layer,
+            func.count(Dependency.id).label("count"),
+            func.avg(Dependency.criticality).label("avg_criticality"),
+        )
+        .where(
+            Dependency.tenant_id == tenant.id,
+            Dependency.is_active,
+        )
+        .group_by(Dependency.layer)
+    )
 
     result = await db.execute(layer_query)
     layer_stats = {}
@@ -392,7 +401,7 @@ async def get_cross_layer_impact(
     outgoing_query = select(Dependency).where(
         Dependency.tenant_id == tenant.id,
         Dependency.source_entity_id == entity_id,
-        Dependency.is_active == True,
+        Dependency.is_active,
     )
     outgoing_result = await db.execute(outgoing_query)
     outgoing_deps = outgoing_result.scalars().all()
@@ -401,25 +410,36 @@ async def get_cross_layer_impact(
     incoming_query = select(Dependency).where(
         Dependency.tenant_id == tenant.id,
         Dependency.target_entity_id == entity_id,
-        Dependency.is_active == True,
+        Dependency.is_active,
     )
     incoming_result = await db.execute(incoming_query)
     incoming_deps = incoming_result.scalars().all()
 
     # Calculate impact by layer
-    layer_impact = {layer.value: {"outgoing": 0, "incoming": 0, "risk_score": 0.0} for layer in DependencyLayer}
+    layer_impact = {
+        layer.value: {"outgoing": 0, "incoming": 0, "risk_score": 0.0}
+        for layer in DependencyLayer
+    }
 
     for dep in outgoing_deps:
         layer_impact[dep.layer.value]["outgoing"] += 1
-        layer_impact[dep.layer.value]["risk_score"] += dep.criticality * _get_layer_risk_weight(dep.layer)
+        layer_impact[dep.layer.value]["risk_score"] += (
+            dep.criticality * _get_layer_risk_weight(dep.layer)
+        )
 
     for dep in incoming_deps:
         layer_impact[dep.layer.value]["incoming"] += 1
-        layer_impact[dep.layer.value]["risk_score"] += dep.criticality * _get_layer_risk_weight(dep.layer) * 0.5
+        layer_impact[dep.layer.value]["risk_score"] += (
+            dep.criticality * _get_layer_risk_weight(dep.layer) * 0.5
+        )
 
     # Calculate total cross-layer risk
     total_risk = sum(li["risk_score"] for li in layer_impact.values())
-    primary_layer = max(layer_impact.items(), key=lambda x: x[1]["risk_score"])[0] if layer_impact else "operational"
+    primary_layer = (
+        max(layer_impact.items(), key=lambda x: x[1]["risk_score"])[0]
+        if layer_impact
+        else "operational"
+    )
 
     # Get affected entities
     affected_entity_ids = set()
@@ -460,6 +480,8 @@ def _get_risk_recommendation(total_risk: float, primary_layer: str) -> str:
     elif total_risk > 25:
         return f"MEDIUM PRIORITY: Notable dependency concentration in {primary_layer} layer. Consider backup arrangements."
     elif total_risk > 10:
-        return f"LOW PRIORITY: Moderate {primary_layer} dependencies. Monitor for changes."
+        return (
+            f"LOW PRIORITY: Moderate {primary_layer} dependencies. Monitor for changes."
+        )
     else:
         return "MINIMAL: Low cross-layer exposure. Standard monitoring sufficient."

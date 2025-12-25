@@ -2,21 +2,15 @@
 Monitoring and alerting endpoints for CORTEX-CI.
 Provides system health, metrics, and alert management.
 """
-from datetime import datetime, timedelta
+
+from datetime import datetime
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import text, func
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
 from app.core.database import get_db
-from app.models.entity import Entity
-from app.models.constraint import Constraint
-from app.models.dependency import Dependency
-from app.models.risk import RiskScore
-from app.models.audit import AuditLog
-from app.models.scenario_chain import ScenarioChain
-from app.models.ai_analysis import AIAnalysis, AnomalyDetection
 
 router = APIRouter()
 
@@ -73,7 +67,7 @@ async def detailed_health_check(db: AsyncSession = Depends(get_db)):
         database=db_status,
         timestamp=datetime.utcnow().isoformat(),
         uptime_check=True,
-        version="2.0.0"  # Phase 2
+        version="2.0.0",  # Phase 2
     )
 
 
@@ -94,15 +88,11 @@ async def get_system_metrics(db: AsyncSession = Depends(get_db)):
         constraints_count = constraints_result.scalar() or 0
 
         # Dependencies count
-        deps_result = await db.execute(
-            text("SELECT COUNT(*) FROM dependencies")
-        )
+        deps_result = await db.execute(text("SELECT COUNT(*) FROM dependencies"))
         dependencies_count = deps_result.scalar() or 0
 
         # Risk scores count
-        risks_result = await db.execute(
-            text("SELECT COUNT(*) FROM risk_scores")
-        )
+        risks_result = await db.execute(text("SELECT COUNT(*) FROM risk_scores"))
         risk_scores_count = risks_result.scalar() or 0
 
         # High risk entities
@@ -114,13 +104,17 @@ async def get_system_metrics(db: AsyncSession = Depends(get_db)):
         # Critical/High constraints (critical may not exist in older databases)
         try:
             critical_result = await db.execute(
-                text("SELECT COUNT(*) FROM constraints WHERE severity IN ('critical', 'high') AND is_active = true")
+                text(
+                    "SELECT COUNT(*) FROM constraints WHERE severity IN ('critical', 'high') AND is_active = true"
+                )
             )
             critical_constraints = critical_result.scalar() or 0
-        except:
+        except Exception:
             # Fallback if critical enum doesn't exist
             critical_result = await db.execute(
-                text("SELECT COUNT(*) FROM constraints WHERE severity = 'high' AND is_active = true")
+                text(
+                    "SELECT COUNT(*) FROM constraints WHERE severity = 'high' AND is_active = true"
+                )
             )
             critical_constraints = critical_result.scalar() or 0
 
@@ -130,25 +124,25 @@ async def get_system_metrics(db: AsyncSession = Depends(get_db)):
                 text("SELECT COUNT(*) FROM scenario_chains")
             )
             scenario_chains_count = chains_result.scalar() or 0
-        except:
+        except Exception:
             scenario_chains_count = 0
 
         # AI analyses count (Phase 2)
         try:
-            ai_result = await db.execute(
-                text("SELECT COUNT(*) FROM ai_analyses")
-            )
+            ai_result = await db.execute(text("SELECT COUNT(*) FROM ai_analyses"))
             ai_analyses_count = ai_result.scalar() or 0
-        except:
+        except Exception:
             ai_analyses_count = 0
 
         # Pending anomalies (Phase 2)
         try:
             anomalies_result = await db.execute(
-                text("SELECT COUNT(*) FROM anomaly_detections WHERE is_confirmed IS NULL")
+                text(
+                    "SELECT COUNT(*) FROM anomaly_detections WHERE is_confirmed IS NULL"
+                )
             )
             pending_anomalies_count = anomalies_result.scalar() or 0
-        except:
+        except Exception:
             pending_anomalies_count = 0
 
         # Recent audit events (last 24h)
@@ -170,17 +164,19 @@ async def get_system_metrics(db: AsyncSession = Depends(get_db)):
             pending_anomalies_count=pending_anomalies_count,
             recent_audit_events=recent_audit_events,
             high_risk_entities=high_risk_entities,
-            critical_constraints=critical_constraints
+            critical_constraints=critical_constraints,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch metrics: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch metrics: {str(e)}"
+        )
 
 
 @router.get("/alerts", response_model=AlertsResponse)
 async def get_alerts(
     severity: Optional[str] = None,
     acknowledged: Optional[bool] = None,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """Get system alerts based on current data conditions."""
     alerts = []
@@ -198,15 +194,17 @@ async def get_alerts(
             """)
         )
         for row in high_risk_result.fetchall():
-            alerts.append(Alert(
-                id=f"high-risk-{row[0]}",
-                type="high_risk",
-                severity="critical" if row[2] >= 90 else "high",
-                message=f"Entity '{row[1]}' has critical risk score: {row[2]:.1f}",
-                entity_id=str(row[0]),
-                created_at=datetime.utcnow().isoformat(),
-                is_acknowledged=False
-            ))
+            alerts.append(
+                Alert(
+                    id=f"high-risk-{row[0]}",
+                    type="high_risk",
+                    severity="critical" if row[2] >= 90 else "high",
+                    message=f"Entity '{row[1]}' has critical risk score: {row[2]:.1f}",
+                    entity_id=str(row[0]),
+                    created_at=datetime.utcnow().isoformat(),
+                    is_acknowledged=False,
+                )
+            )
 
         # Alert 2: Pending AI anomalies requiring review
         try:
@@ -219,17 +217,19 @@ async def get_alerts(
                 """)
             )
             for row in anomalies_result.fetchall():
-                alerts.append(Alert(
-                    id=f"anomaly-{row[0]}",
-                    type="pending_anomaly",
-                    severity="medium",
-                    message=f"Unreviewed anomaly: {row[2]} - {row[3][:100]}...",
-                    entity_id=str(row[1]) if row[1] else None,
-                    created_at=datetime.utcnow().isoformat(),
-                    is_acknowledged=False
-                ))
-        except:
-            pass
+                alerts.append(
+                    Alert(
+                        id=f"anomaly-{row[0]}",
+                        type="pending_anomaly",
+                        severity="medium",
+                        message=f"Unreviewed anomaly: {row[2]} - {row[3][:100]}...",
+                        entity_id=str(row[1]) if row[1] else None,
+                        created_at=datetime.utcnow().isoformat(),
+                        is_acknowledged=False,
+                    )
+                )
+        except Exception:
+            pass  # Table may not exist in older deployments
 
         # Alert 3: AI analyses awaiting approval
         try:
@@ -243,16 +243,18 @@ async def get_alerts(
                 """)
             )
             for row in ai_pending_result.fetchall():
-                alerts.append(Alert(
-                    id=f"ai-approval-{row[0]}",
-                    type="ai_pending_approval",
-                    severity="medium",
-                    message=f"AI {row[1]} analysis awaiting approval: {row[2][:80]}...",
-                    created_at=datetime.utcnow().isoformat(),
-                    is_acknowledged=False
-                ))
-        except:
-            pass
+                alerts.append(
+                    Alert(
+                        id=f"ai-approval-{row[0]}",
+                        type="ai_pending_approval",
+                        severity="medium",
+                        message=f"AI {row[1]} analysis awaiting approval: {row[2][:80]}...",
+                        created_at=datetime.utcnow().isoformat(),
+                        is_acknowledged=False,
+                    )
+                )
+        except Exception:
+            pass  # Table may not exist in older deployments
 
         # Alert 4: Check for entities with no recent risk calculation
         stale_risk_result = await db.execute(
@@ -266,26 +268,34 @@ async def get_alerts(
         )
         stale_count = stale_risk_result.scalar() or 0
         if stale_count > 100:
-            alerts.append(Alert(
-                id="stale-risk-scores",
-                type="stale_data",
-                severity="low",
-                message=f"{stale_count} entities have stale or missing risk scores (>7 days old)",
-                created_at=datetime.utcnow().isoformat(),
-                is_acknowledged=False
-            ))
+            alerts.append(
+                Alert(
+                    id="stale-risk-scores",
+                    type="stale_data",
+                    severity="low",
+                    message=f"{stale_count} entities have stale or missing risk scores (>7 days old)",
+                    created_at=datetime.utcnow().isoformat(),
+                    is_acknowledged=False,
+                )
+            )
 
         # Filter by severity if specified
         if severity:
             alerts = [a for a in alerts if a.severity == severity]
 
+        # Filter by acknowledged status if specified
+        if acknowledged is not None:
+            alerts = [a for a in alerts if a.is_acknowledged == acknowledged]
+
         return AlertsResponse(
             alerts=alerts,
             total_count=len(alerts),
-            unacknowledged_count=sum(1 for a in alerts if not a.is_acknowledged)
+            unacknowledged_count=sum(1 for a in alerts if not a.is_acknowledged),
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate alerts: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate alerts: {str(e)}"
+        )
 
 
 @router.get("/dashboard")
@@ -302,7 +312,7 @@ async def monitoring_dashboard(db: AsyncSession = Depends(get_db)):
             "total": alerts.total_count,
             "unacknowledged": alerts.unacknowledged_count,
             "critical": sum(1 for a in alerts.alerts if a.severity == "critical"),
-            "recent": alerts.alerts[:5]
+            "recent": alerts.alerts[:5],
         },
-        "generated_at": datetime.utcnow().isoformat()
+        "generated_at": datetime.utcnow().isoformat(),
     }

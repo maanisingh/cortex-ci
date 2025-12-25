@@ -1,0 +1,446 @@
+name: Advanced Full Stack Quality Check
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+env:
+  REPORT_ARTIFACT: quality-reports
+
+jobs:
+  python-checks:
+    name: Python Quality Checks
+    runs-on: ubuntu-latest
+    if: hashFiles('**/*.py') != '' || hashFiles('requirements.txt') != '' || hashFiles('pyproject.toml') != ''
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff mypy bandit vulture safety pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          if [ -f pyproject.toml ]; then pip install -e .; fi
+
+      - name: Ruff Lint
+        id: ruff
+        run: |
+          echo "## Ruff Lint Results" >> $GITHUB_STEP_SUMMARY
+          ruff check . --output-format=github 2>&1 | tee ruff-output.txt || true
+          if [ -s ruff-output.txt ]; then
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat ruff-output.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No lint issues found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: MyPy Type Check
+        id: mypy
+        run: |
+          echo "## MyPy Type Check Results" >> $GITHUB_STEP_SUMMARY
+          mypy . --ignore-missing-imports --show-error-codes 2>&1 | tee mypy-output.txt || true
+          if grep -q "error:" mypy-output.txt; then
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat mypy-output.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No type errors found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Vulture Dead Code Analysis
+        id: vulture
+        run: |
+          echo "## Dead Code Analysis" >> $GITHUB_STEP_SUMMARY
+          vulture . --min-confidence 70 2>&1 | tee vulture-output.txt || true
+          if [ -s vulture-output.txt ]; then
+            echo "⚠️ Potentially unused code detected:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat vulture-output.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+
+            # Add context for each finding
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Dead Code Context" >> $GITHUB_STEP_SUMMARY
+            while read -r line; do
+              if [[ -n "$line" ]]; then
+                file=$(echo "$line" | cut -d: -f1)
+                lineno=$(echo "$line" | cut -d: -f2)
+                symbol=$(echo "$line" | grep -oP "unused \w+ '\K[^']+" || true)
+                if [[ -n "$symbol" && -f "$file" ]]; then
+                  echo "**$file:$lineno** - \`$symbol\`" >> $GITHUB_STEP_SUMMARY
+                  # Find references
+                  refs=$(grep -rn --include="*.py" "$symbol" . 2>/dev/null | grep -v "^$file:$lineno:" | head -3 || true)
+                  if [[ -n "$refs" ]]; then
+                    echo "  References found:" >> $GITHUB_STEP_SUMMARY
+                    echo '```' >> $GITHUB_STEP_SUMMARY
+                    echo "$refs" >> $GITHUB_STEP_SUMMARY
+                    echo '```' >> $GITHUB_STEP_SUMMARY
+                  else
+                    echo "  ⚠️ No references found - likely orphaned" >> $GITHUB_STEP_SUMMARY
+                  fi
+                fi
+              fi
+            done < vulture-output.txt
+          else
+            echo "✅ No dead code detected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Import Analysis
+        run: |
+          echo "## Import Analysis" >> $GITHUB_STEP_SUMMARY
+          python3 << 'EOF' > import-analysis.txt 2>&1
+          import ast
+          import os
+          import sys
+
+          broken = []
+          for root, dirs, files in os.walk('.'):
+              dirs[:] = [d for d in dirs if d not in ['venv', 'env', '.venv', 'node_modules', '__pycache__', '.git']]
+              for f in files:
+                  if f.endswith('.py'):
+                      path = os.path.join(root, f)
+                      try:
+                          with open(path) as file:
+                              tree = ast.parse(file.read())
+                          for node in ast.walk(tree):
+                              if isinstance(node, ast.Import):
+                                  for alias in node.names:
+                                      try:
+                                          __import__(alias.name.split('.')[0])
+                                      except ImportError as e:
+                                          broken.append(f'{path}:{node.lineno} - Cannot import {alias.name}: {e}')
+                              elif isinstance(node, ast.ImportFrom):
+                                  if node.module:
+                                      try:
+                                          __import__(node.module.split('.')[0])
+                                      except ImportError as e:
+                                          broken.append(f'{path}:{node.lineno} - Cannot import from {node.module}: {e}')
+                      except SyntaxError as e:
+                          broken.append(f'{path}:{e.lineno} - Syntax error: {e.msg}')
+                      except Exception:
+                          pass
+
+          for b in broken:
+              print(b)
+
+          if not broken:
+              print("OK")
+          EOF
+
+          if grep -q "Cannot import\|Syntax error" import-analysis.txt; then
+            echo "❌ Broken imports found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat import-analysis.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All imports valid" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Bandit Security Scan
+        run: |
+          echo "## Security Scan" >> $GITHUB_STEP_SUMMARY
+          bandit -r . -ll -f json 2>/dev/null | tee bandit-output.json || true
+          count=$(jq '.results | length' bandit-output.json 2>/dev/null || echo "0")
+          if [ "$count" -gt 0 ]; then
+            echo "⚠️ Found $count security issues:" >> $GITHUB_STEP_SUMMARY
+            jq -r '.results[] | "- **\(.filename):\(.line_number)** [\(.severity)] \(.issue_text)"' bandit-output.json >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No security issues found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Pytest
+        if: hashFiles('**/test_*.py') != '' || hashFiles('**/*_test.py') != ''
+        run: |
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          pytest -v --tb=short 2>&1 | tee pytest-output.txt || true
+          if grep -q "FAILED\|ERROR" pytest-output.txt; then
+            echo "❌ Test failures:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            grep -E "FAILED|ERROR|AssertionError" pytest-output.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All tests passed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  javascript-checks:
+    name: JavaScript/TypeScript Quality Checks
+    runs-on: ubuntu-latest
+    if: hashFiles('package.json') != ''
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: ESLint
+        run: |
+          echo "## ESLint Results" >> $GITHUB_STEP_SUMMARY
+          npx eslint . --ext .js,.jsx,.ts,.tsx -f json 2>/dev/null | tee eslint-output.json || echo "[]" > eslint-output.json
+          errors=$(jq '[.[] | .errorCount] | add // 0' eslint-output.json)
+          if [ "$errors" -gt 0 ]; then
+            echo "❌ Found $errors ESLint errors:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            jq -r '.[] | select(.errorCount > 0) | .filePath as $f | .messages[] | select(.severity == 2) | "\($f):\(.line) - \(.ruleId): \(.message)"' eslint-output.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No ESLint errors" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: TypeScript Check
+        if: hashFiles('tsconfig.json') != ''
+        run: |
+          echo "## TypeScript Check" >> $GITHUB_STEP_SUMMARY
+          npx tsc --noEmit 2>&1 | tee tsc-output.txt || true
+          if grep -q "error TS" tsc-output.txt; then
+            echo "❌ TypeScript errors:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            grep "error TS" tsc-output.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No TypeScript errors" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Unused Exports Analysis
+        run: |
+          echo "## Unused Exports Analysis" >> $GITHUB_STEP_SUMMARY
+          node << 'EOF' > unused-exports.txt 2>&1
+          const fs = require('fs');
+          const path = require('path');
+
+          const getAllFiles = (dir, exts) => {
+              let results = [];
+              try {
+                  const list = fs.readdirSync(dir);
+                  list.forEach(file => {
+                      const filePath = path.join(dir, file);
+                      const stat = fs.statSync(filePath);
+                      if (stat.isDirectory() && !['node_modules', '.git', 'dist', 'build', '.next'].includes(file)) {
+                          results = results.concat(getAllFiles(filePath, exts));
+                      } else if (exts.some(ext => file.endsWith(ext))) {
+                          results.push(filePath);
+                      }
+                  });
+              } catch (e) {}
+              return results;
+          };
+
+          const files = getAllFiles('.', ['.js', '.jsx', '.ts', '.tsx']);
+          const exports = {};
+          const imports = new Set();
+
+          files.forEach(file => {
+              try {
+                  const content = fs.readFileSync(file, 'utf8');
+                  const exportMatches = content.matchAll(/export\s+(?:const|let|var|function|class|interface|type|enum)\s+(\w+)/g);
+                  for (const match of exportMatches) {
+                      exports[match[1]] = exports[match[1]] || [];
+                      exports[match[1]].push(file);
+                  }
+              } catch (e) {}
+          });
+
+          files.forEach(file => {
+              try {
+                  const content = fs.readFileSync(file, 'utf8');
+                  const importMatches = content.matchAll(/import\s*\{([^}]+)\}/g);
+                  for (const match of importMatches) {
+                      match[1].split(',').forEach(i => {
+                          const name = i.trim().split(/\s+as\s+/)[0].trim();
+                          if (name) imports.add(name);
+                      });
+                  }
+                  const defaultImports = content.matchAll(/import\s+(\w+)\s+from/g);
+                  for (const match of defaultImports) {
+                      imports.add(match[1]);
+                  }
+              } catch (e) {}
+          });
+
+          const ignored = ['default', 'App', 'main', 'handler', 'getServerSideProps', 'getStaticProps', 'getStaticPaths', 'metadata', 'generateMetadata'];
+          Object.entries(exports).forEach(([name, files]) => {
+              if (!imports.has(name) && !ignored.includes(name)) {
+                  files.forEach(f => console.log(f + ': exported "' + name + '" is never imported'));
+              }
+          });
+          EOF
+
+          if [ -s unused-exports.txt ]; then
+            echo "⚠️ Potentially unused exports:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat unused-exports.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No unused exports detected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Missing Imports Analysis
+        run: |
+          echo "## Missing Imports Analysis" >> $GITHUB_STEP_SUMMARY
+          node << 'EOF' > missing-imports.txt 2>&1
+          const fs = require('fs');
+          const path = require('path');
+
+          const getAllFiles = (dir, exts) => {
+              let results = [];
+              try {
+                  const list = fs.readdirSync(dir);
+                  list.forEach(file => {
+                      const filePath = path.join(dir, file);
+                      const stat = fs.statSync(filePath);
+                      if (stat.isDirectory() && !['node_modules', '.git', 'dist', 'build'].includes(file)) {
+                          results = results.concat(getAllFiles(filePath, exts));
+                      } else if (exts.some(ext => file.endsWith(ext))) {
+                          results.push(filePath);
+                      }
+                  });
+              } catch (e) {}
+              return results;
+          };
+
+          const files = getAllFiles('.', ['.js', '.jsx', '.ts', '.tsx']);
+
+          files.forEach(file => {
+              try {
+                  const content = fs.readFileSync(file, 'utf8');
+                  const dir = path.dirname(file);
+                  const relativeImports = content.matchAll(/(?:import|require)\s*\(?['\"](\.[^'\"]+)['\"]\)?/g);
+                  for (const match of relativeImports) {
+                      let importPath = path.resolve(dir, match[1]);
+                      const extensions = ['', '.js', '.jsx', '.ts', '.tsx', '/index.js', '/index.jsx', '/index.ts', '/index.tsx'];
+                      const exists = extensions.some(ext => fs.existsSync(importPath + ext));
+                      if (!exists) {
+                          console.log(file + ': imports missing "' + match[1] + '"');
+                      }
+                  }
+              } catch (e) {}
+          });
+          EOF
+
+          if [ -s missing-imports.txt ]; then
+            echo "❌ Missing imports found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat missing-imports.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All imports resolve" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Build Check
+        run: |
+          echo "## Build Check" >> $GITHUB_STEP_SUMMARY
+          if grep -q '"build"' package.json; then
+            npm run build 2>&1 | tee build-output.txt || true
+            if grep -qi "error\|failed" build-output.txt; then
+              echo "❌ Build failed:" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              grep -i "error" build-output.txt | head -20 >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              exit 1
+            else
+              echo "✅ Build succeeded" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "ℹ️ No build script found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Tests
+        run: |
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          if grep -q '"test"' package.json; then
+            npm test -- --passWithNoTests 2>&1 | tee test-output.txt || npx vitest run 2>&1 | tee test-output.txt || true
+            if grep -qi "fail\|error" test-output.txt; then
+              echo "❌ Test failures:" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              grep -iE "fail|error|✗" test-output.txt | head -20 >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ Tests passed" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "ℹ️ No test script found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  html-css-checks:
+    name: HTML/CSS Quality Checks
+    runs-on: ubuntu-latest
+    if: hashFiles('**/*.html') != '' || hashFiles('**/*.css') != ''
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: HTML Validation
+        if: hashFiles('**/*.html') != ''
+        run: |
+          echo "## HTML Validation" >> $GITHUB_STEP_SUMMARY
+          npx html-validate "**/*.html" 2>&1 | tee html-output.txt || true
+          if grep -q "error" html-output.txt; then
+            echo "❌ HTML errors:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat html-output.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ HTML valid" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Stylelint CSS
+        if: hashFiles('**/*.css') != '' || hashFiles('**/*.scss') != ''
+        run: |
+          echo "## CSS Validation" >> $GITHUB_STEP_SUMMARY
+          npx stylelint "**/*.{css,scss}" 2>&1 | tee css-output.txt || true
+          if [ -s css-output.txt ]; then
+            echo "⚠️ CSS issues:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat css-output.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ CSS valid" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  summary:
+    name: Quality Check Summary
+    runs-on: ubuntu-latest
+    needs: [python-checks, javascript-checks, html-css-checks]
+    if: always()
+
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "# Quality Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Python | ${{ needs.python-checks.result == 'success' && '✅' || needs.python-checks.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| JavaScript | ${{ needs.javascript-checks.result == 'success' && '✅' || needs.javascript-checks.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| HTML/CSS | ${{ needs.html-css-checks.result == 'success' && '✅' || needs.html-css-checks.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*For detailed Claude Code analysis, run locally with \`fullcheck\` and share the JSON report.*" >> $GITHUB_STEP_SUMMARY

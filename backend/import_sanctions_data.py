@@ -17,10 +17,9 @@ Usage:
 import asyncio
 import json
 import xml.etree.ElementTree as ET
-from datetime import datetime, date
 from pathlib import Path
 from typing import Optional, List, Dict, Any
-from uuid import UUID, uuid4
+from uuid import uuid4
 import argparse
 import sys
 
@@ -32,7 +31,14 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
-from app.models import Entity, Constraint, Tenant, EntityType, ConstraintType, ConstraintSeverity
+from app.models import (
+    Entity,
+    Constraint,
+    Tenant,
+    EntityType,
+    ConstraintType,
+    ConstraintSeverity,
+)
 
 
 # Data file paths
@@ -45,20 +51,57 @@ UN_SANCTIONS_FILE = DATA_DIR / "un_sanctions.xml"
 def get_country_code(country_name: str) -> Optional[str]:
     """Convert country name to ISO 3166-1 alpha-2 code."""
     country_map = {
-        "cuba": "CU", "iran": "IR", "russia": "RU", "russian federation": "RU",
-        "syria": "SY", "syrian arab republic": "SY", "north korea": "KP",
-        "korea, democratic people's republic of": "KP", "venezuela": "VE",
-        "belarus": "BY", "myanmar": "MM", "burma": "MM", "zimbabwe": "ZW",
-        "china": "CN", "hong kong": "HK", "united states": "US", "usa": "US",
-        "united kingdom": "GB", "uk": "GB", "germany": "DE", "france": "FR",
-        "japan": "JP", "switzerland": "CH", "spain": "ES", "italy": "IT",
-        "netherlands": "NL", "belgium": "BE", "austria": "AT", "poland": "PL",
-        "ukraine": "UA", "turkey": "TR", "saudi arabia": "SA", "uae": "AE",
-        "united arab emirates": "AE", "israel": "IL", "india": "IN",
-        "pakistan": "PK", "afghanistan": "AF", "iraq": "IQ", "lebanon": "LB",
-        "yemen": "YE", "libya": "LY", "sudan": "SD", "south sudan": "SS",
-        "somalia": "SO", "eritrea": "ER", "ethiopia": "ET", "mali": "ML",
-        "central african republic": "CF", "congo": "CD", "drc": "CD",
+        "cuba": "CU",
+        "iran": "IR",
+        "russia": "RU",
+        "russian federation": "RU",
+        "syria": "SY",
+        "syrian arab republic": "SY",
+        "north korea": "KP",
+        "korea, democratic people's republic of": "KP",
+        "venezuela": "VE",
+        "belarus": "BY",
+        "myanmar": "MM",
+        "burma": "MM",
+        "zimbabwe": "ZW",
+        "china": "CN",
+        "hong kong": "HK",
+        "united states": "US",
+        "usa": "US",
+        "united kingdom": "GB",
+        "uk": "GB",
+        "germany": "DE",
+        "france": "FR",
+        "japan": "JP",
+        "switzerland": "CH",
+        "spain": "ES",
+        "italy": "IT",
+        "netherlands": "NL",
+        "belgium": "BE",
+        "austria": "AT",
+        "poland": "PL",
+        "ukraine": "UA",
+        "turkey": "TR",
+        "saudi arabia": "SA",
+        "uae": "AE",
+        "united arab emirates": "AE",
+        "israel": "IL",
+        "india": "IN",
+        "pakistan": "PK",
+        "afghanistan": "AF",
+        "iraq": "IQ",
+        "lebanon": "LB",
+        "yemen": "YE",
+        "libya": "LY",
+        "sudan": "SD",
+        "south sudan": "SS",
+        "somalia": "SO",
+        "eritrea": "ER",
+        "ethiopia": "ET",
+        "mali": "ML",
+        "central african republic": "CF",
+        "congo": "CD",
+        "drc": "CD",
     }
     if not country_name:
         return None
@@ -74,7 +117,9 @@ def parse_ofac_sdn(limit: int = 1000) -> List[Dict[str, Any]]:
     print(f"Parsing OFAC SDN from {OFAC_SDN_FILE}...")
 
     # Define namespace
-    ns = {"sdn": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML"}
+    ns = {
+        "sdn": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML"
+    }
 
     tree = ET.parse(OFAC_SDN_FILE)
     root = tree.getroot()
@@ -136,19 +181,21 @@ def parse_ofac_sdn(limit: int = 1000) -> List[Dict[str, Any]]:
             elif sdn_type.text.lower() == "aircraft":
                 entity_type = EntityType.ORGANIZATION
 
-        entities.append({
-            "external_id": f"OFAC-{uid.text}" if uid is not None else None,
-            "name": name,
-            "type": entity_type,
-            "aliases": aliases[:10],  # Limit aliases
-            "country_code": get_country_code(country) if country else None,
-            "category": "sanctioned_entity",
-            "subcategory": "ofac_sdn",
-            "tags": programs[:5],  # Sanctions programs as tags
-            "criticality": 5,  # High criticality for sanctioned entities
-            "notes": f"OFAC SDN Entry. Programs: {', '.join(programs[:3])}",
-            "source": "OFAC",
-        })
+        entities.append(
+            {
+                "external_id": f"OFAC-{uid.text}" if uid is not None else None,
+                "name": name,
+                "type": entity_type,
+                "aliases": aliases[:10],  # Limit aliases
+                "country_code": get_country_code(country) if country else None,
+                "category": "sanctioned_entity",
+                "subcategory": "ofac_sdn",
+                "tags": programs[:5],  # Sanctions programs as tags
+                "criticality": 5,  # High criticality for sanctioned entities
+                "notes": f"OFAC SDN Entry. Programs: {', '.join(programs[:3])}",
+                "source": "OFAC",
+            }
+        )
         count += 1
 
     print(f"Parsed {len(entities)} entities from OFAC SDN")
@@ -166,7 +213,7 @@ def parse_opensanctions(limit: int = 1000) -> List[Dict[str, Any]]:
     entities = []
     count = 0
 
-    with open(OPENSANCTIONS_FILE, 'r') as f:
+    with open(OPENSANCTIONS_FILE, "r") as f:
         for line in f:
             if count >= limit:
                 break
@@ -203,24 +250,28 @@ def parse_opensanctions(limit: int = 1000) -> List[Dict[str, Any]]:
                 country_code = get_country_code(country_code)
 
             # Determine entity type
-            entity_type = EntityType.PERSON if schema == "Person" else EntityType.ORGANIZATION
+            entity_type = (
+                EntityType.PERSON if schema == "Person" else EntityType.ORGANIZATION
+            )
 
             # Get datasets as tags
             datasets = record.get("datasets", [])[:5]
 
-            entities.append({
-                "external_id": record.get("id"),
-                "name": name[:500],
-                "type": entity_type,
-                "aliases": aliases,
-                "country_code": country_code[:3] if country_code else None,
-                "category": "sanctioned_entity",
-                "subcategory": "opensanctions",
-                "tags": datasets,
-                "criticality": 5,
-                "notes": f"OpenSanctions ID: {record.get('id')}. Schema: {schema}",
-                "source": "OpenSanctions",
-            })
+            entities.append(
+                {
+                    "external_id": record.get("id"),
+                    "name": name[:500],
+                    "type": entity_type,
+                    "aliases": aliases,
+                    "country_code": country_code[:3] if country_code else None,
+                    "category": "sanctioned_entity",
+                    "subcategory": "opensanctions",
+                    "tags": datasets,
+                    "criticality": 5,
+                    "notes": f"OpenSanctions ID: {record.get('id')}. Schema: {schema}",
+                    "source": "OpenSanctions",
+                }
+            )
             count += 1
 
     print(f"Parsed {len(entities)} entities from OpenSanctions")
@@ -267,19 +318,21 @@ def parse_un_sanctions(limit: int = 500) -> List[Dict[str, Any]]:
             # Get reference number
             dataid = individual.get("DATAID", "")
 
-            entities.append({
-                "external_id": f"UN-{dataid}" if dataid else None,
-                "name": name[:500],
-                "type": EntityType.PERSON,
-                "aliases": [],
-                "country_code": None,
-                "category": "sanctioned_entity",
-                "subcategory": "un_consolidated",
-                "tags": ["UN_SANCTIONS"],
-                "criticality": 5,
-                "notes": f"UN Consolidated Sanctions List",
-                "source": "UN",
-            })
+            entities.append(
+                {
+                    "external_id": f"UN-{dataid}" if dataid else None,
+                    "name": name[:500],
+                    "type": EntityType.PERSON,
+                    "aliases": [],
+                    "country_code": None,
+                    "category": "sanctioned_entity",
+                    "subcategory": "un_consolidated",
+                    "tags": ["UN_SANCTIONS"],
+                    "criticality": 5,
+                    "notes": "UN Consolidated Sanctions List",
+                    "source": "UN",
+                }
+            )
             count += 1
 
         elif individual.tag.endswith("ENTITY") or individual.tag == "ENTITY":
@@ -295,19 +348,21 @@ def parse_un_sanctions(limit: int = 500) -> List[Dict[str, Any]]:
 
             dataid = individual.get("DATAID", "")
 
-            entities.append({
-                "external_id": f"UN-{dataid}" if dataid else None,
-                "name": name[:500],
-                "type": EntityType.ORGANIZATION,
-                "aliases": [],
-                "country_code": None,
-                "category": "sanctioned_entity",
-                "subcategory": "un_consolidated",
-                "tags": ["UN_SANCTIONS"],
-                "criticality": 5,
-                "notes": f"UN Consolidated Sanctions List",
-                "source": "UN",
-            })
+            entities.append(
+                {
+                    "external_id": f"UN-{dataid}" if dataid else None,
+                    "name": name[:500],
+                    "type": EntityType.ORGANIZATION,
+                    "aliases": [],
+                    "country_code": None,
+                    "category": "sanctioned_entity",
+                    "subcategory": "un_consolidated",
+                    "tags": ["UN_SANCTIONS"],
+                    "criticality": 5,
+                    "notes": "UN Consolidated Sanctions List",
+                    "source": "UN",
+                }
+            )
             count += 1
 
     print(f"Parsed {len(entities)} entities from UN Sanctions")
@@ -417,11 +472,7 @@ def create_sanctions_constraints() -> List[Dict[str, Any]]:
     return constraints
 
 
-async def import_data(
-    source: str = "all",
-    limit: int = 1000,
-    dry_run: bool = False
-):
+async def import_data(source: str = "all", limit: int = 1000, dry_run: bool = False):
     """Import sanctions data into CORTEX-CI database."""
 
     # Parse data based on source
@@ -472,7 +523,7 @@ async def import_data(
             existing = await db.execute(
                 select(Constraint).where(
                     Constraint.tenant_id == tenant.id,
-                    Constraint.reference_code == c["reference_code"]
+                    Constraint.reference_code == c["reference_code"],
                 )
             )
             if existing.scalar_one_or_none():
@@ -516,7 +567,7 @@ async def import_data(
                 existing = await db.execute(
                     select(Entity).where(
                         Entity.tenant_id == tenant.id,
-                        Entity.external_id == e["external_id"]
+                        Entity.external_id == e["external_id"],
                     )
                 )
                 if existing.scalar_one_or_none():
@@ -547,7 +598,9 @@ async def import_data(
                 print(f"  Imported {entity_count} entities...")
 
         await db.commit()
-        print(f"\nTotal imported: {entity_count} entities, {constraint_count} constraints")
+        print(
+            f"\nTotal imported: {entity_count} entities, {constraint_count} constraints"
+        )
 
     await engine.dispose()
     print("\nImport complete!")
@@ -555,17 +608,19 @@ async def import_data(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Import sanctions data into CORTEX-CI")
-    parser.add_argument("--source", choices=["ofac", "opensanctions", "un", "all"],
-                        default="all", help="Data source to import")
-    parser.add_argument("--limit", type=int, default=1000,
-                        help="Maximum entities to import per source")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="Parse data without importing")
+    parser.add_argument(
+        "--source",
+        choices=["ofac", "opensanctions", "un", "all"],
+        default="all",
+        help="Data source to import",
+    )
+    parser.add_argument(
+        "--limit", type=int, default=1000, help="Maximum entities to import per source"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Parse data without importing"
+    )
 
     args = parser.parse_args()
 
-    asyncio.run(import_data(
-        source=args.source,
-        limit=args.limit,
-        dry_run=args.dry_run
-    ))
+    asyncio.run(import_data(source=args.source, limit=args.limit, dry_run=args.dry_run))

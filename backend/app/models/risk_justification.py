@@ -1,15 +1,22 @@
 """Phase 2.3: Risk Justification Engine - Legal defensibility models."""
-from datetime import datetime, timezone
+
+from __future__ import annotations
+
+from datetime import datetime
 from uuid import UUID, uuid4
-from typing import Optional, List
+from typing import TYPE_CHECKING, Optional
 from decimal import Decimal
 
-from sqlalchemy import String, Text, ForeignKey, Enum as SQLEnum, Boolean, Numeric
+from sqlalchemy import String, Text, ForeignKey, Boolean, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
 
 from app.core.database import Base
 from app.models.base import TimestampMixin, TenantMixin
+
+if TYPE_CHECKING:
+    from app.models.entity import Entity
+    from app.models.risk import RiskScore
 
 
 class RiskJustification(Base, TimestampMixin, TenantMixin):
@@ -47,9 +54,7 @@ class RiskJustification(Base, TimestampMixin, TenantMixin):
     assumptions: Mapped[list] = mapped_column(JSONB, default=list)
 
     # Uncertainty quantification
-    confidence: Mapped[Decimal] = mapped_column(
-        Numeric(5, 2), default=Decimal("0.85")
-    )
+    confidence: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=Decimal("0.85"))
     uncertainty_factors: Mapped[list] = mapped_column(JSONB, default=list)
 
     # Source citations
@@ -96,13 +101,21 @@ class RiskJustification(Base, TimestampMixin, TenantMixin):
                     "factors": self.uncertainty_factors,
                 },
                 "sources": self.source_citations,
-                "generated_at": self.created_at.isoformat() if self.created_at else None,
+                "generated_at": self.created_at.isoformat()
+                if self.created_at
+                else None,
                 "analyst_can_override": self.analyst_can_override,
             },
             "override": {
                 "was_overridden": self.overridden_by is not None,
-                "overridden_at": self.overridden_at.isoformat() if self.overridden_at else None,
+                "overridden_at": self.overridden_at.isoformat()
+                if self.overridden_at
+                else None,
                 "reason": self.override_reason,
-                "original_score": float(self.original_score) if self.original_score else None,
-            } if self.overridden_by else None,
+                "original_score": float(self.original_score)
+                if self.original_score
+                else None,
+            }
+            if self.overridden_by
+            else None,
         }

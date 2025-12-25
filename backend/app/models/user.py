@@ -1,9 +1,9 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from uuid import UUID, uuid4
-from typing import Optional
-from sqlalchemy import String, Boolean, ForeignKey, Text
+from typing import Optional, List
+from sqlalchemy import String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB, ARRAY
 
 from app.core.database import Base
 from app.models.base import TimestampMixin, TenantMixin
@@ -27,13 +27,19 @@ class User(Base, TimestampMixin, TenantMixin):
     department: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     # Role-based access control
-    role: Mapped[str] = mapped_column(
-        String(50), nullable=False, default=Role.VIEWER
-    )
+    role: Mapped[str] = mapped_column(String(50), nullable=False, default=Role.VIEWER)
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    # MFA/TOTP (Phase 3 Security)
+    mfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    mfa_secret: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    mfa_backup_codes: Mapped[Optional[List[str]]] = mapped_column(
+        ARRAY(String(20)), nullable=True
+    )
+    mfa_verified_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
 
     # Metadata
     last_login: Mapped[Optional[datetime]] = mapped_column(nullable=True)
@@ -43,9 +49,7 @@ class User(Base, TimestampMixin, TenantMixin):
     tenant = relationship("Tenant", back_populates="users")
 
     # Unique constraint: email unique per tenant
-    __table_args__ = (
-        {"schema": None},
-    )
+    __table_args__ = ({"schema": None},)
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"

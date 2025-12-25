@@ -18,7 +18,9 @@ async def get_current_tenant(
     request: Request,
     db: AsyncSession = Depends(get_db),
     x_tenant_id: Optional[str] = Header(None),
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(
+        HTTPBearer(auto_error=False)
+    ),
 ) -> Tenant:
     """Get current tenant from header, token, or subdomain."""
     tenant_id = x_tenant_id
@@ -36,7 +38,7 @@ async def get_current_tenant(
         if "." in host:
             tenant_slug = host.split(".")[0]
             result = await db.execute(
-                select(Tenant).where(Tenant.slug == tenant_slug, Tenant.is_active == True)
+                select(Tenant).where(Tenant.slug == tenant_slug, Tenant.is_active)
             )
             tenant = result.scalar_one_or_none()
             if tenant:
@@ -52,7 +54,7 @@ async def get_current_tenant(
     except ValueError:
         # Maybe it's a slug
         result = await db.execute(
-            select(Tenant).where(Tenant.slug == tenant_id, Tenant.is_active == True)
+            select(Tenant).where(Tenant.slug == tenant_id, Tenant.is_active)
         )
         tenant = result.scalar_one_or_none()
         if tenant:
@@ -63,7 +65,7 @@ async def get_current_tenant(
         )
 
     result = await db.execute(
-        select(Tenant).where(Tenant.id == tenant_uuid, Tenant.is_active == True)
+        select(Tenant).where(Tenant.id == tenant_uuid, Tenant.is_active)
     )
     tenant = result.scalar_one_or_none()
 
@@ -106,7 +108,7 @@ async def get_current_user(
 ) -> User:
     """Get current authenticated user."""
     result = await db.execute(
-        select(User).where(User.id == UUID(token.sub), User.is_active == True)
+        select(User).where(User.id == UUID(token.sub), User.is_active)
     )
     user = result.scalar_one_or_none()
 
@@ -133,6 +135,7 @@ async def get_current_active_user(
 
 def require_roles(*roles: str):
     """Dependency factory for role-based access control."""
+
     async def role_checker(
         current_user: User = Depends(get_current_active_user),
     ) -> User:
@@ -142,6 +145,7 @@ def require_roles(*roles: str):
                 detail=f"Insufficient permissions. Required roles: {', '.join(roles)}",
             )
         return current_user
+
     return role_checker
 
 
@@ -149,7 +153,9 @@ def require_roles(*roles: str):
 RequireAdmin = Annotated[User, Depends(require_roles(Role.ADMIN))]
 RequireWriter = Annotated[User, Depends(require_roles(Role.ADMIN, Role.ANALYST))]
 RequireApprover = Annotated[User, Depends(require_roles(Role.ADMIN, Role.APPROVER))]
-RequireViewer = Annotated[User, Depends(require_roles(Role.ADMIN, Role.ANALYST, Role.APPROVER, Role.VIEWER))]
+RequireViewer = Annotated[
+    User, Depends(require_roles(Role.ADMIN, Role.ANALYST, Role.APPROVER, Role.VIEWER))
+]
 
 CurrentUser = Annotated[User, Depends(get_current_active_user)]
 CurrentTenant = Annotated[Tenant, Depends(get_current_tenant)]

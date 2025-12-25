@@ -6,12 +6,14 @@ from pydantic import BaseModel, Field
 
 class TenantBase(BaseModel):
     """Base tenant schema."""
+
     name: str = Field(..., min_length=2, max_length=255)
     description: Optional[str] = None
 
 
 class TenantCreate(TenantBase):
     """Tenant creation schema."""
+
     slug: str = Field(..., min_length=2, max_length=100, pattern=r"^[a-z0-9-]+$")
     settings: Dict[str, Any] = {}
     risk_weights: Dict[str, float] = {
@@ -24,6 +26,7 @@ class TenantCreate(TenantBase):
 
 class TenantUpdate(BaseModel):
     """Tenant update schema."""
+
     name: Optional[str] = Field(None, min_length=2, max_length=255)
     description: Optional[str] = None
     settings: Optional[Dict[str, Any]] = None
@@ -33,6 +36,7 @@ class TenantUpdate(BaseModel):
 
 class TenantResponse(TenantBase):
     """Tenant response schema."""
+
     id: UUID
     slug: str
     is_active: bool

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from uuid import UUID, uuid4
 from typing import Optional, List
 from enum import Enum
@@ -12,6 +12,7 @@ from app.models.base import TimestampMixin, TenantMixin
 
 class ScenarioStatus(str, Enum):
     """Status of a scenario simulation."""
+
     DRAFT = "draft"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -20,6 +21,7 @@ class ScenarioStatus(str, Enum):
 
 class ScenarioType(str, Enum):
     """Type of scenario being simulated."""
+
     ENTITY_RESTRICTION = "entity_restriction"
     COUNTRY_EMBARGO = "country_embargo"
     SUPPLIER_LOSS = "supplier_loss"
@@ -39,9 +41,7 @@ class Scenario(Base, TimestampMixin, TenantMixin):
     # Scenario metadata
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    type: Mapped[ScenarioType] = mapped_column(
-        SQLEnum(ScenarioType), nullable=False
-    )
+    type: Mapped[ScenarioType] = mapped_column(SQLEnum(ScenarioType), nullable=False)
     status: Mapped[ScenarioStatus] = mapped_column(
         SQLEnum(ScenarioStatus), default=ScenarioStatus.DRAFT, nullable=False
     )

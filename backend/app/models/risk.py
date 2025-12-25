@@ -12,6 +12,7 @@ from app.models.base import TimestampMixin, TenantMixin
 
 class RiskLevel(str, Enum):
     """Risk level classification."""
+
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"

@@ -1,47 +1,50 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
-import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { constraintsApi } from '../services/api'
-import ConstraintForm from '../components/forms/ConstraintForm'
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { constraintsApi } from "../services/api";
+import ConstraintForm from "../components/forms/ConstraintForm";
 
 export default function Constraints() {
-  const [search, setSearch] = useState('')
-  const [showForm, setShowForm] = useState(false)
-  const [editConstraint, setEditConstraint] = useState<any>(null)
+  const [search, setSearch] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editConstraint, setEditConstraint] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['constraints', search],
+    queryKey: ["constraints", search],
     queryFn: async () => {
-      const response = await constraintsApi.list({ page: 1, search: search || undefined })
-      return response.data
+      const response = await constraintsApi.list({
+        page: 1,
+        search: search || undefined,
+      });
+      return response.data;
     },
-  })
+  });
 
   const { data: summary } = useQuery({
-    queryKey: ['constraints-summary'],
+    queryKey: ["constraints-summary"],
     queryFn: async () => {
-      const response = await constraintsApi.summary()
-      return response.data
+      const response = await constraintsApi.summary();
+      return response.data;
     },
-  })
+  });
 
   const typeColors: Record<string, string> = {
-    policy: 'bg-blue-100 text-blue-800',
-    regulation: 'bg-purple-100 text-purple-800',
-    compliance: 'bg-green-100 text-green-800',
-    contractual: 'bg-yellow-100 text-yellow-800',
-    operational: 'bg-orange-100 text-orange-800',
-    financial: 'bg-red-100 text-red-800',
-    security: 'bg-gray-100 text-gray-800',
-  }
+    policy: "bg-blue-100 text-blue-800",
+    regulation: "bg-purple-100 text-purple-800",
+    compliance: "bg-green-100 text-green-800",
+    contractual: "bg-yellow-100 text-yellow-800",
+    operational: "bg-orange-100 text-orange-800",
+    financial: "bg-red-100 text-red-800",
+    security: "bg-gray-100 text-gray-800",
+  };
 
   const severityColors: Record<string, string> = {
-    low: 'bg-green-100 text-green-800',
-    medium: 'bg-yellow-100 text-yellow-800',
-    high: 'bg-orange-100 text-orange-800',
-    critical: 'bg-red-100 text-red-800',
-  }
+    low: "bg-green-100 text-green-800",
+    medium: "bg-yellow-100 text-yellow-800",
+    high: "bg-orange-100 text-orange-800",
+    critical: "bg-red-100 text-red-800",
+  };
 
   return (
     <div>
@@ -49,11 +52,19 @@ export default function Constraints() {
         <div className="sm:flex-auto">
           <h1 className="text-2xl font-bold text-gray-900">Constraints</h1>
           <p className="mt-2 text-sm text-gray-700">
-            Policies, regulations, and compliance requirements affecting your organization
+            Policies, regulations, and compliance requirements affecting your
+            organization
           </p>
         </div>
         <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-          <button type="button" className="btn-primary" onClick={() => { setEditConstraint(null); setShowForm(true); }}>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => {
+              setEditConstraint(null);
+              setShowForm(true);
+            }}
+          >
             <PlusIcon className="h-5 w-5 mr-2" />
             Add Constraint
           </button>
@@ -62,27 +73,40 @@ export default function Constraints() {
 
       <ConstraintForm
         isOpen={showForm}
-        onClose={() => { setShowForm(false); setEditConstraint(null); }}
+        onClose={() => {
+          setShowForm(false);
+          setEditConstraint(null);
+        }}
         constraint={editConstraint}
       />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-4 mb-6">
         <div className="card">
-          <dt className="text-sm font-medium text-gray-500">Total Constraints</dt>
-          <dd className="mt-1 text-3xl font-semibold text-gray-900">{summary?.total || 0}</dd>
+          <dt className="text-sm font-medium text-gray-500">
+            Total Constraints
+          </dt>
+          <dd className="mt-1 text-3xl font-semibold text-gray-900">
+            {summary?.total || 0}
+          </dd>
         </div>
         <div className="card">
           <dt className="text-sm font-medium text-gray-500">Mandatory</dt>
-          <dd className="mt-1 text-3xl font-semibold text-gray-900">{summary?.mandatory || 0}</dd>
+          <dd className="mt-1 text-3xl font-semibold text-gray-900">
+            {summary?.mandatory || 0}
+          </dd>
         </div>
         <div className="card border-l-4 border-orange-400">
           <dt className="text-sm font-medium text-gray-500">Expiring Soon</dt>
-          <dd className="mt-1 text-3xl font-semibold text-orange-600">{summary?.expiring_soon || 0}</dd>
+          <dd className="mt-1 text-3xl font-semibold text-orange-600">
+            {summary?.expiring_soon || 0}
+          </dd>
         </div>
         <div className="card">
           <dt className="text-sm font-medium text-gray-500">Active</dt>
-          <dd className="mt-1 text-3xl font-semibold text-green-600">{summary?.active || 0}</dd>
+          <dd className="mt-1 text-3xl font-semibold text-green-600">
+            {summary?.active || 0}
+          </dd>
         </div>
       </div>
 
@@ -117,21 +141,37 @@ export default function Constraints() {
             <tbody className="bg-white divide-y divide-gray-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                  <td
+                    colSpan={6}
+                    className="px-6 py-4 text-center text-gray-500"
+                  >
                     Loading...
                   </td>
                 </tr>
               ) : data?.items?.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                    No constraints found. Add your first constraint to get started.
+                  <td
+                    colSpan={6}
+                    className="px-6 py-4 text-center text-gray-500"
+                  >
+                    No constraints found. Add your first constraint to get
+                    started.
                   </td>
                 </tr>
               ) : (
                 data?.items?.map((constraint: any) => (
-                  <tr key={constraint.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/constraints/${constraint.id}`}>
+                  <tr
+                    key={constraint.id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() =>
+                      (window.location.href = `/constraints/${constraint.id}`)
+                    }
+                  >
                     <td className="table-cell">
-                      <Link to={`/constraints/${constraint.id}`} className="font-medium text-primary-600 hover:text-primary-800">
+                      <Link
+                        to={`/constraints/${constraint.id}`}
+                        className="font-medium text-primary-600 hover:text-primary-800"
+                      >
                         {constraint.name}
                       </Link>
                       {constraint.reference_code && (
@@ -143,7 +183,8 @@ export default function Constraints() {
                     <td className="table-cell">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                          typeColors[constraint.type?.toLowerCase()] || 'bg-gray-100 text-gray-800'
+                          typeColors[constraint.type?.toLowerCase()] ||
+                          "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {constraint.type}
@@ -152,7 +193,8 @@ export default function Constraints() {
                     <td className="table-cell">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                          severityColors[constraint.severity?.toLowerCase()] || 'bg-gray-100 text-gray-800'
+                          severityColors[constraint.severity?.toLowerCase()] ||
+                          "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {constraint.severity}
@@ -160,16 +202,21 @@ export default function Constraints() {
                     </td>
                     <td className="table-cell text-gray-500">
                       {constraint.effective_date
-                        ? new Date(constraint.effective_date).toLocaleDateString()
-                        : '-'}
+                        ? new Date(
+                            constraint.effective_date,
+                          ).toLocaleDateString()
+                        : "-"}
                     </td>
                     <td className="table-cell text-gray-500">
                       {constraint.expiry_date
                         ? new Date(constraint.expiry_date).toLocaleDateString()
-                        : 'No expiry'}
+                        : "No expiry"}
                     </td>
                     <td className="table-cell">
-                      <Link to={`/constraints/${constraint.id}`} className="text-primary-600 hover:text-primary-900 text-sm">
+                      <Link
+                        to={`/constraints/${constraint.id}`}
+                        className="text-primary-600 hover:text-primary-900 text-sm"
+                      >
                         View Details
                       </Link>
                     </td>
@@ -181,5 +228,5 @@ export default function Constraints() {
         </div>
       </div>
     </div>
-  )
+  );
 }

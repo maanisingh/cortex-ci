@@ -1,0 +1,636 @@
+{
+  "project": "/root/cortex-ci",
+  "timestamp": "2025-12-25T16:46:35+00:00",
+  "issues": [
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/import_sanctions_data.py",
+      "line": "33 - Cannot import from app.core.config",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/import_sanctions_data.py",
+      "line": "34 - Cannot import from app.models",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/services/risk_engine.py",
+      "line": "8 - Cannot import from app.models",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/services/scenario_simulator.py",
+      "line": "9 - Cannot import from app.models",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/audit.py",
+      "line": "6 - Cannot import from app.models.audit",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/risk.py",
+      "line": "6 - Cannot import from app.models.risk",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/constraint.py",
+      "line": "6 - Cannot import from app.models.constraint",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/scenario.py",
+      "line": "6 - Cannot import from app.models.scenario",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/dependency.py",
+      "line": "6 - Cannot import from app.models.dependency",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "1 - Cannot import from app.schemas.auth",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "9 - Cannot import from app.schemas.user",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "10 - Cannot import from app.schemas.tenant",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "11 - Cannot import from app.schemas.entity",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "12 - Cannot import from app.schemas.constraint",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "13 - Cannot import from app.schemas.dependency",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "14 - Cannot import from app.schemas.risk",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "15 - Cannot import from app.schemas.scenario",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/__init__.py",
+      "line": "16 - Cannot import from app.schemas.audit",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/schemas/entity.py",
+      "line": "6 - Cannot import from app.models.entity",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/scenario_chain.py",
+      "line": "14 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/scenario_chain.py",
+      "line": "15 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/scenario_chain.py",
+      "line": "18 - Cannot import from app.models.entity",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/audit.py",
+      "line": "9 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/audit.py",
+      "line": "10 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/risk.py",
+      "line": "9 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/risk.py",
+      "line": "10 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/tenant.py",
+      "line": "7 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/tenant.py",
+      "line": "8 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/risk_justification.py",
+      "line": "13 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/risk_justification.py",
+      "line": "14 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/risk_justification.py",
+      "line": "17 - Cannot import from app.models.entity",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/risk_justification.py",
+      "line": "18 - Cannot import from app.models.risk",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/constraint.py",
+      "line": "9 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/constraint.py",
+      "line": "10 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/scenario.py",
+      "line": "9 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/scenario.py",
+      "line": "10 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/user.py",
+      "line": "8 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/user.py",
+      "line": "9 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/user.py",
+      "line": "10 - Cannot import from app.core.security",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/dependency.py",
+      "line": "8 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/dependency.py",
+      "line": "9 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "1 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "2 - Cannot import from app.models.tenant",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "3 - Cannot import from app.models.user",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "4 - Cannot import from app.models.entity",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "5 - Cannot import from app.models.constraint",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "6 - Cannot import from app.models.dependency",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "7 - Cannot import from app.models.risk",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "8 - Cannot import from app.models.scenario",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "9 - Cannot import from app.models.audit",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "12 - Cannot import from app.models.scenario_chain",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "13 - Cannot import from app.models.risk_justification",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "14 - Cannot import from app.models.historical",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/__init__.py",
+      "line": "20 - Cannot import from app.models.ai_analysis",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/entity.py",
+      "line": "8 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/entity.py",
+      "line": "9 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/ai_analysis.py",
+      "line": "14 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/ai_analysis.py",
+      "line": "15 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/ai_analysis.py",
+      "line": "18 - Cannot import from app.models.entity",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/ai_analysis.py",
+      "line": "19 - Cannot import from app.models.user",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/historical.py",
+      "line": "13 - Cannot import from app.core.database",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/historical.py",
+      "line": "14 - Cannot import from app.models.base",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/historical.py",
+      "line": "17 - Cannot import from app.models.constraint",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/historical.py",
+      "line": "18 - Cannot import from app.models.entity",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/models/historical.py",
+      "line": "19 - Cannot import from app.models.user",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/core/security.py",
+      "line": "9 - Cannot import from app.core.config",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/app/core/database.py",
+      "line": "6 - Cannot import from app.core.config",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/alembic/env.py",
+      "line": "10 - Cannot import from app.core.config",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "import_check",
+      "type": "broken_import",
+      "file": "./backend/alembic/env.py",
+      "line": "11 - Cannot import from app.models",
+      "message": " No module named 'app' ",
+      "context": " ",
+      "suggestion": "Check if module is installed or fix import path "
+    },
+    {
+      "tool": "export_check",
+      "type": "unused_export",
+      "file": "src/services/api.ts",
+      "line": "0",
+      "message": " exported \\\"dependencyLayersApi\\\" is never imported ",
+      "context": " ",
+      "suggestion": "Verify if export is needed or remove "
+    }
+  ]
+}

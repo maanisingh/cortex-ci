@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from uuid import UUID
 import structlog
 
@@ -7,9 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.models import (
-    Entity, Constraint, Dependency, RiskScore, Scenario, ScenarioStatus, ScenarioType, Tenant
+    Entity,
+    Dependency,
+    RiskScore,
+    Scenario,
+    ScenarioStatus,
+    ScenarioType,
+    Tenant,
 )
-from app.services.risk_engine import RiskEngine
 
 logger = structlog.get_logger()
 
@@ -81,7 +86,7 @@ class ScenarioSimulator:
             result = await self.db.execute(
                 select(Entity.id).where(
                     Entity.tenant_id == self.tenant.id,
-                    Entity.is_active == True,
+                    Entity.is_active,
                 )
             )
             affected_ids = [row[0] for row in result.all()]
@@ -124,9 +129,7 @@ class ScenarioSimulator:
 
         for entity_id in target_ids:
             # Get entity
-            result = await self.db.execute(
-                select(Entity).where(Entity.id == entity_id)
-            )
+            result = await self.db.execute(select(Entity).where(Entity.id == entity_id))
             entity = result.scalar_one_or_none()
 
             if not entity:
@@ -134,11 +137,10 @@ class ScenarioSimulator:
 
             # Find all entities that depend on this one
             result = await self.db.execute(
-                select(Dependency)
-                .where(
+                select(Dependency).where(
                     Dependency.tenant_id == self.tenant.id,
                     Dependency.target_entity_id == entity_id,
-                    Dependency.is_active == True,
+                    Dependency.is_active,
                 )
             )
             incoming_deps = result.scalars().all()
@@ -178,7 +180,9 @@ class ScenarioSimulator:
 
         # Determine overall severity
         high_impact = sum(1 for i in impacted if i["severity"] == "HIGH")
-        severity = "CRITICAL" if high_impact > 3 else "HIGH" if high_impact > 0 else "MEDIUM"
+        severity = (
+            "CRITICAL" if high_impact > 3 else "HIGH" if high_impact > 0 else "MEDIUM"
+        )
 
         return {
             "summary": f"Sanctioning {len(target_ids)} entities would impact {len(impacted)} dependent entities",
@@ -198,11 +202,10 @@ class ScenarioSimulator:
 
         # Find all entities in this country
         result = await self.db.execute(
-            select(Entity)
-            .where(
+            select(Entity).where(
                 Entity.tenant_id == self.tenant.id,
                 Entity.country_code == country_code,
-                Entity.is_active == True,
+                Entity.is_active,
             )
         )
         country_entities = result.scalars().all()
@@ -212,20 +215,21 @@ class ScenarioSimulator:
 
         for entity in country_entities:
             # Entity itself is directly impacted
-            impacted.append({
-                "entity_id": str(entity.id),
-                "entity_name": entity.name,
-                "impact_type": "direct_embargo",
-                "severity": "CRITICAL",
-            })
+            impacted.append(
+                {
+                    "entity_id": str(entity.id),
+                    "entity_name": entity.name,
+                    "impact_type": "direct_embargo",
+                    "severity": "CRITICAL",
+                }
+            )
 
             # Find all entities depending on this one
             result = await self.db.execute(
-                select(Dependency)
-                .where(
+                select(Dependency).where(
                     Dependency.tenant_id == self.tenant.id,
                     Dependency.target_entity_id == entity.id,
-                    Dependency.is_active == True,
+                    Dependency.is_active,
                 )
             )
             deps = result.scalars().all()
@@ -237,13 +241,15 @@ class ScenarioSimulator:
                 source = source_result.scalar_one_or_none()
 
                 if source and source.country_code != country_code:
-                    impacted.append({
-                        "entity_id": str(source.id),
-                        "entity_name": source.name,
-                        "impact_type": "dependency_in_embargoed_country",
-                        "dependency_layer": dep.layer.value,
-                        "severity": "HIGH" if dep.criticality >= 4 else "MEDIUM",
-                    })
+                    impacted.append(
+                        {
+                            "entity_id": str(source.id),
+                            "entity_name": source.name,
+                            "impact_type": "dependency_in_embargoed_country",
+                            "dependency_layer": dep.layer.value,
+                            "severity": "HIGH" if dep.criticality >= 4 else "MEDIUM",
+                        }
+                    )
 
         severity = "CRITICAL" if len(country_entities) > 5 else "HIGH"
 
@@ -259,7 +265,9 @@ class ScenarioSimulator:
             ],
         }
 
-    async def _simulate_supplier_unavailable(self, scenario: Scenario) -> Dict[str, Any]:
+    async def _simulate_supplier_unavailable(
+        self, scenario: Scenario
+    ) -> Dict[str, Any]:
         """Simulate what happens if a supplier becomes unavailable."""
         params = scenario.parameters
         supplier_id = params.get("supplier_entity_id")
@@ -270,9 +278,7 @@ class ScenarioSimulator:
         supplier_id = UUID(supplier_id)
 
         # Get supplier
-        result = await self.db.execute(
-            select(Entity).where(Entity.id == supplier_id)
-        )
+        result = await self.db.execute(select(Entity).where(Entity.id == supplier_id))
         supplier = result.scalar_one_or_none()
 
         if not supplier:
@@ -280,11 +286,10 @@ class ScenarioSimulator:
 
         # Find all entities depending on this supplier
         result = await self.db.execute(
-            select(Dependency)
-            .where(
+            select(Dependency).where(
                 Dependency.tenant_id == self.tenant.id,
                 Dependency.target_entity_id == supplier_id,
-                Dependency.is_active == True,
+                Dependency.is_active,
             )
         )
         deps = result.scalars().all()
@@ -297,18 +302,30 @@ class ScenarioSimulator:
             source = source_result.scalar_one_or_none()
 
             if source:
-                impacted.append({
-                    "entity_id": str(source.id),
-                    "entity_name": source.name,
-                    "impact_type": "supplier_unavailable",
-                    "dependency_layer": dep.layer.value,
-                    "relationship": dep.relationship_type.value,
-                    "criticality": dep.criticality,
-                    "severity": "CRITICAL" if dep.criticality == 5 else "HIGH" if dep.criticality >= 4 else "MEDIUM",
-                })
+                impacted.append(
+                    {
+                        "entity_id": str(source.id),
+                        "entity_name": source.name,
+                        "impact_type": "supplier_unavailable",
+                        "dependency_layer": dep.layer.value,
+                        "relationship": dep.relationship_type.value,
+                        "criticality": dep.criticality,
+                        "severity": "CRITICAL"
+                        if dep.criticality == 5
+                        else "HIGH"
+                        if dep.criticality >= 4
+                        else "MEDIUM",
+                    }
+                )
 
         critical_count = sum(1 for i in impacted if i["severity"] == "CRITICAL")
-        severity = "CRITICAL" if critical_count > 0 else "HIGH" if len(impacted) > 5 else "MEDIUM"
+        severity = (
+            "CRITICAL"
+            if critical_count > 0
+            else "HIGH"
+            if len(impacted) > 5
+            else "MEDIUM"
+        )
 
         return {
             "summary": f"Loss of supplier {supplier.name} would affect {len(impacted)} dependent entities",
@@ -354,11 +371,10 @@ class ScenarioSimulator:
             for entity_id in current_impacted:
                 # Find entities depending on currently impacted
                 result = await self.db.execute(
-                    select(Dependency)
-                    .where(
+                    select(Dependency).where(
                         Dependency.tenant_id == self.tenant.id,
                         Dependency.target_entity_id == UUID(entity_id),
-                        Dependency.is_active == True,
+                        Dependency.is_active,
                     )
                 )
                 deps = result.scalars().all()
@@ -371,21 +387,25 @@ class ScenarioSimulator:
                         source = source_result.scalar_one_or_none()
 
                         if source:
-                            new_impacts.append({
-                                "entity_id": str(source.id),
-                                "entity_name": source.name,
-                                "cascade_level": level + 1,
-                                "triggered_by": entity_id,
-                                "estimated_days": level * 30,  # Rough estimate
-                            })
+                            new_impacts.append(
+                                {
+                                    "entity_id": str(source.id),
+                                    "entity_name": source.name,
+                                    "cascade_level": level + 1,
+                                    "triggered_by": entity_id,
+                                    "estimated_days": level * 30,  # Rough estimate
+                                }
+                            )
                             current_impacted.add(str(source.id))
 
             if new_impacts:
-                cascade_effects.append({
-                    "level": level + 1,
-                    "estimated_timeline_days": level * 30,
-                    "new_impacts": new_impacts,
-                })
+                cascade_effects.append(
+                    {
+                        "level": level + 1,
+                        "estimated_timeline_days": level * 30,
+                        "new_impacts": new_impacts,
+                    }
+                )
 
         return {
             "total_levels": len(cascade_effects) + 1,
@@ -409,10 +429,14 @@ class ScenarioSimulator:
             recommendations.append("Review financial exposure and payment alternatives")
 
         if any(i.get("dependency_layer") == "operational" for i in impacted):
-            recommendations.append("Identify alternative suppliers and logistics routes")
+            recommendations.append(
+                "Identify alternative suppliers and logistics routes"
+            )
 
         if any(i.get("criticality", 0) >= 4 for i in impacted):
-            recommendations.append("Prioritize mitigation for high-criticality dependencies")
+            recommendations.append(
+                "Prioritize mitigation for high-criticality dependencies"
+            )
 
         if not recommendations:
             recommendations.append("Continue monitoring situation")

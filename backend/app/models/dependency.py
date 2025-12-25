@@ -1,8 +1,7 @@
-from datetime import datetime, timezone
 from uuid import UUID, uuid4
 from typing import Optional
 from enum import Enum
-from sqlalchemy import String, Text, ForeignKey, Integer, Enum as SQLEnum, Boolean
+from sqlalchemy import Text, ForeignKey, Integer, Enum as SQLEnum, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
 
@@ -12,6 +11,7 @@ from app.models.base import TimestampMixin, TenantMixin
 
 class DependencyLayer(str, Enum):
     """Layer classification for multi-layer dependency modeling (Phase 2 ready)."""
+
     LEGAL = "legal"  # Contracts, grants, obligations
     FINANCIAL = "financial"  # Banks, currencies, payment corridors
     OPERATIONAL = "operational"  # Suppliers, logistics, IT
@@ -21,6 +21,7 @@ class DependencyLayer(str, Enum):
 
 class RelationshipType(str, Enum):
     """Type of relationship between entities."""
+
     # Operational
     SUPPLIES = "supplies"
     PROCURES_FROM = "procures_from"
@@ -100,7 +101,9 @@ class Dependency(Base, TimestampMixin, TenantMixin):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # For reversible relationships
-    is_bidirectional: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_bidirectional: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
 
     # Flexible custom data (contract numbers, amounts, dates, etc.)
     custom_data: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)

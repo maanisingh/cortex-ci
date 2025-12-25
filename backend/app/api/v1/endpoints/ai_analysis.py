@@ -1,9 +1,9 @@
 """Phase 2.5: Controlled AI Integration - Bounded intelligence API."""
+
 from typing import Optional, List, Dict, Any
 from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
-import random
 import math
 
 from fastapi import APIRouter, HTTPException, status, Query
@@ -11,9 +11,15 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select, func
 
 from app.models import (
-    AIAnalysis, AIAnalysisType, AIAnalysisStatus, AnomalyDetection,
-    Entity, RiskScore, Dependency,
-    AuditLog, AuditAction,
+    AIAnalysis,
+    AIAnalysisType,
+    AIAnalysisStatus,
+    AnomalyDetection,
+    Entity,
+    RiskScore,
+    Dependency,
+    AuditLog,
+    AuditAction,
 )
 from app.api.v1.deps import DB, CurrentUser, CurrentTenant, RequireWriter
 
@@ -95,7 +101,9 @@ async def request_ai_analysis(
         )
         count = entity_result.scalar()
         if count != len(data.entity_ids):
-            raise HTTPException(status_code=400, detail="One or more entity IDs not found")
+            raise HTTPException(
+                status_code=400, detail="One or more entity IDs not found"
+            )
 
     analysis = AIAnalysis(
         tenant_id=tenant.id,
@@ -138,7 +146,9 @@ async def request_ai_analysis(
         confidence=float(analysis.confidence),
         output_summary=analysis.output_summary,
         requires_human_approval=analysis.requires_human_approval,
-        created_at=analysis.created_at.isoformat() if analysis.created_at else datetime.utcnow().isoformat(),
+        created_at=analysis.created_at.isoformat()
+        if analysis.created_at
+        else datetime.utcnow().isoformat(),
         model_name=analysis.model_name,
         model_version=analysis.model_version,
     )
@@ -175,7 +185,9 @@ async def list_analyses(
                 confidence=float(a.confidence),
                 output_summary=a.output_summary,
                 requires_human_approval=a.requires_human_approval,
-                created_at=a.created_at.isoformat() if a.created_at else datetime.utcnow().isoformat(),
+                created_at=a.created_at.isoformat()
+                if a.created_at
+                else datetime.utcnow().isoformat(),
                 model_name=a.model_name,
                 model_version=a.model_version,
             )
@@ -217,8 +229,12 @@ async def get_analysis(
         "explanation": analysis.explanation,
         "model_card": analysis.get_model_card(),
         "requires_human_approval": analysis.requires_human_approval,
-        "approved_by": str(analysis.approved_by_id) if analysis.approved_by_id else None,
-        "approved_at": analysis.approved_at.isoformat() if analysis.approved_at else None,
+        "approved_by": str(analysis.approved_by_id)
+        if analysis.approved_by_id
+        else None,
+        "approved_at": analysis.approved_at.isoformat()
+        if analysis.approved_at
+        else None,
         "created_at": analysis.created_at.isoformat() if analysis.created_at else None,
         "processing_time_ms": _calculate_processing_time(analysis),
     }
@@ -327,31 +343,38 @@ async def list_pending_anomalies(
     page_size: int = Query(20, ge=1, le=100),
 ) -> Dict[str, Any]:
     """List anomalies pending human review."""
-    query = select(AnomalyDetection, Entity.name).join(
-        Entity, AnomalyDetection.entity_id == Entity.id
-    ).where(
-        AnomalyDetection.tenant_id == tenant.id,
-        AnomalyDetection.is_reviewed == False,
-    ).order_by(AnomalyDetection.anomaly_score.desc())
+    query = (
+        select(AnomalyDetection, Entity.name)
+        .join(Entity, AnomalyDetection.entity_id == Entity.id)
+        .where(
+            AnomalyDetection.tenant_id == tenant.id,
+            not AnomalyDetection.is_reviewed,
+        )
+        .order_by(AnomalyDetection.anomaly_score.desc())
+    )
 
     query = query.offset((page - 1) * page_size).limit(page_size)
     result = await db.execute(query)
 
     anomalies = []
     for anomaly, entity_name in result:
-        anomalies.append(AnomalyResponse(
-            id=anomaly.id,
-            entity_id=anomaly.entity_id,
-            entity_name=entity_name,
-            anomaly_type=anomaly.anomaly_type,
-            anomaly_description=anomaly.anomaly_description,
-            anomaly_score=float(anomaly.anomaly_score),
-            baseline_value=anomaly.baseline_value,
-            detected_value=anomaly.detected_value,
-            deviation_percentage=float(anomaly.deviation_percentage) if anomaly.deviation_percentage else None,
-            is_reviewed=anomaly.is_reviewed,
-            is_confirmed_anomaly=anomaly.is_confirmed_anomaly,
-        ))
+        anomalies.append(
+            AnomalyResponse(
+                id=anomaly.id,
+                entity_id=anomaly.entity_id,
+                entity_name=entity_name,
+                anomaly_type=anomaly.anomaly_type,
+                anomaly_description=anomaly.anomaly_description,
+                anomaly_score=float(anomaly.anomaly_score),
+                baseline_value=anomaly.baseline_value,
+                detected_value=anomaly.detected_value,
+                deviation_percentage=float(anomaly.deviation_percentage)
+                if anomaly.deviation_percentage
+                else None,
+                is_reviewed=anomaly.is_reviewed,
+                is_confirmed_anomaly=anomaly.is_confirmed_anomaly,
+            )
+        )
 
     return {
         "items": anomalies,
@@ -521,12 +544,16 @@ async def _process_analysis(db: DB, analysis: AIAnalysis, tenant_id: UUID) -> No
     await db.commit()
 
 
-async def _run_anomaly_detection(db: DB, analysis: AIAnalysis, tenant_id: UUID) -> Dict[str, Any]:
+async def _run_anomaly_detection(
+    db: DB, analysis: AIAnalysis, tenant_id: UUID
+) -> Dict[str, Any]:
     """Run anomaly detection algorithm."""
     # Get risk scores for analysis
-    query = select(RiskScore, Entity.name).join(
-        Entity, RiskScore.entity_id == Entity.id
-    ).where(RiskScore.tenant_id == tenant_id)
+    query = (
+        select(RiskScore, Entity.name)
+        .join(Entity, RiskScore.entity_id == Entity.id)
+        .where(RiskScore.tenant_id == tenant_id)
+    )
 
     if analysis.input_entity_ids:
         entity_uuids = [UUID(e) for e in analysis.input_entity_ids]
@@ -536,7 +563,11 @@ async def _run_anomaly_detection(db: DB, analysis: AIAnalysis, tenant_id: UUID) 
     scores = [(float(rs.score), rs.entity_id, name) for rs, name in result]
 
     if not scores:
-        return {"summary": "No data available for analysis", "anomalies": [], "confidence": 0.5}
+        return {
+            "summary": "No data available for analysis",
+            "anomalies": [],
+            "confidence": 0.5,
+        }
 
     # Simple anomaly detection using IQR method
     values = [s[0] for s in scores]
@@ -557,15 +588,19 @@ async def _run_anomaly_detection(db: DB, analysis: AIAnalysis, tenant_id: UUID) 
                 anomaly_score=Decimal(str(min(z_score / 4, 1.0))),  # Normalize to 0-1
                 baseline_value=f"{mean:.1f}",
                 detected_value=f"{score:.1f}",
-                deviation_percentage=Decimal(str(((score - mean) / mean) * 100 if mean > 0 else 0)),
+                deviation_percentage=Decimal(
+                    str(((score - mean) / mean) * 100 if mean > 0 else 0)
+                ),
             )
             db.add(anomaly)
-            anomalies.append({
-                "entity_id": str(entity_id),
-                "entity_name": name,
-                "score": score,
-                "z_score": round(z_score, 2),
-            })
+            anomalies.append(
+                {
+                    "entity_id": str(entity_id),
+                    "entity_name": name,
+                    "score": score,
+                    "z_score": round(z_score, 2),
+                }
+            )
 
     return {
         "summary": f"Found {len(anomalies)} anomalies in {len(scores)} entities",
@@ -580,17 +615,21 @@ async def _run_anomaly_detection(db: DB, analysis: AIAnalysis, tenant_id: UUID) 
     }
 
 
-async def _run_pattern_detection(db: DB, analysis: AIAnalysis, tenant_id: UUID) -> Dict[str, Any]:
+async def _run_pattern_detection(
+    db: DB, analysis: AIAnalysis, tenant_id: UUID
+) -> Dict[str, Any]:
     """Run pattern detection."""
     # Get dependency patterns
     deps_result = await db.execute(
         select(
             Dependency.relationship_type,
             func.count(Dependency.id).label("count"),
-        ).where(
+        )
+        .where(
             Dependency.tenant_id == tenant_id,
-            Dependency.is_active == True,
-        ).group_by(Dependency.relationship_type)
+            Dependency.is_active,
+        )
+        .group_by(Dependency.relationship_type)
     )
 
     patterns = {}
@@ -600,19 +639,23 @@ async def _run_pattern_detection(db: DB, analysis: AIAnalysis, tenant_id: UUID) 
     return {
         "summary": f"Identified {len(patterns)} relationship patterns",
         "patterns": patterns,
-        "dominant_pattern": max(patterns.items(), key=lambda x: x[1])[0] if patterns else None,
+        "dominant_pattern": max(patterns.items(), key=lambda x: x[1])[0]
+        if patterns
+        else None,
         "confidence": 0.78,
         "explanation": "Analyzed dependency relationships to identify common patterns",
     }
 
 
-async def _run_clustering(db: DB, analysis: AIAnalysis, tenant_id: UUID) -> Dict[str, Any]:
+async def _run_clustering(
+    db: DB, analysis: AIAnalysis, tenant_id: UUID
+) -> Dict[str, Any]:
     """Run entity clustering."""
     # Get entities with risk scores
     result = await db.execute(
-        select(Entity, RiskScore).outerjoin(
-            RiskScore, Entity.id == RiskScore.entity_id
-        ).where(Entity.tenant_id == tenant_id)
+        select(Entity, RiskScore)
+        .outerjoin(RiskScore, Entity.id == RiskScore.entity_id)
+        .where(Entity.tenant_id == tenant_id)
     )
 
     # Simple clustering by risk level

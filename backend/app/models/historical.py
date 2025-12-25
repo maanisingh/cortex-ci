@@ -1,15 +1,23 @@
 """Phase 2.4: Institutional Memory - Historical tracking models."""
-from datetime import datetime, date, timezone
+
+from __future__ import annotations
+
+from datetime import date
 from uuid import UUID, uuid4
-from typing import Optional, List
+from typing import TYPE_CHECKING, Optional
 from decimal import Decimal
 
-from sqlalchemy import String, Text, ForeignKey, Date, Enum as SQLEnum, Boolean, Numeric
+from sqlalchemy import String, Text, ForeignKey, Date, Boolean, Numeric
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB, ARRAY
+from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
 
 from app.core.database import Base
 from app.models.base import TimestampMixin, TenantMixin
+
+if TYPE_CHECKING:
+    from app.models.constraint import Constraint
+    from app.models.entity import Entity
+    from app.models.user import User
 
 
 class HistoricalSnapshot(Base, TimestampMixin, TenantMixin):
@@ -79,7 +87,9 @@ class DecisionOutcome(Base, TimestampMixin, TenantMixin):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    decision_maker_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    decision_maker_name: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
 
     # Entities involved
     entities_involved: Mapped[list] = mapped_column(JSONB, default=list)
@@ -126,7 +136,9 @@ class ConstraintChange(Base, TimestampMixin, TenantMixin):
 
     # Change info
     change_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
-    change_type: Mapped[str] = mapped_column(String(50), nullable=False)  # created, updated, deactivated
+    change_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # created, updated, deactivated
     change_summary: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Before/after states
@@ -190,4 +202,6 @@ class TransitionReport(Base, TimestampMixin, TenantMixin):
     generated_by: Mapped[Optional["User"]] = relationship("User")
 
     def __repr__(self) -> str:
-        return f"<TransitionReport {self.title} ({self.period_start} - {self.period_end})>"
+        return (
+            f"<TransitionReport {self.title} ({self.period_start} - {self.period_end})>"
+        )

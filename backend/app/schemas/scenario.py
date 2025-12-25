@@ -8,6 +8,7 @@ from app.models.scenario import ScenarioStatus, ScenarioType
 
 class ScenarioBase(BaseModel):
     """Base scenario schema."""
+
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
     type: ScenarioType
@@ -15,6 +16,7 @@ class ScenarioBase(BaseModel):
 
 class ScenarioCreate(ScenarioBase):
     """Scenario creation schema."""
+
     parameters: Dict[str, Any] = {}
     affected_entity_ids: List[str] = []
     cascade_depth: int = Field(1, ge=1, le=5)
@@ -23,6 +25,7 @@ class ScenarioCreate(ScenarioBase):
 
 class ScenarioUpdate(BaseModel):
     """Scenario update schema."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
     parameters: Optional[Dict[str, Any]] = None
@@ -32,6 +35,7 @@ class ScenarioUpdate(BaseModel):
 
 class ScenarioResponse(ScenarioBase):
     """Scenario response schema."""
+
     id: UUID
     tenant_id: UUID
     status: ScenarioStatus
@@ -57,6 +61,7 @@ class ScenarioResponse(ScenarioBase):
 
 class ScenarioResult(BaseModel):
     """Detailed scenario result."""
+
     scenario_id: UUID
     status: ScenarioStatus
     summary: str
@@ -70,6 +75,7 @@ class ScenarioResult(BaseModel):
 
 class ScenarioListResponse(BaseModel):
     """Paginated scenario list response."""
+
     items: List[ScenarioResponse]
     total: int
     page: int
@@ -79,5 +85,6 @@ class ScenarioListResponse(BaseModel):
 
 class ScenarioArchiveRequest(BaseModel):
     """Request to archive a scenario with outcome."""
+
     outcome_notes: Optional[str] = None
     lessons_learned: Optional[str] = None

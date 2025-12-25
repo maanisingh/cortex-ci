@@ -1,11 +1,17 @@
 from datetime import date, timedelta
-from typing import Optional, List
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status, Query
 from sqlalchemy import select, func, or_
 
-from app.models import Constraint, ConstraintType, ConstraintSeverity, AuditLog, AuditAction
+from app.models import (
+    Constraint,
+    ConstraintType,
+    ConstraintSeverity,
+    AuditLog,
+    AuditAction,
+)
 from app.schemas.constraint import (
     ConstraintCreate,
     ConstraintUpdate,
@@ -86,7 +92,7 @@ async def get_constraint_summary(
     result = await db.execute(
         select(Constraint).where(
             Constraint.tenant_id == tenant.id,
-            Constraint.is_active == True,
+            Constraint.is_active,
         )
     )
     constraints = result.scalars().all()
@@ -105,7 +111,8 @@ async def get_constraint_summary(
     today = date.today()
     thirty_days = today + timedelta(days=30)
     expiring_soon = sum(
-        1 for c in constraints
+        1
+        for c in constraints
         if c.expiry_date and today <= c.expiry_date <= thirty_days
     )
 

@@ -1,107 +1,121 @@
-import { useState, useEffect } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import Modal from '../common/Modal'
-import { entitiesApi } from '../../services/api'
+import { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Modal from "../common/Modal";
+import { entitiesApi } from "../../services/api";
 
 interface EntityFormProps {
-  isOpen: boolean
-  onClose: () => void
-  entity?: any // For edit mode
+  isOpen: boolean;
+  onClose: () => void;
+  entity?: any; // For edit mode
 }
 
-const entityTypes = ['ORGANIZATION', 'INDIVIDUAL', 'LOCATION', 'FINANCIAL']
+const entityTypes = ["ORGANIZATION", "INDIVIDUAL", "LOCATION", "FINANCIAL"];
 const criticalityOptions = [
-  { value: 1, label: 'Very Low' },
-  { value: 2, label: 'Low' },
-  { value: 3, label: 'Medium' },
-  { value: 4, label: 'High' },
-  { value: 5, label: 'Critical' },
-]
+  { value: 1, label: "Very Low" },
+  { value: 2, label: "Low" },
+  { value: 3, label: "Medium" },
+  { value: 4, label: "High" },
+  { value: 5, label: "Critical" },
+];
 
-export default function EntityForm({ isOpen, onClose, entity }: EntityFormProps) {
-  const queryClient = useQueryClient()
-  const isEdit = !!entity
+export default function EntityForm({
+  isOpen,
+  onClose,
+  entity,
+}: EntityFormProps) {
+  const queryClient = useQueryClient();
+  const isEdit = !!entity;
 
   const [formData, setFormData] = useState({
-    name: '',
-    type: 'ORGANIZATION',
-    aliases: '',
-    external_id: '',
-    registration_number: '',
-    tax_id: '',
-    country_code: '',
-    address: '',
-    category: '',
-    subcategory: '',
-    tags: '',
+    name: "",
+    type: "ORGANIZATION",
+    aliases: "",
+    external_id: "",
+    registration_number: "",
+    tax_id: "",
+    country_code: "",
+    address: "",
+    category: "",
+    subcategory: "",
+    tags: "",
     criticality: 3,
-    notes: '',
-  })
+    notes: "",
+  });
 
-  const [error, setError] = useState('')
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (entity) {
       setFormData({
-        name: entity.name || '',
-        type: entity.type || 'ORGANIZATION',
-        aliases: entity.aliases?.join(', ') || '',
-        external_id: entity.external_id || '',
-        registration_number: entity.registration_number || '',
-        tax_id: entity.tax_id || '',
-        country_code: entity.country_code || '',
-        address: entity.address || '',
-        category: entity.category || '',
-        subcategory: entity.subcategory || '',
-        tags: entity.tags?.join(', ') || '',
+        name: entity.name || "",
+        type: entity.type || "ORGANIZATION",
+        aliases: entity.aliases?.join(", ") || "",
+        external_id: entity.external_id || "",
+        registration_number: entity.registration_number || "",
+        tax_id: entity.tax_id || "",
+        country_code: entity.country_code || "",
+        address: entity.address || "",
+        category: entity.category || "",
+        subcategory: entity.subcategory || "",
+        tags: entity.tags?.join(", ") || "",
         criticality: entity.criticality || 3,
-        notes: entity.notes || '',
-      })
+        notes: entity.notes || "",
+      });
     } else {
       setFormData({
-        name: '',
-        type: 'ORGANIZATION',
-        aliases: '',
-        external_id: '',
-        registration_number: '',
-        tax_id: '',
-        country_code: '',
-        address: '',
-        category: '',
-        subcategory: '',
-        tags: '',
+        name: "",
+        type: "ORGANIZATION",
+        aliases: "",
+        external_id: "",
+        registration_number: "",
+        tax_id: "",
+        country_code: "",
+        address: "",
+        category: "",
+        subcategory: "",
+        tags: "",
         criticality: 3,
-        notes: '',
-      })
+        notes: "",
+      });
     }
-    setError('')
-  }, [entity, isOpen])
+    setError("");
+  }, [entity, isOpen]);
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {
       if (isEdit) {
-        return entitiesApi.update(entity.id, data)
+        return entitiesApi.update(entity.id, data);
       }
-      return entitiesApi.create(data)
+      return entitiesApi.create(data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['entities'] })
-      queryClient.invalidateQueries({ queryKey: ['entities-count'] })
-      onClose()
+      queryClient.invalidateQueries({ queryKey: ["entities"] });
+      queryClient.invalidateQueries({ queryKey: ["entities-count"] });
+      onClose();
     },
     onError: (err: any) => {
-      setError(err.response?.data?.detail || 'Failed to save entity')
+      setError(err.response?.data?.detail || "Failed to save entity");
     },
-  })
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError("");
 
     const payload = {
       ...formData,
-      aliases: formData.aliases ? formData.aliases.split(',').map(a => a.trim()).filter(Boolean) : [],
-      tags: formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+      aliases: formData.aliases
+        ? formData.aliases
+            .split(",")
+            .map((a) => a.trim())
+            .filter(Boolean)
+        : [],
+      tags: formData.tags
+        ? formData.tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [],
       country_code: formData.country_code || null,
       external_id: formData.external_id || null,
       registration_number: formData.registration_number || null,
@@ -110,21 +124,30 @@ export default function EntityForm({ isOpen, onClose, entity }: EntityFormProps)
       category: formData.category || null,
       subcategory: formData.subcategory || null,
       notes: formData.notes || null,
-    }
+    };
 
-    mutation.mutate(payload)
-  }
+    mutation.mutate(payload);
+  };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: name === 'criticality' ? parseInt(value) : value,
-    }))
-  }
+      [name]: name === "criticality" ? parseInt(value) : value,
+    }));
+  };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Edit Entity' : 'Add New Entity'} size="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEdit ? "Edit Entity" : "Add New Entity"}
+      size="lg"
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
@@ -158,8 +181,10 @@ export default function EntityForm({ isOpen, onClose, entity }: EntityFormProps)
               onChange={handleChange}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
             >
-              {entityTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
+              {entityTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
               ))}
             </select>
           </div>
@@ -174,8 +199,10 @@ export default function EntityForm({ isOpen, onClose, entity }: EntityFormProps)
               onChange={handleChange}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
             >
-              {criticalityOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label} ({opt.value}/5)</option>
+              {criticalityOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label} ({opt.value}/5)
+                </option>
               ))}
             </select>
           </div>
@@ -323,11 +350,7 @@ export default function EntityForm({ isOpen, onClose, entity }: EntityFormProps)
         </div>
 
         <div className="flex justify-end space-x-3 pt-4 border-t">
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn-secondary"
-          >
+          <button type="button" onClick={onClose} className="btn-secondary">
             Cancel
           </button>
           <button
@@ -335,10 +358,14 @@ export default function EntityForm({ isOpen, onClose, entity }: EntityFormProps)
             disabled={mutation.isPending}
             className="btn-primary"
           >
-            {mutation.isPending ? 'Saving...' : isEdit ? 'Update Entity' : 'Create Entity'}
+            {mutation.isPending
+              ? "Saving..."
+              : isEdit
+                ? "Update Entity"
+                : "Create Entity"}
           </button>
         </div>
       </form>
     </Modal>
-  )
+  );
 }

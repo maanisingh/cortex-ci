@@ -1,24 +1,28 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface User {
-  id: string
-  email: string
-  full_name: string
-  role: string
-  tenant_id: string
+  id: string;
+  email: string;
+  full_name: string;
+  role: string;
+  tenant_id: string;
 }
 
 interface AuthState {
-  user: User | null
-  accessToken: string | null
-  refreshToken: string | null
-  tenantId: string | null
-  isAuthenticated: boolean
-  login: (user: User, tokens: { access_token: string; refresh_token: string }, tenantId: string) => void
-  logout: () => void
-  setTokens: (tokens: { access_token: string; refresh_token: string }) => void
-  setUser: (user: User) => void
+  user: User | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  tenantId: string | null;
+  isAuthenticated: boolean;
+  login: (
+    user: User,
+    tokens: { access_token: string; refresh_token: string },
+    tenantId: string,
+  ) => void;
+  logout: () => void;
+  setTokens: (tokens: { access_token: string; refresh_token: string }) => void;
+  setUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -54,11 +58,10 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: tokens.refresh_token,
         }),
 
-      setUser: (user) =>
-        set({ user }),
+      setUser: (user) => set({ user }),
     }),
     {
-      name: 'cortex-auth',
-    }
-  )
-)
+      name: "cortex-auth",
+    },
+  ),
+);

@@ -1,7 +1,10 @@
 """Phase 2.5: Controlled AI Integration - Bounded intelligence models."""
-from datetime import datetime, timezone
+
+from __future__ import annotations
+
+from datetime import datetime
 from uuid import UUID, uuid4
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from decimal import Decimal
 from enum import Enum
 
@@ -12,9 +15,14 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
 from app.core.database import Base
 from app.models.base import TimestampMixin, TenantMixin
 
+if TYPE_CHECKING:
+    from app.models.entity import Entity
+    from app.models.user import User
+
 
 class AIAnalysisType(str, Enum):
     """Types of AI analysis available."""
+
     ANOMALY = "anomaly"  # Anomaly detection
     PATTERN = "pattern"  # Pattern detection
     SUMMARY = "summary"  # Report summarization
@@ -24,6 +32,7 @@ class AIAnalysisType(str, Enum):
 
 class AIAnalysisStatus(str, Enum):
     """Status of an AI analysis."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -67,9 +76,7 @@ class AIAnalysis(Base, TimestampMixin, TenantMixin):
     output_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Confidence and explainability
-    confidence: Mapped[Decimal] = mapped_column(
-        Numeric(5, 2), default=Decimal("0.00")
-    )
+    confidence: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=Decimal("0.00"))
     explanation: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     model_card: Mapped[dict] = mapped_column(JSONB, default=dict)
 
@@ -94,9 +101,7 @@ class AIAnalysis(Base, TimestampMixin, TenantMixin):
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Relationships
-    requested_by: Mapped["User"] = relationship(
-        "User", foreign_keys=[requested_by_id]
-    )
+    requested_by: Mapped["User"] = relationship("User", foreign_keys=[requested_by_id])
     approved_by: Mapped[Optional["User"]] = relationship(
         "User", foreign_keys=[approved_by_id]
     )

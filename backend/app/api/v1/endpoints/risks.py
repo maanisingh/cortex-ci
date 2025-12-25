@@ -1,11 +1,11 @@
-from typing import Optional, List
+from typing import List
 from uuid import UUID
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, HTTPException, status, Query, BackgroundTasks
 from sqlalchemy import select, func
 
-from app.models import RiskScore, RiskLevel, Entity, AuditLog, AuditAction
+from app.models import RiskScore, RiskLevel, AuditLog, AuditAction
 from app.schemas.risk import (
     RiskScoreResponse,
     RiskSummary,
@@ -38,13 +38,10 @@ async def get_risk_summary(
         .subquery()
     )
 
-    query = (
-        select(RiskScore)
-        .join(
-            subquery,
-            (RiskScore.entity_id == subquery.c.entity_id)
-            & (RiskScore.calculated_at == subquery.c.latest),
-        )
+    query = select(RiskScore).join(
+        subquery,
+        (RiskScore.entity_id == subquery.c.entity_id)
+        & (RiskScore.calculated_at == subquery.c.latest),
     )
 
     result = await db.execute(query)
@@ -59,11 +56,21 @@ async def get_risk_summary(
         total_score += float(score.score)
 
     # Recent changes (last 30 days)
-    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
-    escalations = sum(1 for s in scores if s.level_changed and s.previous_level and
-                      RiskLevel[s.level.value].value > RiskLevel[s.previous_level.value].value)
-    improvements = sum(1 for s in scores if s.level_changed and s.previous_level and
-                       RiskLevel[s.level.value].value < RiskLevel[s.previous_level.value].value)
+    datetime.now(timezone.utc) - timedelta(days=30)
+    escalations = sum(
+        1
+        for s in scores
+        if s.level_changed
+        and s.previous_level
+        and RiskLevel[s.level.value].value > RiskLevel[s.previous_level.value].value
+    )
+    improvements = sum(
+        1
+        for s in scores
+        if s.level_changed
+        and s.previous_level
+        and RiskLevel[s.level.value].value < RiskLevel[s.previous_level.value].value
+    )
 
     return RiskSummary(
         total_entities=len(scores),
@@ -96,9 +103,15 @@ async def get_risk_trends(
         select(
             date_col.label("date"),
             func.avg(RiskScore.score).label("avg_score"),
-            func.sum(case((RiskScore.level == RiskLevel.CRITICAL, 1), else_=0)).label("critical"),
-            func.sum(case((RiskScore.level == RiskLevel.HIGH, 1), else_=0)).label("high"),
-            func.sum(case((RiskScore.level == RiskLevel.MEDIUM, 1), else_=0)).label("medium"),
+            func.sum(case((RiskScore.level == RiskLevel.CRITICAL, 1), else_=0)).label(
+                "critical"
+            ),
+            func.sum(case((RiskScore.level == RiskLevel.HIGH, 1), else_=0)).label(
+                "high"
+            ),
+            func.sum(case((RiskScore.level == RiskLevel.MEDIUM, 1), else_=0)).label(
+                "medium"
+            ),
             func.sum(case((RiskScore.level == RiskLevel.LOW, 1), else_=0)).label("low"),
         )
         .where(
@@ -211,13 +224,18 @@ async def get_risk_justification(
     return RiskJustification(
         risk_level=score.level,
         primary_factors=factors.get("primary_factors", []),
-        assumptions=factors.get("assumptions", [
-            "Entity name matching uses 85% threshold",
-            "Country risk based on FATF and sanctions lists",
-        ]),
+        assumptions=factors.get(
+            "assumptions",
+            [
+                "Entity name matching uses 85% threshold",
+                "Country risk based on FATF and sanctions lists",
+            ],
+        ),
         supporting_sources=factors.get("sources", []),
         uncertainty=factors.get("uncertainty", "Standard confidence level"),
-        recommendation=factors.get("recommendation", "Review if score exceeds threshold"),
+        recommendation=factors.get(
+            "recommendation", "Review if score exceeds threshold"
+        ),
         calculation_details={
             "direct_match": float(score.direct_match_score),
             "indirect_match": float(score.indirect_match_score),

@@ -126,7 +126,7 @@ async def search_audit_logs(
         query = query.where(AuditLog.created_at <= search_data.end_date)
 
     if search_data.success_only:
-        query = query.where(AuditLog.success == True)
+        query = query.where(AuditLog.success)
 
     # Count total
     count_query = select(func.count()).select_from(query.subquery())
@@ -148,7 +148,9 @@ async def search_audit_logs(
     )
 
 
-@router.get("/resource/{resource_type}/{resource_id}", response_model=List[AuditLogResponse])
+@router.get(
+    "/resource/{resource_type}/{resource_id}", response_model=List[AuditLogResponse]
+)
 async def get_resource_history(
     resource_type: str,
     resource_id: UUID,

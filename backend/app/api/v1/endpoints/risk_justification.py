@@ -1,17 +1,20 @@
 """Phase 2.3: Risk Justification Engine - Legal defensibility API."""
+
 from typing import Optional, List, Dict, Any
 from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, status, Query
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import select, func
+from sqlalchemy import select
 
 from app.models import (
-    RiskJustification, Entity, RiskScore, Constraint,
-    AuditLog, AuditAction,
+    RiskJustification,
+    Entity,
+    RiskScore,
+    AuditLog,
+    AuditAction,
 )
 from app.api.v1.deps import DB, CurrentUser, CurrentTenant, RequireWriter
 
@@ -94,10 +97,12 @@ async def get_risk_justification(
 
     # Check for existing justification
     just_result = await db.execute(
-        select(RiskJustification).where(
+        select(RiskJustification)
+        .where(
             RiskJustification.entity_id == entity_id,
             RiskJustification.tenant_id == tenant.id,
-        ).order_by(RiskJustification.version.desc())
+        )
+        .order_by(RiskJustification.version.desc())
     )
     justification = just_result.scalar_one_or_none()
 
@@ -132,10 +137,12 @@ async def export_risk_justification(
 
     # Get or generate justification
     just_result = await db.execute(
-        select(RiskJustification).where(
+        select(RiskJustification)
+        .where(
             RiskJustification.entity_id == entity_id,
             RiskJustification.tenant_id == tenant.id,
-        ).order_by(RiskJustification.version.desc())
+        )
+        .order_by(RiskJustification.version.desc())
     )
     justification = just_result.scalar_one_or_none()
 
@@ -161,15 +168,23 @@ async def export_risk_justification(
                 "factors": justification.uncertainty_factors,
             },
             "sources": justification.source_citations,
-            "generated_at": justification.created_at.isoformat() if justification.created_at else None,
+            "generated_at": justification.created_at.isoformat()
+            if justification.created_at
+            else None,
             "analyst_can_override": justification.analyst_can_override,
         },
         override={
             "was_overridden": justification.overridden_by is not None,
-            "overridden_at": justification.overridden_at.isoformat() if justification.overridden_at else None,
+            "overridden_at": justification.overridden_at.isoformat()
+            if justification.overridden_at
+            else None,
             "reason": justification.override_reason,
-            "original_score": float(justification.original_score) if justification.original_score else None,
-        } if justification.overridden_by else None,
+            "original_score": float(justification.original_score)
+            if justification.original_score
+            else None,
+        }
+        if justification.overridden_by
+        else None,
         export_timestamp=datetime.utcnow().isoformat(),
         export_format="legal_defense",
     )
@@ -198,10 +213,12 @@ async def override_risk_score(
 
     # Get current justification
     just_result = await db.execute(
-        select(RiskJustification).where(
+        select(RiskJustification)
+        .where(
             RiskJustification.entity_id == entity_id,
             RiskJustification.tenant_id == tenant.id,
-        ).order_by(RiskJustification.version.desc())
+        )
+        .order_by(RiskJustification.version.desc())
     )
     current_just = just_result.scalar_one_or_none()
 
@@ -228,13 +245,18 @@ async def override_risk_score(
         risk_score_id=current_just.risk_score_id,
         risk_score=Decimal(str(override_data.new_score)),
         risk_level=_get_risk_level(override_data.new_score),
-        primary_factors=current_just.primary_factors + [{
-            "factor": "analyst_override",
-            "contribution": override_data.new_score - float(current_just.risk_score),
-            "source": "Analyst Override",
-            "evidence": override_data.reason,
-        }],
-        assumptions=current_just.assumptions + [
+        primary_factors=current_just.primary_factors
+        + [
+            {
+                "factor": "analyst_override",
+                "contribution": override_data.new_score
+                - float(current_just.risk_score),
+                "source": "Analyst Override",
+                "evidence": override_data.reason,
+            }
+        ],
+        assumptions=current_just.assumptions
+        + [
             f"Analyst override applied by {current_user.email}",
         ],
         confidence=Decimal("0.95"),  # Higher confidence with human review
@@ -298,10 +320,12 @@ async def get_justification_history(
 ) -> List[Dict[str, Any]]:
     """Get history of all justification versions for an entity."""
     result = await db.execute(
-        select(RiskJustification).where(
+        select(RiskJustification)
+        .where(
             RiskJustification.entity_id == entity_id,
             RiskJustification.tenant_id == tenant.id,
-        ).order_by(RiskJustification.version.desc())
+        )
+        .order_by(RiskJustification.version.desc())
     )
     justifications = result.scalars().all()
 
@@ -333,30 +357,44 @@ async def _generate_justification(
     factors = []
 
     # Country risk factor
-    high_risk_countries = {"RU": 95, "IR": 95, "KP": 95, "SY": 90, "BY": 80, "VE": 75, "CU": 70}
+    high_risk_countries = {
+        "RU": 95,
+        "IR": 95,
+        "KP": 95,
+        "SY": 90,
+        "BY": 80,
+        "VE": 75,
+        "CU": 70,
+    }
     if entity.country_code and entity.country_code in high_risk_countries:
-        factors.append({
-            "factor": "country_risk",
-            "contribution": high_risk_countries[entity.country_code] * 0.35,
-            "source": "OFAC Country Sanctions",
-            "evidence": f"Entity located in sanctioned jurisdiction ({entity.country_code})",
-        })
+        factors.append(
+            {
+                "factor": "country_risk",
+                "contribution": high_risk_countries[entity.country_code] * 0.35,
+                "source": "OFAC Country Sanctions",
+                "evidence": f"Entity located in sanctioned jurisdiction ({entity.country_code})",
+            }
+        )
 
     # Source-based factor
     if entity.source and "OFAC" in entity.source.upper():
-        factors.append({
-            "factor": "sanctions_list_match",
-            "contribution": 30.0,
-            "source": "OFAC SDN List",
-            "evidence": f"Direct match on OFAC sanctions list",
-        })
+        factors.append(
+            {
+                "factor": "sanctions_list_match",
+                "contribution": 30.0,
+                "source": "OFAC SDN List",
+                "evidence": "Direct match on OFAC sanctions list",
+            }
+        )
     elif entity.source and "UN" in entity.source.upper():
-        factors.append({
-            "factor": "sanctions_list_match",
-            "contribution": 28.0,
-            "source": "UN Consolidated List",
-            "evidence": f"Direct match on UN sanctions list",
-        })
+        factors.append(
+            {
+                "factor": "sanctions_list_match",
+                "contribution": 28.0,
+                "source": "UN Consolidated List",
+                "evidence": "Direct match on UN sanctions list",
+            }
+        )
 
     # Entity type factor
     type_risk = {
@@ -366,21 +404,25 @@ async def _generate_justification(
         "INDIVIDUAL": 8,
     }
     if entity.type and entity.type.value in type_risk:
-        factors.append({
-            "factor": "entity_type",
-            "contribution": type_risk[entity.type.value],
-            "source": "Internal Classification",
-            "evidence": f"Entity type {entity.type.value} has elevated baseline risk",
-        })
+        factors.append(
+            {
+                "factor": "entity_type",
+                "contribution": type_risk[entity.type.value],
+                "source": "Internal Classification",
+                "evidence": f"Entity type {entity.type.value} has elevated baseline risk",
+            }
+        )
 
     # Criticality factor
     if entity.criticality and entity.criticality >= 4:
-        factors.append({
-            "factor": "criticality",
-            "contribution": entity.criticality * 3,
-            "source": "Internal Assessment",
-            "evidence": f"Criticality level {entity.criticality}/5",
-        })
+        factors.append(
+            {
+                "factor": "criticality",
+                "contribution": entity.criticality * 3,
+                "source": "Internal Assessment",
+                "evidence": f"Criticality level {entity.criticality}/5",
+            }
+        )
 
     # Assumptions
     assumptions = [
@@ -400,11 +442,15 @@ async def _generate_justification(
     # Source citations
     sources = []
     if entity.source:
-        sources.append({
-            "source": entity.source,
-            "date": entity.created_at.strftime("%Y-%m-%d") if entity.created_at else None,
-            "record_id": entity.external_id or str(entity.id),
-        })
+        sources.append(
+            {
+                "source": entity.source,
+                "date": entity.created_at.strftime("%Y-%m-%d")
+                if entity.created_at
+                else None,
+                "record_id": entity.external_id or str(entity.id),
+            }
+        )
 
     justification = RiskJustification(
         tenant_id=tenant_id,
@@ -426,7 +472,9 @@ async def _generate_justification(
     return justification
 
 
-def _format_justification_response(justification: RiskJustification, entity: Entity) -> Dict[str, Any]:
+def _format_justification_response(
+    justification: RiskJustification, entity: Entity
+) -> Dict[str, Any]:
     """Format justification for API response."""
     return {
         "entity_id": str(justification.entity_id),
@@ -441,7 +489,9 @@ def _format_justification_response(justification: RiskJustification, entity: Ent
         "analyst_can_override": justification.analyst_can_override,
         "was_overridden": justification.overridden_by is not None,
         "override_reason": justification.override_reason,
-        "created_at": justification.created_at.isoformat() if justification.created_at else None,
+        "created_at": justification.created_at.isoformat()
+        if justification.created_at
+        else None,
         "version": justification.version,
     }
 

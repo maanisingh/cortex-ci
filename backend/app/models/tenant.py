@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from uuid import UUID, uuid4
 from typing import Optional
 from sqlalchemy import String, Boolean, Text
@@ -18,7 +17,9 @@ class Tenant(Base, TimestampMixin):
         PGUUID(as_uuid=True), primary_key=True, default=uuid4
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
+    slug: Mapped[str] = mapped_column(
+        String(100), unique=True, nullable=False, index=True
+    )
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
@@ -39,7 +40,9 @@ class Tenant(Base, TimestampMixin):
 
     # Relationships
     users = relationship("User", back_populates="tenant", cascade="all, delete-orphan")
-    entities = relationship("Entity", back_populates="tenant", cascade="all, delete-orphan")
+    entities = relationship(
+        "Entity", back_populates="tenant", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Tenant {self.slug}>"

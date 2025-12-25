@@ -1,30 +1,34 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
-import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { entitiesApi } from '../services/api'
-import EntityForm from '../components/forms/EntityForm'
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { entitiesApi } from "../services/api";
+import EntityForm from "../components/forms/EntityForm";
 
 export default function Entities() {
-  const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
-  const [showForm, setShowForm] = useState(false)
-  const [editEntity, setEditEntity] = useState<any>(null)
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [showForm, setShowForm] = useState(false);
+  const [editEntity, setEditEntity] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['entities', page, search],
+    queryKey: ["entities", page, search],
     queryFn: async () => {
-      const response = await entitiesApi.list({ page, page_size: 20, search: search || undefined })
-      return response.data
+      const response = await entitiesApi.list({
+        page,
+        page_size: 20,
+        search: search || undefined,
+      });
+      return response.data;
     },
-  })
+  });
 
   const typeColors: Record<string, string> = {
-    organization: 'bg-blue-100 text-blue-800',
-    individual: 'bg-purple-100 text-purple-800',
-    location: 'bg-green-100 text-green-800',
-    financial: 'bg-yellow-100 text-yellow-800',
-  }
+    organization: "bg-blue-100 text-blue-800",
+    individual: "bg-purple-100 text-purple-800",
+    location: "bg-green-100 text-green-800",
+    financial: "bg-yellow-100 text-yellow-800",
+  };
 
   return (
     <div>
@@ -36,7 +40,14 @@ export default function Entities() {
           </p>
         </div>
         <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-          <button type="button" className="btn-primary" onClick={() => { setEditEntity(null); setShowForm(true); }}>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => {
+              setEditEntity(null);
+              setShowForm(true);
+            }}
+          >
             <PlusIcon className="h-5 w-5 mr-2" />
             Add Entity
           </button>
@@ -45,7 +56,10 @@ export default function Entities() {
 
       <EntityForm
         isOpen={showForm}
-        onClose={() => { setShowForm(false); setEditEntity(null); }}
+        onClose={() => {
+          setShowForm(false);
+          setEditEntity(null);
+        }}
         entity={editEntity}
       />
 
@@ -80,41 +94,59 @@ export default function Entities() {
             <tbody className="bg-white divide-y divide-gray-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                  <td
+                    colSpan={6}
+                    className="px-6 py-4 text-center text-gray-500"
+                  >
                     Loading...
                   </td>
                 </tr>
               ) : data?.items?.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                  <td
+                    colSpan={6}
+                    className="px-6 py-4 text-center text-gray-500"
+                  >
                     No entities found
                   </td>
                 </tr>
               ) : (
                 data?.items?.map((entity: any) => (
-                  <tr key={entity.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/entities/${entity.id}`}>
+                  <tr
+                    key={entity.id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() =>
+                      (window.location.href = `/entities/${entity.id}`)
+                    }
+                  >
                     <td className="table-cell">
-                      <Link to={`/entities/${entity.id}`} className="font-medium text-primary-600 hover:text-primary-800">
+                      <Link
+                        to={`/entities/${entity.id}`}
+                        className="font-medium text-primary-600 hover:text-primary-800"
+                      >
                         {entity.name}
                       </Link>
                     </td>
                     <td className="table-cell">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          typeColors[entity.type?.toLowerCase()] || 'bg-gray-100 text-gray-800'
+                          typeColors[entity.type?.toLowerCase()] ||
+                          "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {entity.type}
                       </span>
                     </td>
-                    <td className="table-cell">{entity.country_code || '-'}</td>
+                    <td className="table-cell">{entity.country_code || "-"}</td>
                     <td className="table-cell">
                       <div className="flex items-center">
                         {[1, 2, 3, 4, 5].map((n) => (
                           <div
                             key={n}
                             className={`w-2 h-2 rounded-full mr-1 ${
-                              n <= entity.criticality ? 'bg-primary-500' : 'bg-gray-200'
+                              n <= entity.criticality
+                                ? "bg-primary-500"
+                                : "bg-gray-200"
                             }`}
                           />
                         ))}
@@ -124,7 +156,10 @@ export default function Entities() {
                       {new Date(entity.created_at).toLocaleDateString()}
                     </td>
                     <td className="table-cell">
-                      <Link to={`/entities/${entity.id}`} className="text-primary-600 hover:text-primary-900 text-sm">
+                      <Link
+                        to={`/entities/${entity.id}`}
+                        className="text-primary-600 hover:text-primary-900 text-sm"
+                      >
                         View Details
                       </Link>
                     </td>
@@ -157,8 +192,9 @@ export default function Entities() {
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
-                  Showing page <span className="font-medium">{page}</span> of{' '}
-                  <span className="font-medium">{data.pages}</span> ({data.total} total)
+                  Showing page <span className="font-medium">{page}</span> of{" "}
+                  <span className="font-medium">{data.pages}</span> (
+                  {data.total} total)
                 </p>
               </div>
               <div className="flex gap-2">
@@ -182,5 +218,5 @@ export default function Entities() {
         )}
       </div>
     </div>
-  )
+  );
 }

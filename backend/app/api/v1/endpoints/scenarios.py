@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional
 from uuid import UUID
 from datetime import datetime, timezone
 
@@ -125,7 +125,9 @@ async def get_scenario_results(
         severity=results.get("severity", "MEDIUM"),
         impacted_entities=results.get("impacted_entities", []),
         risk_score_changes=results.get("risk_score_changes", {}),
-        cascading_effects=scenario.cascade_results.get("effects", []) if scenario.cascade_results else [],
+        cascading_effects=scenario.cascade_results.get("effects", [])
+        if scenario.cascade_results
+        else [],
         recommendations=results.get("recommendations", []),
         execution_time_seconds=scenario.duration_seconds,
     )
@@ -271,6 +273,7 @@ async def run_scenario(
 
     # Run simulation in background
     from app.services.scenario_simulator import ScenarioSimulator
+
     simulator = ScenarioSimulator(db, tenant)
     background_tasks.add_task(simulator.run, scenario.id)
 

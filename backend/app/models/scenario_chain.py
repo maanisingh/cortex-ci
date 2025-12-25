@@ -1,20 +1,35 @@
 """Phase 2.2: Scenario Chains - Cascading effect prediction models."""
-from datetime import datetime, timezone
+
+from __future__ import annotations
+
+from datetime import datetime
 from uuid import UUID, uuid4
-from typing import Optional, List
+from typing import TYPE_CHECKING, Optional, List
 from enum import Enum
 from decimal import Decimal
 
-from sqlalchemy import String, Text, ForeignKey, Integer, Enum as SQLEnum, Boolean, Numeric
+from sqlalchemy import (
+    String,
+    Text,
+    ForeignKey,
+    Integer,
+    Enum as SQLEnum,
+    Boolean,
+    Numeric,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB, ARRAY
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 from app.core.database import Base
 from app.models.base import TimestampMixin, TenantMixin
 
+if TYPE_CHECKING:
+    from app.models.entity import Entity
+
 
 class EffectSeverity(str, Enum):
     """Severity of an effect in a scenario chain."""
+
     NEGLIGIBLE = "negligible"
     MINOR = "minor"
     MODERATE = "moderate"
@@ -112,7 +127,8 @@ class ChainEffect(Base, TimestampMixin):
         Numeric(10, 2), default=Decimal("0.00")
     )
     probability: Mapped[Decimal] = mapped_column(
-        Numeric(5, 2), default=Decimal("1.00")  # 1.00 = 100%
+        Numeric(5, 2),
+        default=Decimal("1.00"),  # 1.00 = 100%
     )
 
     # Source of this effect (what caused it)

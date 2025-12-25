@@ -1,9 +1,8 @@
-from typing import Optional, List
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status, Query
 from sqlalchemy import select, func, or_
-from sqlalchemy.orm import selectinload
 
 from app.models import Entity, EntityType, AuditLog, AuditAction
 from app.schemas.entity import (
@@ -260,11 +259,13 @@ async def bulk_import_entities(
             imported += 1
 
         except Exception as e:
-            errors.append({
-                "index": idx,
-                "name": entity_data.name,
-                "error": str(e),
-            })
+            errors.append(
+                {
+                    "index": idx,
+                    "name": entity_data.name,
+                    "error": str(e),
+                }
+            )
 
     # Audit log
     audit = AuditLog(

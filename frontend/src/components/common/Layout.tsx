@@ -1,6 +1,6 @@
-import { Fragment, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { Dialog, Transition } from '@headlessui/react'
+import { Fragment, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Dialog, Transition } from "@headlessui/react";
 import {
   Bars3Icon,
   HomeIcon,
@@ -19,49 +19,76 @@ import {
   ClockIcon,
   SparklesIcon,
   ChartBarSquareIcon,
-} from '@heroicons/react/24/outline'
-import { useAuthStore } from '../../stores/authStore'
+  // Phase 2.1 icons
+  Square3Stack3DIcon,
+  ViewColumnsIcon,
+  // Phase 3 icons
+  ShieldCheckIcon,
+  // Phase 4 icons
+  ArrowsUpDownIcon,
+  ChartBarIcon,
+  // Phase 5 icons
+  CpuChipIcon,
+} from "@heroicons/react/24/outline";
+import { useAuthStore } from "../../stores/authStore";
+import RealTimeAlerts from "./RealTimeAlerts";
+import ThemeToggle from "./ThemeToggle";
+import UserGuide from "./UserGuide";
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: HomeIcon },
-  { name: 'Entities', href: '/entities', icon: BuildingOfficeIcon },
-  { name: 'Constraints', href: '/constraints', icon: ShieldExclamationIcon },
-  { name: 'Dependencies', href: '/dependencies', icon: LinkIcon },
-  { name: 'Risks', href: '/risks', icon: ExclamationTriangleIcon },
-  { name: 'Scenarios', href: '/scenarios', icon: BeakerIcon },
-  { name: 'Audit Log', href: '/audit', icon: ClipboardDocumentListIcon },
-]
+  { name: "Dashboard", href: "/", icon: HomeIcon },
+  { name: "Entities", href: "/entities", icon: BuildingOfficeIcon },
+  { name: "Constraints", href: "/constraints", icon: ShieldExclamationIcon },
+  { name: "Dependencies", href: "/dependencies", icon: LinkIcon },
+  { name: "Risks", href: "/risks", icon: ExclamationTriangleIcon },
+  { name: "Scenarios", href: "/scenarios", icon: BeakerIcon },
+  { name: "Audit Log", href: "/audit", icon: ClipboardDocumentListIcon },
+];
 
 const phase2Navigation = [
-  { name: 'Scenario Chains', href: '/scenario-chains', icon: ArrowsRightLeftIcon },
-  { name: 'Risk Justification', href: '/risk-justification', icon: ScaleIcon },
-  { name: 'Institutional Memory', href: '/history', icon: ClockIcon },
-  { name: 'AI Analysis', href: '/ai-analysis', icon: SparklesIcon },
-  { name: 'Monitoring', href: '/monitoring', icon: ChartBarSquareIcon },
-]
+  { name: "Dependency Layers", href: "/dependency-layers", icon: Square3Stack3DIcon },
+  { name: "Cross-Layer Analysis", href: "/cross-layer-analysis", icon: ViewColumnsIcon },
+  {
+    name: "Scenario Chains",
+    href: "/scenario-chains",
+    icon: ArrowsRightLeftIcon,
+  },
+  { name: "Risk Justification", href: "/risk-justification", icon: ScaleIcon },
+  { name: "Institutional Memory", href: "/history", icon: ClockIcon },
+  { name: "AI Analysis", href: "/ai-analysis", icon: SparklesIcon },
+  { name: "Monitoring", href: "/monitoring", icon: ChartBarSquareIcon },
+  { name: "Simulations", href: "/simulations", icon: CpuChipIcon },
+];
 
 const adminNavigation = [
-  { name: 'User Management', href: '/admin/users', icon: UsersIcon },
-  { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
-]
+  { name: "User Management", href: "/admin/users", icon: UsersIcon },
+  { name: "Analytics", href: "/analytics", icon: ChartBarIcon },
+  { name: "Bulk Operations", href: "/bulk-operations", icon: ArrowsUpDownIcon },
+  { name: "Settings", href: "/settings", icon: Cog6ToothIcon },
+];
 
 const userNavigation = [
-  { name: 'Profile', href: '/profile', icon: UserCircleIcon },
-]
+  { name: "Profile", href: "/profile", icon: UserCircleIcon },
+  { name: "Security", href: "/security", icon: ShieldCheckIcon },
+];
 
 function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ')
+  return classes.filter(Boolean).join(" ");
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const location = useLocation()
-  const { user, logout } = useAuthStore()
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+  const { user, logout } = useAuthStore();
 
   return (
     <div>
       <Transition.Root show={sidebarOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-50 lg:hidden" onClose={setSidebarOpen}>
+        <Dialog
+          as="div"
+          className="relative z-50 lg:hidden"
+          onClose={setSidebarOpen}
+        >
           <Transition.Child
             as={Fragment}
             enter="transition-opacity ease-linear duration-300"
@@ -87,7 +114,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Dialog.Panel className="relative mr-16 flex w-full max-w-xs flex-1">
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-primary-900 px-6 pb-4">
                   <div className="flex h-16 shrink-0 items-center">
-                    <span className="text-2xl font-bold text-white">CORTEX-CI</span>
+                    <span className="text-2xl font-bold text-white">
+                      CORTEX-CI
+                    </span>
                   </div>
                   <nav className="flex flex-1 flex-col">
                     <ul role="list" className="flex flex-1 flex-col gap-y-7">
@@ -99,13 +128,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                                 to={item.href}
                                 className={classNames(
                                   location.pathname === item.href
-                                    ? 'bg-primary-800 text-white'
-                                    : 'text-primary-200 hover:text-white hover:bg-primary-800',
-                                  'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                                    ? "bg-primary-800 text-white"
+                                    : "text-primary-200 hover:text-white hover:bg-primary-800",
+                                  "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold",
                                 )}
                                 onClick={() => setSidebarOpen(false)}
                               >
-                                <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                                <item.icon
+                                  className="h-6 w-6 shrink-0"
+                                  aria-hidden="true"
+                                />
                                 {item.name}
                               </Link>
                             </li>
@@ -137,12 +169,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         to={item.href}
                         className={classNames(
                           location.pathname === item.href
-                            ? 'bg-primary-800 text-white'
-                            : 'text-primary-200 hover:text-white hover:bg-primary-800',
-                          'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                            ? "bg-primary-800 text-white"
+                            : "text-primary-200 hover:text-white hover:bg-primary-800",
+                          "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold",
                         )}
                       >
-                        <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                        <item.icon
+                          className="h-6 w-6 shrink-0"
+                          aria-hidden="true"
+                        />
                         {item.name}
                       </Link>
                     </li>
@@ -150,7 +185,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </ul>
               </li>
               <li>
-                <div className="text-xs font-semibold leading-6 text-primary-400 uppercase">Phase 2</div>
+                <div className="text-xs font-semibold leading-6 text-primary-400 uppercase">
+                  Phase 2
+                </div>
                 <ul role="list" className="-mx-2 mt-2 space-y-1">
                   {phase2Navigation.map((item) => (
                     <li key={item.name}>
@@ -158,21 +195,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         to={item.href}
                         className={classNames(
                           location.pathname === item.href
-                            ? 'bg-primary-800 text-white'
-                            : 'text-primary-200 hover:text-white hover:bg-primary-800',
-                          'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                            ? "bg-primary-800 text-white"
+                            : "text-primary-200 hover:text-white hover:bg-primary-800",
+                          "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold",
                         )}
                       >
-                        <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                        <item.icon
+                          className="h-6 w-6 shrink-0"
+                          aria-hidden="true"
+                        />
                         {item.name}
                       </Link>
                     </li>
                   ))}
                 </ul>
               </li>
-              {user?.role?.toUpperCase() === 'ADMIN' && (
+              {user?.role?.toUpperCase() === "ADMIN" && (
                 <li>
-                  <div className="text-xs font-semibold leading-6 text-primary-400 uppercase">Admin</div>
+                  <div className="text-xs font-semibold leading-6 text-primary-400 uppercase">
+                    Admin
+                  </div>
                   <ul role="list" className="-mx-2 mt-2 space-y-1">
                     {adminNavigation.map((item) => (
                       <li key={item.name}>
@@ -180,12 +222,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                           to={item.href}
                           className={classNames(
                             location.pathname === item.href
-                              ? 'bg-primary-800 text-white'
-                              : 'text-primary-200 hover:text-white hover:bg-primary-800',
-                            'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                              ? "bg-primary-800 text-white"
+                              : "text-primary-200 hover:text-white hover:bg-primary-800",
+                            "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold",
                           )}
                         >
-                          <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                          <item.icon
+                            className="h-6 w-6 shrink-0"
+                            aria-hidden="true"
+                          />
                           {item.name}
                         </Link>
                       </li>
@@ -201,12 +246,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         to={item.href}
                         className={classNames(
                           location.pathname === item.href
-                            ? 'bg-primary-800 text-white'
-                            : 'text-primary-200 hover:text-white hover:bg-primary-800',
-                          'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold'
+                            ? "bg-primary-800 text-white"
+                            : "text-primary-200 hover:text-white hover:bg-primary-800",
+                          "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold",
                         )}
                       >
-                        <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                        <item.icon
+                          className="h-6 w-6 shrink-0"
+                          aria-hidden="true"
+                        />
                         {item.name}
                       </Link>
                     </li>
@@ -214,7 +262,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </ul>
                 <div className="text-primary-200 text-sm mb-2 border-t border-primary-700 pt-4">
                   {user?.full_name}
-                  <span className="text-primary-400 block text-xs">{user?.email}</span>
+                  <span className="text-primary-400 block text-xs">
+                    {user?.email}
+                  </span>
                 </div>
                 <button
                   onClick={logout}
@@ -229,10 +279,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       <div className="lg:pl-72">
-        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white dark:bg-dark-800 dark:border-dark-700 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8 transition-colors">
           <button
             type="button"
-            className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
+            className="-m-2.5 p-2.5 text-gray-700 dark:text-gray-300 lg:hidden"
             onClick={() => setSidebarOpen(true)}
           >
             <span className="sr-only">Open sidebar</span>
@@ -241,17 +291,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex items-center gap-x-4 lg:gap-x-6 ml-auto">
-              <span className="text-sm text-gray-500">
-                Role: <span className="font-medium text-gray-900 capitalize">{user?.role}</span>
+              {/* Theme Toggle */}
+              <ThemeToggle />
+              {/* Real-time Alerts */}
+              <RealTimeAlerts />
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Role:{" "}
+                <span className="font-medium text-gray-900 dark:text-gray-200 capitalize">
+                  {user?.role}
+                </span>
               </span>
             </div>
           </div>
         </div>
 
-        <main className="py-10">
+        <main className="py-10 bg-gray-50 dark:bg-dark-900 min-h-screen transition-colors">
           <div className="px-4 sm:px-6 lg:px-8">{children}</div>
         </main>
       </div>
+
+      {/* User Guide / Help System */}
+      <UserGuide />
     </div>
-  )
+  );
 }

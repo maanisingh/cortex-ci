@@ -9,7 +9,6 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 import subprocess
 import uuid
-from datetime import datetime
 
 DATA_DIR = Path("/root/cortex-ci/data/sanctions")
 OFAC_SDN_FILE = DATA_DIR / "ofac_sdn.xml"
@@ -24,8 +23,17 @@ DB_NAME = "cortex_ci"
 def run_sql(sql: str):
     """Execute SQL in the database container."""
     cmd = [
-        "docker", "exec", "-i", DB_CONTAINER,
-        "psql", "-U", DB_USER, "-d", DB_NAME, "-c", sql
+        "docker",
+        "exec",
+        "-i",
+        DB_CONTAINER,
+        "psql",
+        "-U",
+        DB_USER,
+        "-d",
+        DB_NAME,
+        "-c",
+        sql,
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
@@ -36,9 +44,9 @@ def run_sql(sql: str):
 def get_tenant_id():
     """Get the default tenant ID."""
     result = run_sql("SELECT id FROM tenants WHERE slug = 'default';")
-    for line in result.split('\n'):
+    for line in result.split("\n"):
         line = line.strip()
-        if line and '-' in line and len(line) == 36:
+        if line and "-" in line and len(line) == 36:
             return line
     return None
 
@@ -53,13 +61,34 @@ def escape_sql(s: str) -> str:
 def get_country_code(country_name: str) -> str:
     """Convert country name to ISO code."""
     country_map = {
-        "cuba": "CU", "iran": "IR", "russia": "RU", "russian federation": "RU",
-        "syria": "SY", "north korea": "KP", "venezuela": "VE", "belarus": "BY",
-        "myanmar": "MM", "burma": "MM", "china": "CN", "united states": "US",
-        "united kingdom": "GB", "germany": "DE", "france": "FR", "japan": "JP",
-        "switzerland": "CH", "spain": "ES", "italy": "IT", "ukraine": "UA",
-        "saudi arabia": "SA", "israel": "IL", "india": "IN", "pakistan": "PK",
-        "afghanistan": "AF", "iraq": "IQ", "yemen": "YE", "libya": "LY",
+        "cuba": "CU",
+        "iran": "IR",
+        "russia": "RU",
+        "russian federation": "RU",
+        "syria": "SY",
+        "north korea": "KP",
+        "venezuela": "VE",
+        "belarus": "BY",
+        "myanmar": "MM",
+        "burma": "MM",
+        "china": "CN",
+        "united states": "US",
+        "united kingdom": "GB",
+        "germany": "DE",
+        "france": "FR",
+        "japan": "JP",
+        "switzerland": "CH",
+        "spain": "ES",
+        "italy": "IT",
+        "ukraine": "UA",
+        "saudi arabia": "SA",
+        "israel": "IL",
+        "india": "IN",
+        "pakistan": "PK",
+        "afghanistan": "AF",
+        "iraq": "IQ",
+        "yemen": "YE",
+        "libya": "LY",
     }
     if not country_name:
         return None
@@ -70,14 +99,62 @@ def import_constraints(tenant_id: str):
     """Import sanctions constraints."""
     # Note: constrainttype enum: POLICY, REGULATION, COMPLIANCE, CONTRACTUAL, OPERATIONAL, FINANCIAL, SECURITY, CUSTOM
     constraints = [
-        ("OFAC SDN Screening", "Entities on the OFAC Specially Designated Nationals list", "REGULATION", "CRITICAL", "OFAC-SDN"),
-        ("EU Financial Sanctions", "EU restrictive measures against designated persons", "REGULATION", "CRITICAL", "EU-FSF"),
-        ("UN Security Council Sanctions", "Mandatory UN Security Council sanctions", "REGULATION", "CRITICAL", "UN-SC"),
-        ("Russia Sanctions Program", "Comprehensive sanctions targeting Russia", "REGULATION", "CRITICAL", "RUSSIA-EO"),
-        ("Iran Sanctions Program", "Sanctions targeting Iran", "REGULATION", "CRITICAL", "IRAN-TRA"),
-        ("North Korea Sanctions", "Comprehensive DPRK sanctions", "REGULATION", "CRITICAL", "DPRK-NKSR"),
-        ("AML Requirements", "Anti-Money Laundering compliance", "COMPLIANCE", "HIGH", "AML-BSA"),
-        ("FATF Compliance", "Financial Action Task Force standards", "COMPLIANCE", "HIGH", "FATF-40"),
+        (
+            "OFAC SDN Screening",
+            "Entities on the OFAC Specially Designated Nationals list",
+            "REGULATION",
+            "CRITICAL",
+            "OFAC-SDN",
+        ),
+        (
+            "EU Financial Sanctions",
+            "EU restrictive measures against designated persons",
+            "REGULATION",
+            "CRITICAL",
+            "EU-FSF",
+        ),
+        (
+            "UN Security Council Sanctions",
+            "Mandatory UN Security Council sanctions",
+            "REGULATION",
+            "CRITICAL",
+            "UN-SC",
+        ),
+        (
+            "Russia Sanctions Program",
+            "Comprehensive sanctions targeting Russia",
+            "REGULATION",
+            "CRITICAL",
+            "RUSSIA-EO",
+        ),
+        (
+            "Iran Sanctions Program",
+            "Sanctions targeting Iran",
+            "REGULATION",
+            "CRITICAL",
+            "IRAN-TRA",
+        ),
+        (
+            "North Korea Sanctions",
+            "Comprehensive DPRK sanctions",
+            "REGULATION",
+            "CRITICAL",
+            "DPRK-NKSR",
+        ),
+        (
+            "AML Requirements",
+            "Anti-Money Laundering compliance",
+            "COMPLIANCE",
+            "HIGH",
+            "AML-BSA",
+        ),
+        (
+            "FATF Compliance",
+            "Financial Action Task Force standards",
+            "COMPLIANCE",
+            "HIGH",
+            "FATF-40",
+        ),
     ]
 
     print("Importing constraints...")
@@ -107,7 +184,9 @@ def import_ofac_entities(tenant_id: str, limit: int = 500):
         return
 
     print(f"Parsing OFAC SDN (limit: {limit})...")
-    ns = {"sdn": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML"}
+    ns = {
+        "sdn": "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/XML"
+    }
 
     tree = ET.parse(OFAC_SDN_FILE)
     root = tree.getroot()
@@ -170,10 +249,10 @@ def import_ofac_entities(tenant_id: str, limit: int = 500):
                               category, subcategory, tags, criticality, is_active, notes,
                               custom_data, created_at, updated_at)
         SELECT '{uuid.uuid4()}', '{tenant_id}', '{entity_type}', '{escape_sql(name)}',
-               ARRAY[]::varchar[], {f"'{external_id}'" if external_id else 'NULL'},
-               {f"'{country_code}'" if country_code else 'NULL'},
+               ARRAY[]::varchar[], {f"'{external_id}'" if external_id else "NULL"},
+               {f"'{country_code}'" if country_code else "NULL"},
                'sanctioned_entity', 'ofac_sdn',
-               ARRAY[{','.join([f"'{escape_sql(t)}'" for t in tags])}]::varchar[],
+               ARRAY[{",".join([f"'{escape_sql(t)}'" for t in tags])}]::varchar[],
                5, true, 'OFAC SDN Entry',
                '{{"source": "OFAC"}}'::jsonb, NOW(), NOW()
         WHERE NOT EXISTS (
@@ -257,14 +336,14 @@ def import_opensanctions(tenant_id: str, limit: int = 1000):
     count = 0
     imported = 0
 
-    with open(opensanctions_file, 'r') as f:
+    with open(opensanctions_file, "r") as f:
         for line in f:
             if imported >= limit:
                 break
 
             try:
                 record = json.loads(line.strip())
-            except:
+            except (json.JSONDecodeError, ValueError):
                 continue
 
             # Only process Person, Company, Organization schemas
@@ -297,7 +376,7 @@ def import_opensanctions(tenant_id: str, limit: int = 1000):
             SELECT '{uuid.uuid4()}', '{tenant_id}', '{entity_type}', '{escape_sql(name)}',
                    ARRAY[]::varchar[], '{escape_sql(external_id)}',
                    'sanctioned_entity', 'opensanctions',
-                   ARRAY[{','.join([f"'{escape_sql(t)}'" for t in datasets])}]::varchar[],
+                   ARRAY[{",".join([f"'{escape_sql(t)}'" for t in datasets])}]::varchar[],
                    5, true, 'OpenSanctions: {schema}',
                    '{{"source": "OpenSanctions", "schema": "{schema}"}}'::jsonb, NOW(), NOW()
             WHERE NOT EXISTS (

@@ -8,6 +8,7 @@ from app.models.risk import RiskLevel
 
 class RiskScoreResponse(BaseModel):
     """Risk score response schema."""
+
     id: UUID
     tenant_id: UUID
     entity_id: UUID
@@ -32,6 +33,7 @@ class RiskScoreResponse(BaseModel):
 
 class RiskSummary(BaseModel):
     """Summary of risk across the organization."""
+
     total_entities: int
     entities_by_level: Dict[str, int]
     average_score: float
@@ -45,6 +47,7 @@ class RiskSummary(BaseModel):
 
 class RiskTrend(BaseModel):
     """Risk trend over time."""
+
     date: datetime
     average_score: float
     critical_count: int
@@ -55,18 +58,21 @@ class RiskTrend(BaseModel):
 
 class RiskCalculateRequest(BaseModel):
     """Request to calculate risk for entities."""
+
     entity_ids: Optional[List[UUID]] = None  # None means all entities
     force_recalculate: bool = False
 
 
 class RiskCalculateResponse(BaseModel):
     """Response from risk calculation."""
+
     calculated: int
     errors: List[Dict[str, Any]]
 
 
 class RiskJustification(BaseModel):
     """Justification for a risk score (Phase 2)."""
+
     risk_level: RiskLevel
     primary_factors: List[str]
     assumptions: List[str]

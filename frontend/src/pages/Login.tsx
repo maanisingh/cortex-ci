@@ -1,64 +1,68 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../stores/authStore'
-import { authApi } from '../services/api'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../stores/authStore";
+import { authApi } from "../services/api";
 
 export default function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [tenantSlug, setTenantSlug] = useState('default')
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [tenantSlug, setTenantSlug] = useState("default");
 
   const fillDemoCredentials = () => {
-    setEmail('admin@cortex.io')
-    setPassword('Admin123!')
-    setTenantSlug('default')
-  }
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+    setEmail("admin@cortex.io");
+    setPassword("Admin123!");
+    setTenantSlug("default");
+  };
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate()
-  const { login } = useAuthStore()
+  const navigate = useNavigate();
+  const { login } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
       // Login and get tokens
-      const tokenResponse = await authApi.login(email, password, tenantSlug)
-      const tokens = tokenResponse.data
+      const tokenResponse = await authApi.login(email, password, tenantSlug);
+      const tokens = tokenResponse.data;
 
       // Store tokens first so the interceptor can use them
-      useAuthStore.getState().setTokens(tokens)
+      useAuthStore.getState().setTokens(tokens);
 
       // Now get user info (token is available in interceptor)
-      const userResponse = await authApi.me()
-      const user = userResponse.data
+      const userResponse = await authApi.me();
+      const user = userResponse.data;
 
       // Complete login with user info
-      login(user, tokens, user.tenant_id)
+      login(user, tokens, user.tenant_id);
 
-      navigate('/')
+      navigate("/");
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed')
+      setError(err.response?.data?.detail || "Login failed");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-900 to-primary-700 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h1 className="text-center text-4xl font-bold text-white">CORTEX-CI</h1>
+          <h1 className="text-center text-4xl font-bold text-white">
+            CORTEX-CI
+          </h1>
           <p className="mt-2 text-center text-primary-200">
             Sanctions & Constraint Intelligence Platform
           </p>
         </div>
 
         <div className="bg-white rounded-lg shadow-xl p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Sign in to your account</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            Sign in to your account
+          </h2>
 
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
@@ -68,7 +72,10 @@ export default function Login() {
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="tenant" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="tenant"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Organization
               </label>
               <input
@@ -83,7 +90,10 @@ export default function Login() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email address
               </label>
               <input
@@ -100,7 +110,10 @@ export default function Login() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <input
@@ -122,7 +135,7 @@ export default function Login() {
                 disabled={loading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
               >
-                {loading ? 'Signing in...' : 'Sign in'}
+                {loading ? "Signing in..." : "Sign in"}
               </button>
 
               <button
@@ -147,5 +160,5 @@ export default function Login() {
         </p>
       </div>
     </div>
-  )
+  );
 }

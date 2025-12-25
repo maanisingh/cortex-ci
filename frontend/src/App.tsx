@@ -1,37 +1,47 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAuthStore } from './stores/authStore'
-import Layout from './components/common/Layout'
-import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import Entities from './pages/Entities'
-import EntityDetail from './pages/EntityDetail'
-import Constraints from './pages/Constraints'
-import ConstraintDetail from './pages/ConstraintDetail'
-import Dependencies from './pages/Dependencies'
-import Risks from './pages/Risks'
-import Scenarios from './pages/Scenarios'
-import ScenarioDetail from './pages/ScenarioDetail'
-import AuditLog from './pages/AuditLog'
-import AuditLogDetail from './pages/AuditLogDetail'
-import Settings from './pages/Settings'
-import UserManagement from './pages/UserManagement'
-import Profile from './pages/Profile'
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuthStore } from "./stores/authStore";
+import Layout from "./components/common/Layout";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Entities from "./pages/Entities";
+import EntityDetail from "./pages/EntityDetail";
+import Constraints from "./pages/Constraints";
+import ConstraintDetail from "./pages/ConstraintDetail";
+import Dependencies from "./pages/Dependencies";
+import Risks from "./pages/Risks";
+import Scenarios from "./pages/Scenarios";
+import ScenarioDetail from "./pages/ScenarioDetail";
+import AuditLog from "./pages/AuditLog";
+import AuditLogDetail from "./pages/AuditLogDetail";
+import Settings from "./pages/Settings";
+import UserManagement from "./pages/UserManagement";
+import Profile from "./pages/Profile";
 
 // Phase 2 pages
-import ScenarioChains from './pages/ScenarioChains'
-import RiskJustification from './pages/RiskJustification'
-import History from './pages/History'
-import AIAnalysis from './pages/AIAnalysis'
-import Monitoring from './pages/Monitoring'
+import ScenarioChains from "./pages/ScenarioChains";
+import RiskJustification from "./pages/RiskJustification";
+import History from "./pages/History";
+import AIAnalysis from "./pages/AIAnalysis";
+import Monitoring from "./pages/Monitoring";
+// Phase 2.1 pages
+import DependencyLayers from "./pages/DependencyLayers";
+import CrossLayerAnalysis from "./pages/CrossLayerAnalysis";
+// Phase 3 pages
+import SecuritySettings from "./pages/SecuritySettings";
+// Phase 4 pages
+import BulkOperations from "./pages/BulkOperations";
+import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+// Phase 5 pages
+import Simulations from "./pages/Simulations";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated } = useAuthStore();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }
 
 function App() {
@@ -60,17 +70,30 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 {/* Phase 2 routes */}
                 <Route path="/scenario-chains" element={<ScenarioChains />} />
-                <Route path="/risk-justification" element={<RiskJustification />} />
+                <Route
+                  path="/risk-justification"
+                  element={<RiskJustification />}
+                />
                 <Route path="/history" element={<History />} />
                 <Route path="/ai-analysis" element={<AIAnalysis />} />
                 <Route path="/monitoring" element={<Monitoring />} />
+                {/* Phase 2.1 routes */}
+                <Route path="/dependency-layers" element={<DependencyLayers />} />
+                <Route path="/cross-layer-analysis" element={<CrossLayerAnalysis />} />
+                {/* Phase 3 routes */}
+                <Route path="/security" element={<SecuritySettings />} />
+                {/* Phase 4 routes */}
+                <Route path="/bulk-operations" element={<BulkOperations />} />
+                <Route path="/analytics" element={<AnalyticsDashboard />} />
+                {/* Phase 5 routes */}
+                <Route path="/simulations" element={<Simulations />} />
               </Routes>
             </Layout>
           </ProtectedRoute>
         }
       />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

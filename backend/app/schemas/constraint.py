@@ -8,6 +8,7 @@ from app.models.constraint import ConstraintType, ConstraintSeverity
 
 class ConstraintBase(BaseModel):
     """Base constraint schema."""
+
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
     type: ConstraintType
@@ -30,11 +31,13 @@ class ConstraintBase(BaseModel):
 
 class ConstraintCreate(ConstraintBase):
     """Constraint creation schema."""
+
     pass
 
 
 class ConstraintUpdate(BaseModel):
     """Constraint update schema."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
     type: Optional[ConstraintType] = None
@@ -58,6 +61,7 @@ class ConstraintUpdate(BaseModel):
 
 class ConstraintResponse(ConstraintBase):
     """Constraint response schema."""
+
     id: UUID
     tenant_id: UUID
     is_active: bool
@@ -71,6 +75,7 @@ class ConstraintResponse(ConstraintBase):
 
 class ConstraintListResponse(BaseModel):
     """Paginated constraint list response."""
+
     items: List[ConstraintResponse]
     total: int
     page: int
@@ -80,6 +85,7 @@ class ConstraintListResponse(BaseModel):
 
 class ConstraintSummary(BaseModel):
     """Summary of constraints."""
+
     total: int
     by_type: Dict[str, int]
     by_severity: Dict[str, int]

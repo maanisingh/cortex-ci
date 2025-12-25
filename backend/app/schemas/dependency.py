@@ -8,6 +8,7 @@ from app.models.dependency import DependencyLayer, RelationshipType
 
 class DependencyBase(BaseModel):
     """Base dependency schema."""
+
     source_entity_id: UUID
     target_entity_id: UUID
     layer: DependencyLayer = DependencyLayer.OPERATIONAL
@@ -20,11 +21,13 @@ class DependencyBase(BaseModel):
 
 class DependencyCreate(DependencyBase):
     """Dependency creation schema."""
+
     pass
 
 
 class DependencyUpdate(BaseModel):
     """Dependency update schema."""
+
     layer: Optional[DependencyLayer] = None
     relationship_type: Optional[RelationshipType] = None
     criticality: Optional[int] = Field(None, ge=1, le=5)
@@ -36,6 +39,7 @@ class DependencyUpdate(BaseModel):
 
 class DependencyResponse(DependencyBase):
     """Dependency response schema."""
+
     id: UUID
     tenant_id: UUID
     is_active: bool
@@ -52,6 +56,7 @@ class DependencyResponse(DependencyBase):
 
 class DependencyListResponse(BaseModel):
     """Paginated dependency list response."""
+
     items: List[DependencyResponse]
     total: int
     page: int
@@ -61,6 +66,7 @@ class DependencyListResponse(BaseModel):
 
 class DependencyGraphNode(BaseModel):
     """Node in the dependency graph."""
+
     id: str
     label: str
     type: str
@@ -71,6 +77,7 @@ class DependencyGraphNode(BaseModel):
 
 class DependencyGraphEdge(BaseModel):
     """Edge in the dependency graph."""
+
     id: str
     source: str
     target: str
@@ -82,6 +89,7 @@ class DependencyGraphEdge(BaseModel):
 
 class DependencyGraphResponse(BaseModel):
     """Full dependency graph for visualization."""
+
     nodes: List[DependencyGraphNode]
     edges: List[DependencyGraphEdge]
     stats: Dict[str, Any] = {}
