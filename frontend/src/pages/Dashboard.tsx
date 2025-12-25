@@ -20,13 +20,28 @@ import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   LinkIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
+
 import {
   risksApi,
   entitiesApi,
   constraintsApi,
   dependenciesApi,
 } from "../services/api";
+
+// Tooltip component for contextual help
+function InfoTooltip({ text }: { text: string }) {
+  return (
+    <div className="group relative inline-block ml-1">
+      <InformationCircleIcon className="h-4 w-4 text-gray-400 hover:text-indigo-500 cursor-help" />
+      <div className="invisible group-hover:visible absolute z-50 w-64 p-2 mt-1 text-xs text-white bg-gray-900 rounded-lg shadow-lg -left-28 top-full">
+        {text}
+        <div className="absolute w-2 h-2 bg-gray-900 rotate-45 -top-1 left-1/2 transform -translate-x-1/2"></div>
+      </div>
+    </div>
+  );
+}
 
 ChartJS.register(
   CategoryScale,
@@ -164,12 +179,13 @@ export default function Dashboard() {
   };
 
   return (
-    <div>
+    <div data-tour="dashboard">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
           Executive Dashboard
+          <InfoTooltip text="Your central command center for monitoring compliance status, risk levels, and key metrics across all monitored entities." />
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Constraint intelligence and risk monitoring overview
         </p>
       </div>
@@ -212,8 +228,9 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 mb-8">
         {/* Risk Distribution */}
         <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
             Risk Distribution
+            <InfoTooltip text="Shows how entities are distributed across risk levels. Critical and high-risk entities require immediate attention." />
           </h3>
           <div className="h-64 flex items-center justify-center">
             {loadingRisk ? (
@@ -239,8 +256,9 @@ export default function Dashboard() {
 
         {/* Risk Trend */}
         <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
             Risk Trend (30 days)
+            <InfoTooltip text="Track how your overall risk posture has changed over the past month. A downward trend indicates improving compliance." />
           </h3>
           <div className="h-64">
             {riskTrends?.length > 0 ? (
@@ -275,8 +293,9 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 mb-8">
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
               Recent Escalations
+              <InfoTooltip text="Entities whose risk levels have increased in the past 30 days. These require review to understand what changed." />
             </h3>
             <span className="flex items-center text-red-600">
               <ArrowTrendingUpIcon className="h-5 w-5 mr-1" />
@@ -290,8 +309,9 @@ export default function Dashboard() {
 
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
               Recent Improvements
+              <InfoTooltip text="Entities whose risk levels have decreased. This indicates successful mitigation efforts or constraint resolution." />
             </h3>
             <span className="flex items-center text-green-600">
               <ArrowTrendingDownIcon className="h-5 w-5 mr-1" />
@@ -307,9 +327,10 @@ export default function Dashboard() {
       {/* Constraint & Dependency Overview */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {/* Constraints by Type */}
-        <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+        <div className="card" data-tour="constraints">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
             Constraints by Type
+            <InfoTooltip text="Breakdown of active constraints affecting your entities. Each constraint type represents a different regulatory or compliance category." />
           </h3>
           <div className="space-y-3">
             {constraintsSummary?.by_type &&
@@ -347,8 +368,9 @@ export default function Dashboard() {
 
         {/* Dependencies by Layer */}
         <div className="card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
             Dependencies by Layer
+            <InfoTooltip text="Multi-layer dependency mapping shows relationships across legal, financial, operational, and other layers. Critical for understanding cascading risks." />
           </h3>
           <div className="space-y-3">
             {graphData?.stats?.layers &&

@@ -34,6 +34,7 @@ import { useAuthStore } from "../../stores/authStore";
 import RealTimeAlerts from "./RealTimeAlerts";
 import ThemeToggle from "./ThemeToggle";
 import UserGuide from "./UserGuide";
+import { useKeyboardShortcuts, KeyboardShortcutsHelp } from "../../hooks/useKeyboardShortcuts";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: HomeIcon },
@@ -78,8 +79,12 @@ function classNames(...classes: string[]) {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuthStore();
+
+  // Enable keyboard shortcuts
+  useKeyboardShortcuts(() => setShowShortcuts(true));
 
   return (
     <div>
@@ -312,6 +317,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* User Guide / Help System */}
       <UserGuide />
+
+      {/* Keyboard Shortcuts Help */}
+      <KeyboardShortcutsHelp
+        isOpen={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
+      />
     </div>
   );
 }
