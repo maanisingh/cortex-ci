@@ -1,32 +1,7 @@
-from app.models.base import TimestampMixin, TenantMixin
-from app.models.tenant import Tenant
-from app.models.user import User
-from app.models.entity import Entity, EntityType
-from app.models.constraint import Constraint, ConstraintType, ConstraintSeverity
-from app.models.dependency import Dependency, DependencyLayer, RelationshipType
-from app.models.risk import RiskScore, RiskLevel
-from app.models.scenario import Scenario, ScenarioStatus, ScenarioType
-from app.models.audit import AuditLog, AuditAction
+# Compliance Platform Models
+# Full enterprise compliance platform models
 
-# Phase 2 models
-from app.models.scenario_chain import ScenarioChain, ChainEffect, EffectSeverity
-from app.models.risk_justification import RiskJustification
-from app.models.historical import (
-    HistoricalSnapshot,
-    DecisionOutcome,
-    ConstraintChange,
-    TransitionReport,
-)
-from app.models.ai_analysis import (
-    AIAnalysis,
-    AIAnalysisType,
-    AIAnalysisStatus,
-    AnomalyDetection,
-)
-
-# Phase 3: Full Compliance Platform Models
-from app.models.compliance import (
-    # Frameworks
+from app.models.compliance.framework import (
     Framework,
     FrameworkType,
     Control,
@@ -36,7 +11,8 @@ from app.models.compliance import (
     Assessment,
     AssessmentStatus,
     AssessmentResult,
-    # Customers
+)
+from app.models.compliance.customer import (
     Customer,
     CustomerType,
     CustomerStatus,
@@ -45,7 +21,8 @@ from app.models.compliance import (
     DocumentType,
     CustomerReview,
     ReviewType,
-    # Screening
+)
+from app.models.compliance.screening import (
     ScreeningResult,
     ScreeningStatus,
     ScreeningType,
@@ -53,7 +30,8 @@ from app.models.compliance import (
     MatchDisposition,
     WatchlistEntity,
     WatchlistSource,
-    # Transactions
+)
+from app.models.compliance.transaction import (
     Transaction,
     TransactionType,
     TransactionStatus,
@@ -62,7 +40,8 @@ from app.models.compliance import (
     AlertStatus,
     MonitoringRule,
     RuleType,
-    # Policies
+)
+from app.models.compliance.policy import (
     Policy,
     PolicyStatus,
     PolicyCategory,
@@ -70,13 +49,15 @@ from app.models.compliance import (
     PolicyAcknowledgement,
     PolicyException,
     ExceptionStatus,
-    # Evidence
+)
+from app.models.compliance.evidence import (
     Evidence,
     EvidenceType,
     EvidenceStatus,
     EvidenceLink,
     EvidenceReview,
-    # Audits
+)
+from app.models.compliance.audit import (
     Audit,
     AuditType,
     AuditStatus,
@@ -85,7 +66,8 @@ from app.models.compliance import (
     FindingStatus,
     RemediationPlan,
     RemediationStatus,
-    # Vendors
+)
+from app.models.compliance.vendor import (
     Vendor,
     VendorTier,
     VendorStatus,
@@ -94,7 +76,8 @@ from app.models.compliance import (
     QuestionnaireResponse,
     VendorContract,
     ContractStatus,
-    # Incidents
+)
+from app.models.compliance.incident import (
     Incident,
     IncidentSeverity,
     IncidentStatus,
@@ -104,7 +87,8 @@ from app.models.compliance import (
     ResponseAction,
     BreachNotification,
     NotificationStatus,
-    # Training
+)
+from app.models.compliance.training import (
     Course,
     CourseType,
     CourseStatus,
@@ -113,7 +97,8 @@ from app.models.compliance import (
     TrainingCompletion,
     PhishingCampaign,
     PhishingResult,
-    # Cases
+)
+from app.models.compliance.case import (
     Case,
     CaseType,
     CaseStatus,
@@ -126,44 +111,7 @@ from app.models.compliance import (
 )
 
 __all__ = [
-    # Base
-    "TimestampMixin",
-    "TenantMixin",
-    # Core models
-    "Tenant",
-    "User",
-    "Entity",
-    "EntityType",
-    "Constraint",
-    "ConstraintType",
-    "ConstraintSeverity",
-    "Dependency",
-    "DependencyLayer",
-    "RelationshipType",
-    "RiskScore",
-    "RiskLevel",
-    "Scenario",
-    "ScenarioStatus",
-    "ScenarioType",
-    "AuditLog",
-    "AuditAction",
-    # Phase 2: Scenario Chains
-    "ScenarioChain",
-    "ChainEffect",
-    "EffectSeverity",
-    # Phase 2: Risk Justification
-    "RiskJustification",
-    # Phase 2: Historical/Institutional Memory
-    "HistoricalSnapshot",
-    "DecisionOutcome",
-    "ConstraintChange",
-    "TransitionReport",
-    # Phase 2: AI Analysis
-    "AIAnalysis",
-    "AIAnalysisType",
-    "AIAnalysisStatus",
-    "AnomalyDetection",
-    # Phase 3: Compliance Platform - Frameworks
+    # Frameworks
     "Framework",
     "FrameworkType",
     "Control",
@@ -173,7 +121,7 @@ __all__ = [
     "Assessment",
     "AssessmentStatus",
     "AssessmentResult",
-    # Phase 3: Compliance Platform - Customers
+    # Customers
     "Customer",
     "CustomerType",
     "CustomerStatus",
@@ -182,7 +130,7 @@ __all__ = [
     "DocumentType",
     "CustomerReview",
     "ReviewType",
-    # Phase 3: Compliance Platform - Screening
+    # Screening
     "ScreeningResult",
     "ScreeningStatus",
     "ScreeningType",
@@ -190,7 +138,7 @@ __all__ = [
     "MatchDisposition",
     "WatchlistEntity",
     "WatchlistSource",
-    # Phase 3: Compliance Platform - Transactions
+    # Transactions
     "Transaction",
     "TransactionType",
     "TransactionStatus",
@@ -199,7 +147,7 @@ __all__ = [
     "AlertStatus",
     "MonitoringRule",
     "RuleType",
-    # Phase 3: Compliance Platform - Policies
+    # Policies
     "Policy",
     "PolicyStatus",
     "PolicyCategory",
@@ -207,13 +155,13 @@ __all__ = [
     "PolicyAcknowledgement",
     "PolicyException",
     "ExceptionStatus",
-    # Phase 3: Compliance Platform - Evidence
+    # Evidence
     "Evidence",
     "EvidenceType",
     "EvidenceStatus",
     "EvidenceLink",
     "EvidenceReview",
-    # Phase 3: Compliance Platform - Audits
+    # Audits
     "Audit",
     "AuditType",
     "AuditStatus",
@@ -222,7 +170,7 @@ __all__ = [
     "FindingStatus",
     "RemediationPlan",
     "RemediationStatus",
-    # Phase 3: Compliance Platform - Vendors
+    # Vendors
     "Vendor",
     "VendorTier",
     "VendorStatus",
@@ -231,7 +179,7 @@ __all__ = [
     "QuestionnaireResponse",
     "VendorContract",
     "ContractStatus",
-    # Phase 3: Compliance Platform - Incidents
+    # Incidents
     "Incident",
     "IncidentSeverity",
     "IncidentStatus",
@@ -241,7 +189,7 @@ __all__ = [
     "ResponseAction",
     "BreachNotification",
     "NotificationStatus",
-    # Phase 3: Compliance Platform - Training
+    # Training
     "Course",
     "CourseType",
     "CourseStatus",
@@ -250,7 +198,7 @@ __all__ = [
     "TrainingCompletion",
     "PhishingCampaign",
     "PhishingResult",
-    # Phase 3: Compliance Platform - Cases
+    # Cases
     "Case",
     "CaseType",
     "CaseStatus",

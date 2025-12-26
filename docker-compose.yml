@@ -1,6 +1,10 @@
 version: '3.8'
 
 services:
+  # =============================================================================
+  # CORE INFRASTRUCTURE
+  # =============================================================================
+
   # PostgreSQL Database
   db:
     image: postgres:15-alpine
@@ -54,6 +58,238 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # =============================================================================
+  # AUTHENTICATION & SECURITY (Keycloak)
+  # =============================================================================
+
+  keycloak-db:
+    image: postgres:15-alpine
+    container_name: cortex-keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: cortex-keycloak
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
+      KC_HOSTNAME_PORT: 8080
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+    command: start-dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # =============================================================================
+  # SANCTIONS SCREENING (OpenSanctions yente)
+  # =============================================================================
+
+  opensanctions:
+    image: ghcr.io/opensanctions/yente:latest
+    container_name: cortex-opensanctions
+    environment:
+      YENTE_ELASTICSEARCH_URL: http://elasticsearch:9200
+      YENTE_UPDATE_TOKEN: ${OPENSANCTIONS_TOKEN:-}
+      YENTE_DATASETS: default
+    ports:
+      - "8100:8000"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # Elasticsearch for OpenSanctions
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: cortex-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # =============================================================================
+  # WORKFLOW AUTOMATION (n8n)
+  # =============================================================================
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: cortex-n8n
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-admin}
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://n8n:5678
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=db
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-postgres}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # =============================================================================
+  # INCIDENT RESPONSE (TheHive)
+  # =============================================================================
+
+  thehive:
+    image: strangebee/thehive:5.2
+    container_name: cortex-thehive
+    environment:
+      - TH_CORTEX_ENABLED=false
+      - TH_DB_BACKEND=postgresql
+      - TH_DB_POSTGRESQL_HOST=db
+      - TH_DB_POSTGRESQL_PORT=5432
+      - TH_DB_POSTGRESQL_DATABASE=thehive
+      - TH_DB_POSTGRESQL_USER=${POSTGRES_USER:-postgres}
+      - TH_DB_POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - TH_STORAGE_PROVIDER=localfs
+      - TH_STORAGE_LOCALFS_PATH=/data/files
+    ports:
+      - "9000:9000"
+    volumes:
+      - thehive_data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # =============================================================================
+  # PHISHING SIMULATION (Gophish)
+  # =============================================================================
+
+  gophish:
+    image: gophish/gophish:latest
+    container_name: cortex-gophish
+    ports:
+      - "3333:3333"   # Admin interface
+      - "8088:80"     # Phishing server
+    volumes:
+      - gophish_data:/opt/gophish/data
+    restart: unless-stopped
+
+  # =============================================================================
+  # E-SIGNATURES (DocuSeal)
+  # =============================================================================
+
+  docuseal:
+    image: docuseal/docuseal:latest
+    container_name: cortex-docuseal
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/docuseal
+      - SECRET_KEY_BASE=${DOCUSEAL_SECRET:-changeme}
+    ports:
+      - "3001:3000"
+    volumes:
+      - docuseal_data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # =============================================================================
+  # DOCUMENT MANAGEMENT (Paperless-ngx)
+  # =============================================================================
+
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    container_name: cortex-paperless
+    environment:
+      PAPERLESS_REDIS: redis://redis:6379
+      PAPERLESS_DBHOST: db
+      PAPERLESS_DBPORT: 5432
+      PAPERLESS_DBNAME: paperless
+      PAPERLESS_DBUSER: ${POSTGRES_USER:-postgres}
+      PAPERLESS_DBPASS: ${POSTGRES_PASSWORD:-postgres}
+      PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET:-changeme}
+      PAPERLESS_ADMIN_USER: ${PAPERLESS_ADMIN:-admin}
+      PAPERLESS_ADMIN_PASSWORD: ${PAPERLESS_ADMIN_PASSWORD:-admin}
+      PAPERLESS_OCR_LANGUAGE: eng
+    ports:
+      - "8001:8000"
+    volumes:
+      - paperless_data:/usr/src/paperless/data
+      - paperless_media:/usr/src/paperless/media
+      - paperless_consume:/usr/src/paperless/consume
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # =============================================================================
+  # SECURITY MONITORING (Wazuh - Optional, resource intensive)
+  # =============================================================================
+
+  # wazuh-manager:
+  #   image: wazuh/wazuh-manager:4.7.0
+  #   container_name: cortex-wazuh
+  #   environment:
+  #     - ELASTICSEARCH_URL=http://elasticsearch:9200
+  #   ports:
+  #     - "1514:1514/udp"
+  #     - "1515:1515"
+  #     - "55000:55000"
+  #   volumes:
+  #     - wazuh_data:/var/ossec/data
+  #   restart: unless-stopped
+
+  # =============================================================================
+  # CORTEX APPLICATION
+  # =============================================================================
+
   # Backend API
   backend:
     build:
@@ -67,6 +303,28 @@ services:
       MEILISEARCH_MASTER_KEY: ${MEILISEARCH_MASTER_KEY:-masterkey}
       SECRET_KEY: ${SECRET_KEY:-change-this-in-production}
       DEBUG: ${DEBUG:-false}
+      # Keycloak
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: cortex
+      KEYCLOAK_CLIENT_ID: cortex-api
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-}
+      # OpenSanctions
+      OPENSANCTIONS_URL: http://opensanctions:8000
+      # TheHive
+      THEHIVE_URL: http://thehive:9000
+      THEHIVE_API_KEY: ${THEHIVE_API_KEY:-}
+      # Gophish
+      GOPHISH_URL: http://gophish:3333
+      GOPHISH_API_KEY: ${GOPHISH_API_KEY:-}
+      # n8n
+      N8N_URL: http://n8n:5678
+      N8N_API_KEY: ${N8N_API_KEY:-}
+      # DocuSeal
+      DOCUSEAL_URL: http://docuseal:3000
+      DOCUSEAL_API_KEY: ${DOCUSEAL_API_KEY:-}
+      # Paperless
+      PAPERLESS_URL: http://paperless:8000
+      PAPERLESS_API_KEY: ${PAPERLESS_API_KEY:-}
     ports:
       - "8000:8000"
     depends_on:
@@ -89,6 +347,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: cortex-frontend
+    environment:
+      VITE_API_URL: ${API_URL:-http://localhost:8000}
+      VITE_KEYCLOAK_URL: ${KEYCLOAK_URL:-http://localhost:8080}
+      VITE_KEYCLOAK_REALM: cortex
+      VITE_KEYCLOAK_CLIENT_ID: cortex-frontend
     ports:
       - "80:80"
     depends_on:
@@ -101,13 +364,16 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: cortex-worker
-    command: celery -A app.workers worker --loglevel=info
+    command: celery -A app.workers worker --loglevel=info --concurrency=4
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-cortex_ci}
       REDIS_URL: redis://redis:6379/0
       MEILISEARCH_URL: http://meilisearch:7700
       MEILISEARCH_MASTER_KEY: ${MEILISEARCH_MASTER_KEY:-masterkey}
       SECRET_KEY: ${SECRET_KEY:-change-this-in-production}
+      OPENSANCTIONS_URL: http://opensanctions:8000
+      THEHIVE_URL: http://thehive:9000
+      THEHIVE_API_KEY: ${THEHIVE_API_KEY:-}
     depends_on:
       db:
         condition: service_healthy
@@ -135,6 +401,16 @@ volumes:
   postgres_data:
   redis_data:
   meilisearch_data:
+  keycloak_db_data:
+  elasticsearch_data:
+  n8n_data:
+  thehive_data:
+  gophish_data:
+  docuseal_data:
+  paperless_data:
+  paperless_media:
+  paperless_consume:
+  # wazuh_data:
 
 networks:
   default:
