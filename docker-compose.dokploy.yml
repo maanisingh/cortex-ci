@@ -1,6 +1,7 @@
 version: "3.8"
 
 services:
+  # Core Database
   db:
     image: postgres:16-alpine
     environment:
@@ -17,6 +18,7 @@ services:
       timeout: 5s
       retries: 5
 
+  # Redis Cache
   redis:
     image: redis:7-alpine
     command: redis-server --appendonly yes
@@ -30,6 +32,202 @@ services:
       timeout: 5s
       retries: 5
 
+  # Keycloak Identity Provider
+  keycloak-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak_secure_2024}
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql/data
+    networks:
+      - cortex-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    command: start
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak_secure_2024}
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY: edge
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin_secure_2024}
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    networks:
+      - cortex-network
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.keycloak.rule=Host(`auth.cortex.alexandratechlab.com`)
+      - traefik.http.routers.keycloak.entrypoints=websecure
+      - traefik.http.routers.keycloak.tls.certresolver=letsencrypt
+      - traefik.http.services.keycloak.loadbalancer.server.port=8080
+
+  # OpenSanctions Yente - Sanctions Screening
+  opensanctions:
+    image: ghcr.io/opensanctions/yente:latest
+    environment:
+      YENTE_ELASTICSEARCH: http://elasticsearch:9200
+      YENTE_INDEX_NAME: yente
+      YENTE_SCHEDULE: "0 4 * * *"
+      YENTE_AUTO_REINDEX: "true"
+    depends_on:
+      - elasticsearch
+    networks:
+      - cortex-network
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.opensanctions.rule=Host(`sanctions.cortex.alexandratechlab.com`)
+      - traefik.http.routers.opensanctions.entrypoints=websecure
+      - traefik.http.routers.opensanctions.tls.certresolver=letsencrypt
+      - traefik.http.services.opensanctions.loadbalancer.server.port=8000
+
+  # Elasticsearch for OpenSanctions and Search
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.3
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - cortex-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # n8n Workflow Automation
+  n8n:
+    image: n8nio/n8n:latest
+    environment:
+      - N8N_HOST=n8n.cortex.alexandratechlab.com
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://n8n.cortex.alexandratechlab.com/
+      - GENERIC_TIMEZONE=UTC
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-n8n_secure_2024}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - cortex-network
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.n8n.rule=Host(`n8n.cortex.alexandratechlab.com`)
+      - traefik.http.routers.n8n.entrypoints=websecure
+      - traefik.http.routers.n8n.tls.certresolver=letsencrypt
+      - traefik.http.services.n8n.loadbalancer.server.port=5678
+
+  # TheHive - Incident Response
+  thehive:
+    image: strangebee/thehive:5.2
+    environment:
+      - TH_NO_CONFIG_CORTEX=true
+      - TH_NO_CONFIG_MISP=true
+    volumes:
+      - thehive_data:/data
+    networks:
+      - cortex-network
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.thehive.rule=Host(`thehive.cortex.alexandratechlab.com`)
+      - traefik.http.routers.thehive.entrypoints=websecure
+      - traefik.http.routers.thehive.tls.certresolver=letsencrypt
+      - traefik.http.services.thehive.loadbalancer.server.port=9000
+
+  # GoPhish - Phishing Simulation
+  gophish:
+    image: gophish/gophish:latest
+    volumes:
+      - gophish_data:/opt/gophish
+    networks:
+      - cortex-network
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.gophish.rule=Host(`phishing.cortex.alexandratechlab.com`)
+      - traefik.http.routers.gophish.entrypoints=websecure
+      - traefik.http.routers.gophish.tls.certresolver=letsencrypt
+      - traefik.http.services.gophish.loadbalancer.server.port=3333
+
+  # DocuSeal - Document Signing
+  docuseal:
+    image: docuseal/docuseal:latest
+    environment:
+      - SECRET_KEY_BASE=${DOCUSEAL_SECRET:-docuseal_secret_key_2024}
+      - DATABASE_URL=postgresql://cortex:${POSTGRES_PASSWORD:-CortexCI_Secure_2024!}@db:5432/docuseal
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cortex-network
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.docuseal.rule=Host(`docs.cortex.alexandratechlab.com`)
+      - traefik.http.routers.docuseal.entrypoints=websecure
+      - traefik.http.routers.docuseal.tls.certresolver=letsencrypt
+      - traefik.http.services.docuseal.loadbalancer.server.port=3000
+
+  # Paperless-ngx - Document Management
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    environment:
+      PAPERLESS_REDIS: redis://redis:6379
+      PAPERLESS_DBHOST: db
+      PAPERLESS_DBNAME: paperless
+      PAPERLESS_DBUSER: cortex
+      PAPERLESS_DBPASS: ${POSTGRES_PASSWORD:-CortexCI_Secure_2024!}
+      PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET:-paperless_secret_key_2024}
+      PAPERLESS_URL: https://paperless.cortex.alexandratechlab.com
+      PAPERLESS_ADMIN_USER: admin
+      PAPERLESS_ADMIN_PASSWORD: ${PAPERLESS_ADMIN_PASSWORD:-paperless_admin_2024}
+    volumes:
+      - paperless_data:/usr/src/paperless/data
+      - paperless_media:/usr/src/paperless/media
+      - paperless_consume:/usr/src/paperless/consume
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cortex-network
+      - dokploy-network
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.paperless.rule=Host(`paperless.cortex.alexandratechlab.com`)
+      - traefik.http.routers.paperless.entrypoints=websecure
+      - traefik.http.routers.paperless.tls.certresolver=letsencrypt
+      - traefik.http.services.paperless.loadbalancer.server.port=8000
+
+  # Main Backend API
   backend:
     build:
       context: ./backend
@@ -39,7 +237,25 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY:-your-production-secret-key-change-this}
       - DEBUG=false
-      - APP_NAME=CORTEX-CI
+      - APP_NAME=CORTEX-CI Compliance Platform
+      # Keycloak Integration
+      - KEYCLOAK_URL=https://auth.cortex.alexandratechlab.com
+      - KEYCLOAK_REALM=cortex
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID:-cortex-api}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+      # OpenSanctions Integration
+      - OPENSANCTIONS_URL=http://opensanctions:8000
+      - OPENSANCTIONS_API_KEY=${OPENSANCTIONS_API_KEY:-}
+      # TheHive Integration
+      - THEHIVE_URL=http://thehive:9000
+      - THEHIVE_API_KEY=${THEHIVE_API_KEY:-}
+      # n8n Webhook Integration
+      - N8N_WEBHOOK_URL=http://n8n:5678/webhook
+      # GoPhish Integration
+      - GOPHISH_URL=http://gophish:3333
+      - GOPHISH_API_KEY=${GOPHISH_API_KEY:-}
+      # Elasticsearch
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       db:
         condition: service_healthy
@@ -59,12 +275,16 @@ services:
       - traefik.http.middlewares.cortex-strip.stripprefix.prefixes=/api
       - traefik.http.routers.cortex-api.middlewares=cortex-strip
 
+  # Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
         - VITE_API_URL=/api/v1
+        - VITE_KEYCLOAK_URL=https://auth.cortex.alexandratechlab.com
+        - VITE_KEYCLOAK_REALM=cortex
+        - VITE_KEYCLOAK_CLIENT_ID=cortex-web
     depends_on:
       - backend
     networks:
@@ -82,6 +302,14 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  keycloak_db_data:
+  elasticsearch_data:
+  n8n_data:
+  thehive_data:
+  gophish_data:
+  paperless_data:
+  paperless_media:
+  paperless_consume:
 
 networks:
   cortex-network:

@@ -24,6 +24,22 @@ from app.api.v1.endpoints import (
 # Phase 4-5 endpoints
 from app.api.v1.endpoints import websocket, simulations
 
+# Compliance Platform endpoints
+from app.api.v1.endpoints.compliance import (
+    frameworks,
+    customers,
+    screening,
+    transactions,
+    policies,
+    evidence,
+    audits,
+    vendors,
+    incidents,
+    training,
+    cases,
+    controls,
+)
+
 api_router = APIRouter()
 
 # Core endpoints
@@ -70,4 +86,42 @@ api_router.include_router(
 )
 api_router.include_router(
     simulations.router, prefix="/simulations", tags=["Phase 5 - Simulations"]
+)
+
+# Compliance Platform Endpoints
+api_router.include_router(
+    frameworks.router, prefix="/compliance/frameworks", tags=["Compliance - Frameworks"]
+)
+api_router.include_router(
+    controls.router, prefix="/compliance/controls", tags=["Compliance - Controls"]
+)
+api_router.include_router(
+    customers.router, prefix="/compliance/customers", tags=["Compliance - KYC/AML"]
+)
+api_router.include_router(
+    screening.router, prefix="/compliance/screening", tags=["Compliance - Screening"]
+)
+api_router.include_router(
+    transactions.router, prefix="/compliance/transactions", tags=["Compliance - Transactions"]
+)
+api_router.include_router(
+    cases.router, prefix="/compliance/cases", tags=["Compliance - Case Management"]
+)
+api_router.include_router(
+    policies.router, prefix="/compliance/policies", tags=["Compliance - Policies"]
+)
+api_router.include_router(
+    evidence.router, prefix="/compliance/evidence", tags=["Compliance - Evidence"]
+)
+api_router.include_router(
+    audits.router, prefix="/compliance/audits", tags=["Compliance - Audits"]
+)
+api_router.include_router(
+    vendors.router, prefix="/compliance/vendors", tags=["Compliance - Vendor Risk"]
+)
+api_router.include_router(
+    incidents.router, prefix="/compliance/incidents", tags=["Compliance - Incidents"]
+)
+api_router.include_router(
+    training.router, prefix="/compliance/training", tags=["Compliance - Training"]
 )
