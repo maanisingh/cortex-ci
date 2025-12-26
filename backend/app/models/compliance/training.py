@@ -48,6 +48,17 @@ class AssignmentStatus(str, Enum):
     COMPLETED = "COMPLETED"
     OVERDUE = "OVERDUE"
     EXEMPT = "EXEMPT"
+    FAILED = "FAILED"
+
+
+class CampaignStatus(str, Enum):
+    """Phishing campaign status."""
+    DRAFT = "DRAFT"
+    SCHEDULED = "SCHEDULED"
+    ACTIVE = "ACTIVE"
+    PAUSED = "PAUSED"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
 
 
 class Course(Base, TimestampMixin, TenantMixin):
