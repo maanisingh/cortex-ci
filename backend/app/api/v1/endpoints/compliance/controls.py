@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from app.core.database import get_db
 from app.api.v1.deps import get_current_user, get_current_tenant_id
 from app.models.compliance.framework import (
-    Control, ControlStatus, ControlMapping,
+    Control, ControlMapping,
     Assessment, AssessmentStatus, AssessmentResult
 )
 
@@ -21,18 +21,14 @@ class ControlResponse(BaseModel):
     control_id: str
     title: str
     framework_id: UUID
-    status: str
-    implementation_status: Optional[str]
-    owner_id: Optional[UUID]
+    implementation_status: Optional[str] = None
 
     class Config:
         from_attributes = True
 
 class ControlUpdateSchema(BaseModel):
-    status: Optional[str] = None
     implementation_status: Optional[str] = None
     implementation_notes: Optional[str] = None
-    owner_id: Optional[UUID] = None
 
 class AssessmentCreate(BaseModel):
     control_id: UUID
@@ -60,9 +56,7 @@ class ControlMappingCreate(BaseModel):
 @router.get("/", response_model=List[ControlResponse])
 async def list_controls(
     framework_id: Optional[UUID] = Query(None),
-    status: Optional[str] = Query(None),
     implementation_status: Optional[str] = Query(None),
-    owner_id: Optional[UUID] = Query(None),
     search: Optional[str] = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
@@ -72,12 +66,8 @@ async def list_controls(
     query = select(Control).where(Control.tenant_id == tenant_id)
     if framework_id:
         query = query.where(Control.framework_id == framework_id)
-    if status:
-        query = query.where(Control.status == status)
     if implementation_status:
         query = query.where(Control.implementation_status == implementation_status)
-    if owner_id:
-        query = query.where(Control.owner_id == owner_id)
     if search:
         query = query.where(
             Control.title.ilike(f"%{search}%") | Control.control_id.ilike(f"%{search}%")
@@ -115,16 +105,10 @@ async def update_control(
     if not control:
         raise HTTPException(status_code=404, detail="Control not found")
 
-    if update.status:
-        control.status = update.status
     if update.implementation_status:
         control.implementation_status = update.implementation_status
     if update.implementation_notes:
         control.implementation_notes = update.implementation_notes
-    if update.owner_id:
-        control.owner_id = update.owner_id
-
-    control.updated_at = datetime.now(timezone.utc)
     await db.commit()
     return {"message": "Control updated", "control_id": str(control_id)}
 
@@ -233,8 +217,6 @@ async def create_control_mapping(
         target_control_id=mapping.target_control_id,
         relationship_type=mapping.relationship_type,
         notes=mapping.notes,
-        created_at=datetime.now(timezone.utc),
-        created_by=current_user.id,
     )
     db.add(db_mapping)
     await db.commit()
