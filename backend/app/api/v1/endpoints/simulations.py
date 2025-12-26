@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.security import get_current_user
+from app.api.v1.deps import get_current_user
 from app.models import User
 from app.services.advanced_simulation import (
     simulation_engine,
