@@ -149,6 +149,13 @@ def require_roles(*roles: str):
     return role_checker
 
 
+async def get_current_tenant_id(
+    tenant: Tenant = Depends(get_current_tenant),
+) -> UUID:
+    """Get current tenant ID."""
+    return tenant.id
+
+
 # Convenience dependencies
 RequireAdmin = Annotated[User, Depends(require_roles(Role.ADMIN))]
 RequireWriter = Annotated[User, Depends(require_roles(Role.ADMIN, Role.ANALYST))]
