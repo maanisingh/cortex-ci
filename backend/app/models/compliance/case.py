@@ -148,7 +148,7 @@ class Case(Base, TimestampMixin, TenantMixin):
 
     # Tags and metadata
     tags: Mapped[List[str]] = mapped_column(ARRAY(String), default=list)
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    extra_data: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
 
     # TheHive integration
     thehive_case_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)

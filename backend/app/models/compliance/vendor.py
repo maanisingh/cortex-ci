@@ -125,7 +125,7 @@ class Vendor(Base, TimestampMixin, TenantMixin):
 
     # Notes
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    extra_data: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
 
     # Relationships
     assessments = relationship("VendorAssessment", back_populates="vendor", cascade="all, delete-orphan")

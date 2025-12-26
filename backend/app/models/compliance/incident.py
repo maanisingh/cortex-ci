@@ -162,7 +162,7 @@ class Incident(Base, TimestampMixin, TenantMixin):
 
     # Tags and metadata
     tags: Mapped[List[str]] = mapped_column(ARRAY(String), default=list)
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    extra_data: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
 
     # Relationships
     timeline_entries = relationship("IncidentTimeline", back_populates="incident", cascade="all, delete-orphan")

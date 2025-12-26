@@ -98,7 +98,7 @@ class Evidence(Base, TimestampMixin, TenantMixin):
     # Metadata
     source_system: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     source_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    extra_data: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
 
     # Relationships
     control_links = relationship("EvidenceLink", back_populates="evidence", cascade="all, delete-orphan")

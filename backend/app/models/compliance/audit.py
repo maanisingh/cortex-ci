@@ -131,7 +131,7 @@ class Audit(Base, TimestampMixin, TenantMixin):
     actual_cost: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     # Metadata
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    extra_data: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
 
     # Relationships
     findings = relationship("AuditFinding", back_populates="audit", cascade="all, delete-orphan")

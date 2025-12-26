@@ -146,7 +146,7 @@ class Transaction(Base, TimestampMixin, TenantMixin):
     alert_count: Mapped[int] = mapped_column(Integer, default=0)
 
     # Additional data
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    extra_data: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
 
     # Relationships
     customer = relationship("Customer", back_populates="transactions")
