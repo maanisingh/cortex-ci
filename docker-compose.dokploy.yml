@@ -218,6 +218,8 @@ services:
         - VITE_API_URL=/api/v1
     depends_on:
       - backend
+    ports:
+      - "3002:80"
     networks:
       - cortex-network
       - dokploy-network
