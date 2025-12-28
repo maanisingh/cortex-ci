@@ -71,7 +71,7 @@ export default function EntityDetail() {
         // Risk score might not exist yet
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Failed to load entity");
+      setError(err.response?.data?.detail || "Failed to load risk object");
     } finally {
       setLoading(false);
     }
@@ -108,12 +108,12 @@ export default function EntityDetail() {
   if (error || !entity) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-700">{error || "Entity not found"}</p>
+        <p className="text-red-700">{error || "Risk object not found"}</p>
         <button
           onClick={() => navigate("/entities")}
           className="mt-2 text-red-600 underline"
         >
-          Back to Entities
+          Back to Risk Objects
         </button>
       </div>
     );
@@ -131,7 +131,7 @@ export default function EntityDetail() {
             onClick={() => navigate("/entities")}
             className="text-sm text-gray-500 hover:text-gray-700 mb-2 flex items-center"
           >
-            ← Back to Entities
+            ← Back to Risk Objects
           </button>
           <h1 className="text-2xl font-bold text-gray-900">{entity.name}</h1>
           <p className="text-gray-500 capitalize">
@@ -146,7 +146,7 @@ export default function EntityDetail() {
               <div className="text-xs uppercase font-medium">Risk Level</div>
               <div className="text-lg font-bold">{riskScore.risk_level}</div>
               <div className="text-xs">
-                Score: {riskScore.overall_score.toFixed(1)}
+                Score: {riskScore.overall_score?.toFixed(1) ?? "N/A"}
               </div>
             </div>
           )}
@@ -160,9 +160,9 @@ export default function EntityDetail() {
 
       {/* Main Info Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Entity Details */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Entity Information</h2>
+        {/* Risk Object Details */}
+        <div className="lg:col-span-2 bg-white rounded-lg shadow p-6 dark:bg-dark-800">
+          <h2 className="text-lg font-semibold mb-4 dark:text-gray-100">Risk Object Information</h2>
           <dl className="grid grid-cols-2 gap-4">
             <div>
               <dt className="text-sm text-gray-500">Type</dt>
@@ -232,7 +232,7 @@ export default function EntityDetail() {
             <div className="space-y-4">
               <div className="text-center p-4 rounded-lg bg-gray-50">
                 <div className="text-3xl font-bold text-gray-900">
-                  {riskScore.overall_score.toFixed(1)}
+                  {riskScore.overall_score?.toFixed(1) ?? "0.0"}
                 </div>
                 <div
                   className={`inline-block px-2 py-1 rounded text-sm font-medium mt-1 ${getRiskColor(riskScore.risk_level)}`}

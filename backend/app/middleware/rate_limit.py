@@ -3,14 +3,14 @@ Rate Limiting Middleware (Phase 3)
 Implements sliding window rate limiting with Redis backend.
 """
 
-from typing import Callable, Optional
-import time
 import hashlib
+import time
+from collections.abc import Callable
 
-from fastapi import Request, Response, status
-from starlette.middleware.base import BaseHTTPMiddleware
 import redis.asyncio as redis
 import structlog
+from fastapi import Request, Response, status
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.config import settings
 
@@ -25,7 +25,7 @@ class RateLimiter:
 
     def __init__(self, redis_url: str = None):
         self.redis_url = redis_url or settings.REDIS_URL
-        self._redis: Optional[redis.Redis] = None
+        self._redis: redis.Redis | None = None
 
     async def get_redis(self) -> redis.Redis:
         """Get or create Redis connection."""

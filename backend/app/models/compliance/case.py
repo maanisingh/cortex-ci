@@ -2,21 +2,24 @@
 Case Management Models
 Investigation cases, SAR reports, and case workflows
 """
-from uuid import UUID, uuid4
-from typing import Optional, List
-from enum import Enum
+
 from datetime import date, datetime
 from decimal import Decimal
-from sqlalchemy import String, Text, Integer, Float, ForeignKey, Date, DateTime, Boolean, Numeric
+from enum import Enum
+from uuid import UUID, uuid4
+
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB, ARRAY
 
 from app.core.database import Base
-from app.models.base import TimestampMixin, TenantMixin
+from app.models.base import TenantMixin, TimestampMixin
 
 
 class CaseType(str, Enum):
     """Type of investigation case."""
+
     AML_INVESTIGATION = "AML_INVESTIGATION"
     FRAUD_INVESTIGATION = "FRAUD_INVESTIGATION"
     SANCTIONS_MATCH = "SANCTIONS_MATCH"
@@ -34,6 +37,7 @@ class CaseType(str, Enum):
 
 class CaseStatus(str, Enum):
     """Case workflow status."""
+
     NEW = "NEW"
     ASSIGNED = "ASSIGNED"
     IN_PROGRESS = "IN_PROGRESS"
@@ -47,6 +51,7 @@ class CaseStatus(str, Enum):
 
 class CasePriority(str, Enum):
     """Case priority levels."""
+
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
@@ -55,6 +60,7 @@ class CasePriority(str, Enum):
 
 class TaskStatus(str, Enum):
     """Case task status."""
+
     PENDING = "PENDING"
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
@@ -64,6 +70,7 @@ class TaskStatus(str, Enum):
 
 class SARStatus(str, Enum):
     """SAR filing status."""
+
     DRAFT = "DRAFT"
     PENDING_REVIEW = "PENDING_REVIEW"
     APPROVED = "APPROVED"
@@ -74,6 +81,7 @@ class SARStatus(str, Enum):
 
 class Case(Base, TimestampMixin, TenantMixin):
     """Investigation case."""
+
     __tablename__ = "cases"
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -86,72 +94,91 @@ class Case(Base, TimestampMixin, TenantMixin):
     # Classification
     case_type: Mapped[CaseType] = mapped_column(String(50), nullable=False, index=True)
     status: Mapped[CaseStatus] = mapped_column(String(50), default=CaseStatus.NEW, index=True)
-    priority: Mapped[CasePriority] = mapped_column(String(20), default=CasePriority.MEDIUM, index=True)
+    priority: Mapped[CasePriority] = mapped_column(
+        String(20), default=CasePriority.MEDIUM, index=True
+    )
 
     # Source
-    source_type: Mapped[str] = mapped_column(String(50), nullable=False)  # ALERT, SCREENING, MANUAL, EXTERNAL
-    source_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # Alert ID, screening result ID, etc.
+    source_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # ALERT, SCREENING, MANUAL, EXTERNAL
+    source_id: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )  # Alert ID, screening result ID, etc.
 
     # Related customer
-    customer_id: Mapped[Optional[UUID]] = mapped_column(PGUUID(as_uuid=True), ForeignKey("customers.id", ondelete="SET NULL"), nullable=True, index=True)
+    customer_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("customers.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     # Timeline
     opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    due_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    closed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Assignment
-    assigned_to: Mapped[Optional[UUID]] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    assigned_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    assigned_team: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    assigned_to: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
+    assigned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    assigned_team: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Opener
-    opened_by: Mapped[Optional[UUID]] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    opened_by: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
 
     # Investigation summary
-    risk_indicators: Mapped[List[str]] = mapped_column(ARRAY(String), default=list)
-    investigation_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    findings: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    risk_indicators: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+    investigation_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    findings: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Financial summary (for AML cases)
-    total_amount_involved: Mapped[Optional[Decimal]] = mapped_column(Numeric(20, 2), nullable=True)
-    currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
+    total_amount_involved: Mapped[Decimal | None] = mapped_column(Numeric(20, 2), nullable=True)
+    currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
     transaction_count: Mapped[int] = mapped_column(Integer, default=0)
 
     # Related transactions
-    related_transactions: Mapped[List[str]] = mapped_column(ARRAY(String), default=list)
+    related_transactions: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
 
     # Related alerts
-    related_alerts: Mapped[List[str]] = mapped_column(ARRAY(String), default=list)
+    related_alerts: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     alert_count: Mapped[int] = mapped_column(Integer, default=0)
 
     # Disposition
-    disposition: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    disposition_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    closed_by: Mapped[Optional[UUID]] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    disposition: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    disposition_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    closed_by: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
 
     # SAR decision
     sar_required: Mapped[bool] = mapped_column(Boolean, default=False)
-    sar_decision_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    sar_decision_by: Mapped[Optional[UUID]] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    sar_decision_rationale: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    sar_decision_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    sar_decision_by: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
+    sar_decision_rationale: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Escalation
     is_escalated: Mapped[bool] = mapped_column(Boolean, default=False)
-    escalated_to: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    escalation_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    escalated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    escalated_to: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    escalation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    escalated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # SLA tracking
-    sla_due_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    sla_due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     sla_breached: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Tags and metadata
-    tags: Mapped[List[str]] = mapped_column(ARRAY(String), default=list)
-    extra_data: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    tags: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+    extra_data: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     # TheHive integration
-    thehive_case_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    thehive_case_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Relationships
     customer = relationship("Customer", back_populates="cases")
@@ -162,23 +189,30 @@ class Case(Base, TimestampMixin, TenantMixin):
 
 class CaseNote(Base, TimestampMixin, TenantMixin):
     """Case investigation note."""
+
     __tablename__ = "case_notes"
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
-    case_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("cases.id", ondelete="CASCADE"), index=True)
+    case_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("cases.id", ondelete="CASCADE"), index=True
+    )
 
     # Note details
-    note_type: Mapped[str] = mapped_column(String(50), nullable=False)  # INVESTIGATION, COMMUNICATION, DECISION, SYSTEM
+    note_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # INVESTIGATION, COMMUNICATION, DECISION, SYSTEM
     content: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Author
-    author_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    author_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+    )
 
     # Visibility
     is_internal: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Attachments
-    attachments: Mapped[List[str]] = mapped_column(ARRAY(String), default=list)
+    attachments: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
 
     # Relationships
     case = relationship("Case", back_populates="notes")
@@ -186,29 +220,38 @@ class CaseNote(Base, TimestampMixin, TenantMixin):
 
 class CaseTask(Base, TimestampMixin, TenantMixin):
     """Case workflow task."""
+
     __tablename__ = "case_tasks"
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
-    case_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("cases.id", ondelete="CASCADE"), index=True)
+    case_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("cases.id", ondelete="CASCADE"), index=True
+    )
 
     # Task details
     title: Mapped[str] = mapped_column(String(500), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    task_type: Mapped[str] = mapped_column(String(50), nullable=False)  # REVIEW, COLLECT_INFO, INTERVIEW, DOCUMENT, DECISION
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    task_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # REVIEW, COLLECT_INFO, INTERVIEW, DOCUMENT, DECISION
 
     # Status
     status: Mapped[TaskStatus] = mapped_column(String(50), default=TaskStatus.PENDING)
 
     # Assignment
-    assigned_to: Mapped[Optional[UUID]] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    assigned_to: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
 
     # Timeline
-    due_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    completed_by: Mapped[Optional[UUID]] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_by: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
 
     # Outcome
-    outcome: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    outcome: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Order
     sequence: Mapped[int] = mapped_column(Integer, default=0)
@@ -222,10 +265,13 @@ class CaseTask(Base, TimestampMixin, TenantMixin):
 
 class SARReport(Base, TimestampMixin, TenantMixin):
     """Suspicious Activity Report."""
+
     __tablename__ = "sar_reports"
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
-    case_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), ForeignKey("cases.id", ondelete="CASCADE"), index=True)
+    case_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("cases.id", ondelete="CASCADE"), index=True
+    )
 
     # SAR identification
     sar_ref: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
@@ -237,25 +283,25 @@ class SARReport(Base, TimestampMixin, TenantMixin):
 
     # Filing details
     filing_institution: Mapped[str] = mapped_column(String(255), nullable=False)
-    filing_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    fincen_bsa_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    filing_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    fincen_bsa_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Subject information
     subject_type: Mapped[str] = mapped_column(String(50), nullable=False)  # INDIVIDUAL, BUSINESS
     subject_name: Mapped[str] = mapped_column(String(500), nullable=False)
-    subject_dob: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    subject_ssn_tin: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-    subject_address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    subject_account_numbers: Mapped[List[str]] = mapped_column(ARRAY(String), default=list)
+    subject_dob: Mapped[date | None] = mapped_column(Date, nullable=True)
+    subject_ssn_tin: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    subject_address: Mapped[str | None] = mapped_column(Text, nullable=True)
+    subject_account_numbers: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
 
     # Activity summary
-    activity_start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    activity_end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    total_amount: Mapped[Optional[Decimal]] = mapped_column(Numeric(20, 2), nullable=True)
+    activity_start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    activity_end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    total_amount: Mapped[Decimal | None] = mapped_column(Numeric(20, 2), nullable=True)
     transaction_count: Mapped[int] = mapped_column(Integer, default=0)
 
     # Suspicious activity types
-    activity_types: Mapped[List[str]] = mapped_column(ARRAY(String), default=list)
+    activity_types: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     # Structuring, Terrorist Financing, Money Laundering, etc.
 
     # Narrative
@@ -263,25 +309,33 @@ class SARReport(Base, TimestampMixin, TenantMixin):
 
     # Related law enforcement
     law_enforcement_contact: Mapped[bool] = mapped_column(Boolean, default=False)
-    le_agency: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    le_case_number: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    le_agency: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    le_case_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Approval workflow
-    prepared_by: Mapped[Optional[UUID]] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    prepared_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    reviewed_by: Mapped[Optional[UUID]] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    approved_by: Mapped[Optional[UUID]] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    prepared_by: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
+    prepared_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reviewed_by: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    approved_by: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Filing
-    filed_by: Mapped[Optional[UUID]] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    filed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    acknowledgement_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    acknowledgement_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    filed_by: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
+    filed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    acknowledgement_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    acknowledgement_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Document
-    document_path: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    document_path: Mapped[str | None] = mapped_column(String(1000), nullable=True)
 
     # Relationships
     case = relationship("Case", back_populates="sar_reports")

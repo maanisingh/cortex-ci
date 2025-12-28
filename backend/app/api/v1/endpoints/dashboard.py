@@ -1,12 +1,11 @@
-from typing import Dict, Any
 from datetime import datetime, timedelta
+from typing import Any
 
 from fastapi import APIRouter
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 
-from app.models import Entity, Constraint, Dependency, RiskScore, AuditLog
-from app.api.v1.deps import DB, CurrentUser, CurrentTenant
-
+from app.api.v1.deps import DB, CurrentTenant, CurrentUser
+from app.models import AuditLog, Constraint, Dependency, Entity, RiskScore
 
 router = APIRouter()
 
@@ -16,7 +15,7 @@ async def get_dashboard_stats(
     db: DB,
     current_user: CurrentUser,
     tenant: CurrentTenant,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get dashboard statistics for the current tenant."""
 
     # Entity counts by type
@@ -40,9 +39,7 @@ async def get_dashboard_stats(
     )
 
     constraint_result = await db.execute(constraint_query)
-    constraints_by_severity = {
-        str(row.severity): row.count for row in constraint_result
-    }
+    constraints_by_severity = {str(row.severity): row.count for row in constraint_result}
 
     # Total constraints
     total_constraints = sum(constraints_by_severity.values())
@@ -114,7 +111,7 @@ async def get_risk_overview(
     db: DB,
     current_user: CurrentUser,
     tenant: CurrentTenant,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get risk distribution overview."""
 
     # Get risk score distribution
@@ -164,10 +161,10 @@ async def get_risk_overview(
 @router.get("/sync-status")
 async def get_sync_status(
     current_user: CurrentUser,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get data sync status and history."""
-    from pathlib import Path
     import json
+    from pathlib import Path
 
     sync_log_file = Path("/root/cortex-ci/data/sanctions/sync_log.json")
 
@@ -180,7 +177,7 @@ async def get_sync_status(
         }
 
     try:
-        with open(sync_log_file, "r") as f:
+        with open(sync_log_file) as f:
             sync_log = json.load(f)
 
         syncs = sync_log.get("syncs", [])

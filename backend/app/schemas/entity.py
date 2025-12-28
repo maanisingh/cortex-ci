@@ -1,6 +1,7 @@
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Any
 from uuid import UUID
+
 from pydantic import BaseModel, Field
 
 from app.models.entity import EntityType
@@ -11,17 +12,17 @@ class EntityBase(BaseModel):
 
     type: EntityType
     name: str = Field(..., min_length=1, max_length=500)
-    aliases: List[str] = []
-    external_id: Optional[str] = None
-    registration_number: Optional[str] = None
-    tax_id: Optional[str] = None
-    country_code: Optional[str] = Field(None, max_length=3)
-    address: Optional[str] = None
-    category: Optional[str] = None
-    subcategory: Optional[str] = None
-    tags: List[str] = []
+    aliases: list[str] = []
+    external_id: str | None = None
+    registration_number: str | None = None
+    tax_id: str | None = None
+    country_code: str | None = Field(None, max_length=3)
+    address: str | None = None
+    category: str | None = None
+    subcategory: str | None = None
+    tags: list[str] = []
     criticality: int = Field(3, ge=1, le=5)
-    custom_data: Dict[str, Any] = {}
+    custom_data: dict[str, Any] = {}
 
 
 class EntityCreate(EntityBase):
@@ -33,20 +34,20 @@ class EntityCreate(EntityBase):
 class EntityUpdate(BaseModel):
     """Entity update schema."""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=500)
-    aliases: Optional[List[str]] = None
-    external_id: Optional[str] = None
-    registration_number: Optional[str] = None
-    tax_id: Optional[str] = None
-    country_code: Optional[str] = Field(None, max_length=3)
-    address: Optional[str] = None
-    category: Optional[str] = None
-    subcategory: Optional[str] = None
-    tags: Optional[List[str]] = None
-    criticality: Optional[int] = Field(None, ge=1, le=5)
-    custom_data: Optional[Dict[str, Any]] = None
-    is_active: Optional[bool] = None
-    notes: Optional[str] = None
+    name: str | None = Field(None, min_length=1, max_length=500)
+    aliases: list[str] | None = None
+    external_id: str | None = None
+    registration_number: str | None = None
+    tax_id: str | None = None
+    country_code: str | None = Field(None, max_length=3)
+    address: str | None = None
+    category: str | None = None
+    subcategory: str | None = None
+    tags: list[str] | None = None
+    criticality: int | None = Field(None, ge=1, le=5)
+    custom_data: dict[str, Any] | None = None
+    is_active: bool | None = None
+    notes: str | None = None
 
 
 class EntityResponse(EntityBase):
@@ -55,7 +56,7 @@ class EntityResponse(EntityBase):
     id: UUID
     tenant_id: UUID
     is_active: bool
-    notes: Optional[str]
+    notes: str | None
     created_at: datetime
     updated_at: datetime
 
@@ -66,7 +67,7 @@ class EntityResponse(EntityBase):
 class EntityListResponse(BaseModel):
     """Paginated entity list response."""
 
-    items: List[EntityResponse]
+    items: list[EntityResponse]
     total: int
     page: int
     page_size: int
@@ -76,15 +77,15 @@ class EntityListResponse(BaseModel):
 class EntityScreenRequest(BaseModel):
     """Request to screen an entity or list of entities."""
 
-    entity_ids: Optional[List[UUID]] = None  # Screen specific entities
-    name: Optional[str] = None  # Screen a name (without creating entity)
-    aliases: List[str] = []
+    entity_ids: list[UUID] | None = None  # Screen specific entities
+    name: str | None = None  # Screen a name (without creating entity)
+    aliases: list[str] = []
 
 
 class EntityBulkImportRequest(BaseModel):
     """Bulk import request."""
 
-    entities: List[EntityCreate]
+    entities: list[EntityCreate]
     skip_duplicates: bool = True
 
 
@@ -93,4 +94,4 @@ class EntityBulkImportResponse(BaseModel):
 
     imported: int
     skipped: int
-    errors: List[Dict[str, Any]]
+    errors: list[dict[str, Any]]

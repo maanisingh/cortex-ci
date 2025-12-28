@@ -61,7 +61,9 @@ export default function RealTimeAlerts() {
   const [connected, setConnected] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const connectWebSocket = useCallback(() => {
     if (!accessToken || !isAuthenticated) return;
@@ -261,7 +263,9 @@ export default function RealTimeAlerts() {
                           <XMarkIcon className="h-4 w-4" />
                         </button>
                         <div className="flex gap-3">
-                          <Icon className={`h-5 w-5 flex-shrink-0 ${style.iconColor}`} />
+                          <Icon
+                            className={`h-5 w-5 flex-shrink-0 ${style.iconColor}`}
+                          />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900">
                               {alert.title}

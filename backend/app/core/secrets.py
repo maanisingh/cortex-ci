@@ -6,12 +6,13 @@ Implements secure secrets storage, encryption, and rotation.
 import base64
 import hashlib
 import secrets as py_secrets
-from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
+from typing import Any
+
+import structlog
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import structlog
 
 from app.core.config import settings
 
@@ -24,7 +25,7 @@ class SecretsManager:
     Uses Fernet symmetric encryption with key derivation.
     """
 
-    def __init__(self, master_key: Optional[str] = None):
+    def __init__(self, master_key: str | None = None):
         """
         Initialize secrets manager.
 
@@ -32,8 +33,8 @@ class SecretsManager:
             master_key: Master encryption key (from environment or config)
         """
         self._master_key = master_key or settings.ENCRYPTION_KEY
-        self._fernet: Optional[Fernet] = None
-        self._secrets_cache: Dict[str, Dict[str, Any]] = {}
+        self._fernet: Fernet | None = None
+        self._secrets_cache: dict[str, dict[str, Any]] = {}
         self._init_encryption()
 
     def _init_encryption(self):
@@ -51,9 +52,7 @@ class SecretsManager:
                 salt=salt,
                 iterations=100000,
             )
-            key = base64.urlsafe_b64encode(
-                kdf.derive(self._master_key.encode())
-            )
+            key = base64.urlsafe_b64encode(kdf.derive(self._master_key.encode()))
             self._fernet = Fernet(key)
             logger.info("Secrets encryption initialized")
         except Exception as e:
@@ -106,9 +105,9 @@ class SecretsManager:
         self,
         name: str,
         value: str,
-        metadata: Optional[Dict[str, Any]] = None,
-        expires_at: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] | None = None,
+        expires_at: datetime | None = None,
+    ) -> dict[str, Any]:
         """
         Store a secret with optional expiration.
 
@@ -148,7 +147,7 @@ class SecretsManager:
             "version": secret_entry["version"],
         }
 
-    def get_secret(self, name: str) -> Optional[str]:
+    def get_secret(self, name: str) -> str | None:
         """
         Retrieve a secret value.
 
@@ -202,13 +201,15 @@ class SecretsManager:
         """
         result = []
         for name, entry in self._secrets_cache.items():
-            result.append({
-                "name": name,
-                "created_at": entry["created_at"],
-                "expires_at": entry["expires_at"],
-                "version": entry["version"],
-                "metadata": entry["metadata"],
-            })
+            result.append(
+                {
+                    "name": name,
+                    "created_at": entry["created_at"],
+                    "expires_at": entry["expires_at"],
+                    "version": entry["version"],
+                    "metadata": entry["metadata"],
+                }
+            )
         return result
 
     def rotate_secret(
@@ -216,7 +217,7 @@ class SecretsManager:
         name: str,
         new_value: str,
         retain_versions: int = 3,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Rotate a secret to a new value.
 
@@ -236,10 +237,12 @@ class SecretsManager:
 
         # Track rotation history
         rotation_history = metadata.get("rotation_history", [])
-        rotation_history.append({
-            "version": old_entry["version"],
-            "rotated_at": datetime.utcnow().isoformat(),
-        })
+        rotation_history.append(
+            {
+                "version": old_entry["version"],
+                "rotated_at": datetime.utcnow().isoformat(),
+            }
+        )
 
         # Keep only recent history
         if len(rotation_history) > retain_versions:
@@ -281,22 +284,22 @@ class FieldEncryption:
     Used to encrypt sensitive fields before storage.
     """
 
-    def __init__(self, secrets_manager: Optional[SecretsManager] = None):
+    def __init__(self, secrets_manager: SecretsManager | None = None):
         self._manager = secrets_manager or secrets_manager_instance
 
-    def encrypt_field(self, value: Any) -> Optional[str]:
+    def encrypt_field(self, value: Any) -> str | None:
         """Encrypt a field value."""
         if value is None:
             return None
         return self._manager.encrypt(str(value))
 
-    def decrypt_field(self, encrypted_value: Optional[str]) -> Optional[str]:
+    def decrypt_field(self, encrypted_value: str | None) -> str | None:
         """Decrypt a field value."""
         if encrypted_value is None:
             return None
         return self._manager.decrypt(encrypted_value)
 
-    def encrypt_dict(self, data: Dict[str, Any], fields: list) -> Dict[str, Any]:
+    def encrypt_dict(self, data: dict[str, Any], fields: list) -> dict[str, Any]:
         """
         Encrypt specific fields in a dictionary.
 
@@ -313,7 +316,7 @@ class FieldEncryption:
                 result[field] = self.encrypt_field(result[field])
         return result
 
-    def decrypt_dict(self, data: Dict[str, Any], fields: list) -> Dict[str, Any]:
+    def decrypt_dict(self, data: dict[str, Any], fields: list) -> dict[str, Any]:
         """
         Decrypt specific fields in a dictionary.
 
@@ -336,16 +339,16 @@ class APIKeyManager:
     Manage API keys for service-to-service authentication.
     """
 
-    def __init__(self, secrets_manager: Optional[SecretsManager] = None):
+    def __init__(self, secrets_manager: SecretsManager | None = None):
         self._manager = secrets_manager or secrets_manager_instance
-        self._api_keys: Dict[str, Dict[str, Any]] = {}
+        self._api_keys: dict[str, dict[str, Any]] = {}
 
     def create_api_key(
         self,
         name: str,
         scopes: list,
         expires_days: int = 365,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Create a new API key.
 
@@ -377,7 +380,7 @@ class APIKeyManager:
             "expires_at": expires_at.isoformat(),
         }
 
-    def validate_api_key(self, api_key: str) -> Optional[Dict[str, Any]]:
+    def validate_api_key(self, api_key: str) -> dict[str, Any] | None:
         """
         Validate an API key.
 

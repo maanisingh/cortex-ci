@@ -225,13 +225,15 @@ const TOUR_STEPS: TourStep[] = [
   {
     target: "[data-tour='dashboard']",
     title: "Welcome to CORTEX-CI",
-    content: "This is your executive dashboard showing key metrics and risk overview.",
+    content:
+      "This is your executive dashboard showing key metrics and risk overview.",
     position: "bottom",
   },
   {
     target: "[data-tour='entities']",
     title: "Entity Management",
-    content: "Manage all monitored entities including individuals, organizations, and assets.",
+    content:
+      "Manage all monitored entities including individuals, organizations, and assets.",
     position: "right",
   },
   {
@@ -243,7 +245,8 @@ const TOUR_STEPS: TourStep[] = [
   {
     target: "[data-tour='scenarios']",
     title: "Scenario Simulation",
-    content: "Run what-if analyses to understand potential impacts before they happen.",
+    content:
+      "Run what-if analyses to understand potential impacts before they happen.",
     position: "right",
   },
   {
@@ -257,7 +260,9 @@ const TOUR_STEPS: TourStep[] = [
 export default function UserGuide() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>("overview");
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["overview"]));
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(["overview"]),
+  );
   const [showTour, setShowTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [hasSeenTour, setHasSeenTour] = useState(() => {
@@ -355,7 +360,10 @@ export default function UserGuide() {
       {/* Guide Modal */}
       {isOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setIsOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setIsOpen(false)}
+          />
           <div className="absolute inset-y-0 right-0 max-w-2xl w-full bg-white shadow-xl flex flex-col">
             {/* Header */}
             <div className="px-6 py-4 border-b flex items-center justify-between bg-indigo-600 text-white">
@@ -363,7 +371,10 @@ export default function UserGuide() {
                 <BookOpenIcon className="h-6 w-6" />
                 <h2 className="text-xl font-semibold">CORTEX-CI User Guide</h2>
               </div>
-              <button onClick={() => setIsOpen(false)} className="hover:bg-indigo-700 p-2 rounded">
+              <button
+                onClick={() => setIsOpen(false)}
+                className="hover:bg-indigo-700 p-2 rounded"
+              >
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
@@ -388,7 +399,9 @@ export default function UserGuide() {
               <div className="p-6">
                 {/* Quick Links */}
                 <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Quick Navigation</h3>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">
+                    Quick Navigation
+                  </h3>
                   <div className="grid grid-cols-2 gap-2">
                     {GUIDE_SECTIONS.slice(0, 6).map((section) => (
                       <button
@@ -413,22 +426,31 @@ export default function UserGuide() {
                 {/* Sections */}
                 <div className="space-y-2">
                   {GUIDE_SECTIONS.map((section) => (
-                    <div key={section.id} className="border rounded-lg overflow-hidden">
+                    <div
+                      key={section.id}
+                      className="border rounded-lg overflow-hidden"
+                    >
                       <button
                         onClick={() => toggleSection(section.id)}
                         className={`w-full flex items-center justify-between p-4 text-left ${
-                          expandedSections.has(section.id) ? "bg-indigo-50" : "hover:bg-gray-50"
+                          expandedSections.has(section.id)
+                            ? "bg-indigo-50"
+                            : "hover:bg-gray-50"
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <section.icon
                             className={`h-5 w-5 ${
-                              expandedSections.has(section.id) ? "text-indigo-600" : "text-gray-500"
+                              expandedSections.has(section.id)
+                                ? "text-indigo-600"
+                                : "text-gray-500"
                             }`}
                           />
                           <span
                             className={`font-medium ${
-                              expandedSections.has(section.id) ? "text-indigo-900" : "text-gray-900"
+                              expandedSections.has(section.id)
+                                ? "text-indigo-900"
+                                : "text-gray-900"
                             }`}
                           >
                             {section.title}
@@ -471,7 +493,10 @@ export default function UserGuide() {
                               </h4>
                               <ul className="space-y-1">
                                 {section.tips.map((tip, i) => (
-                                  <li key={i} className="flex items-start gap-2 text-sm text-amber-800">
+                                  <li
+                                    key={i}
+                                    className="flex items-start gap-2 text-sm text-amber-800"
+                                  >
                                     <CheckCircleIcon className="h-4 w-4 flex-shrink-0 mt-0.5" />
                                     {tip}
                                   </li>
@@ -489,7 +514,8 @@ export default function UserGuide() {
 
             {/* Footer */}
             <div className="px-6 py-3 border-t bg-gray-50 text-center text-xs text-gray-500">
-              CORTEX-CI v1.0.0 • Government-grade Constraint Intelligence Platform
+              CORTEX-CI v1.0.0 • Government-grade Constraint Intelligence
+              Platform
             </div>
           </div>
         </div>
@@ -505,7 +531,9 @@ export default function UserGuide() {
                 <PlayIcon className="h-5 w-5 text-indigo-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">{TOUR_STEPS[tourStep].title}</h3>
+                <h3 className="font-semibold text-gray-900">
+                  {TOUR_STEPS[tourStep].title}
+                </h3>
                 <p className="text-sm text-gray-500">
                   Step {tourStep + 1} of {TOUR_STEPS.length}
                 </p>

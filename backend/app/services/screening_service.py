@@ -2,54 +2,53 @@
 
 Integrates with the OpenSanctions yente API for real-time sanctions screening.
 """
-import httpx
+
 import logging
-from typing import Optional, List, Dict, Any
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID, uuid4
+
+import httpx
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.models.compliance.screening import (
-    ScreeningResult, ScreeningMatch, MatchStatus,
-    WatchlistEntity, WatchlistType
-)
 from app.models.compliance.customer import Customer
+from app.models.compliance.screening import (
+    MatchStatus,
+    ScreeningMatch,
+    ScreeningResult,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class MatchResult(BaseModel):
     """Match result from yente API"""
+
     id: str
     schema_: str
     caption: str
     score: float
-    datasets: List[str]
-    properties: Dict[str, Any]
+    datasets: list[str]
+    properties: dict[str, Any]
 
 
 class ScreeningService:
     """Service for sanctions and PEP screening via OpenSanctions"""
 
-    def __init__(self, base_url: Optional[str] = None):
-        self.base_url = base_url or getattr(settings, 'OPENSANCTIONS_URL', 'http://localhost:8000')
-        self.api_key = getattr(settings, 'OPENSANCTIONS_API_KEY', None)
+    def __init__(self, base_url: str | None = None):
+        self.base_url = base_url or getattr(settings, "OPENSANCTIONS_URL", "http://localhost:8000")
+        self.api_key = getattr(settings, "OPENSANCTIONS_API_KEY", None)
         self.timeout = 30.0
         self.match_threshold = 0.7  # Minimum score to consider a match
 
-    async def _make_request(
-        self,
-        method: str,
-        endpoint: str,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def _make_request(self, method: str, endpoint: str, **kwargs) -> dict[str, Any]:
         """Make HTTP request to yente API"""
-        headers = kwargs.pop('headers', {})
+        headers = kwargs.pop("headers", {})
         if self.api_key:
-            headers['Authorization'] = f'Bearer {self.api_key}'
+            headers["Authorization"] = f"Bearer {self.api_key}"
 
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             url = f"{self.base_url}{endpoint}"
@@ -57,20 +56,20 @@ class ScreeningService:
             response.raise_for_status()
             return response.json()
 
-    async def check_health(self) -> Dict[str, Any]:
+    async def check_health(self) -> dict[str, Any]:
         """Check yente API health status"""
         try:
-            result = await self._make_request('GET', '/healthz')
-            return {'status': 'healthy', 'details': result}
+            result = await self._make_request("GET", "/healthz")
+            return {"status": "healthy", "details": result}
         except Exception as e:
             logger.error(f"OpenSanctions health check failed: {e}")
-            return {'status': 'unhealthy', 'error': str(e)}
+            return {"status": "unhealthy", "error": str(e)}
 
-    async def get_datasets(self) -> List[Dict[str, Any]]:
+    async def get_datasets(self) -> list[dict[str, Any]]:
         """Get available datasets from yente"""
         try:
-            result = await self._make_request('GET', '/catalog')
-            return result.get('datasets', [])
+            result = await self._make_request("GET", "/catalog")
+            return result.get("datasets", [])
         except Exception as e:
             logger.error(f"Failed to get datasets: {e}")
             return []
@@ -79,11 +78,11 @@ class ScreeningService:
         self,
         name: str,
         schema: str = "Person",
-        birth_date: Optional[str] = None,
-        countries: Optional[List[str]] = None,
-        id_numbers: Optional[List[str]] = None,
-        datasets: Optional[List[str]] = None,
-    ) -> List[MatchResult]:
+        birth_date: str | None = None,
+        countries: list[str] | None = None,
+        id_numbers: list[str] | None = None,
+        datasets: list[str] | None = None,
+    ) -> list[MatchResult]:
         """
         Screen an entity against sanctions and PEP lists.
 
@@ -108,10 +107,7 @@ class ScreeningService:
         if id_numbers:
             properties["idNumber"] = id_numbers
 
-        query = {
-            "schema": schema,
-            "properties": properties
-        }
+        query = {"schema": schema, "properties": properties}
 
         params = {}
         if datasets:
@@ -119,22 +115,21 @@ class ScreeningService:
 
         try:
             result = await self._make_request(
-                'POST',
-                '/match/default',
-                json={"queries": {"q1": query}},
-                params=params
+                "POST", "/match/default", json={"queries": {"q1": query}}, params=params
             )
 
             matches = []
-            for resp in result.get('responses', {}).get('q1', {}).get('results', []):
-                matches.append(MatchResult(
-                    id=resp.get('id', ''),
-                    schema_=resp.get('schema', ''),
-                    caption=resp.get('caption', ''),
-                    score=resp.get('score', 0.0),
-                    datasets=resp.get('datasets', []),
-                    properties=resp.get('properties', {})
-                ))
+            for resp in result.get("responses", {}).get("q1", {}).get("results", []):
+                matches.append(
+                    MatchResult(
+                        id=resp.get("id", ""),
+                        schema_=resp.get("schema", ""),
+                        caption=resp.get("caption", ""),
+                        score=resp.get("score", 0.0),
+                        datasets=resp.get("datasets", []),
+                        properties=resp.get("properties", {}),
+                    )
+                )
 
             return [m for m in matches if m.score >= self.match_threshold]
 
@@ -147,7 +142,7 @@ class ScreeningService:
         db: AsyncSession,
         tenant_id: UUID,
         customer_id: UUID,
-        screened_by: Optional[UUID] = None,
+        screened_by: UUID | None = None,
     ) -> ScreeningResult:
         """
         Screen a customer against all watchlists and save results.
@@ -162,9 +157,7 @@ class ScreeningService:
             ScreeningResult with matches
         """
         # Get customer
-        result = await db.execute(
-            select(Customer).where(Customer.id == customer_id)
-        )
+        result = await db.execute(select(Customer).where(Customer.id == customer_id))
         customer = result.scalar_one_or_none()
         if not customer:
             raise ValueError(f"Customer {customer_id} not found")
@@ -180,7 +173,7 @@ class ScreeningService:
             countries.append(customer.nationality)
 
         # Screen against OpenSanctions
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         screening_result_id = uuid4()
 
         try:
@@ -263,9 +256,9 @@ class ScreeningService:
         self,
         db: AsyncSession,
         tenant_id: UUID,
-        customer_ids: List[UUID],
-        screened_by: Optional[UUID] = None,
-    ) -> Dict[str, Any]:
+        customer_ids: list[UUID],
+        screened_by: UUID | None = None,
+    ) -> dict[str, Any]:
         """
         Screen multiple customers in batch.
 
@@ -276,7 +269,7 @@ class ScreeningService:
             "screened": 0,
             "matches_found": 0,
             "errors": 0,
-            "details": []
+            "details": [],
         }
 
         for customer_id in customer_ids:
@@ -287,18 +280,18 @@ class ScreeningService:
                 results["screened"] += 1
                 if screening_result.total_matches > 0:
                     results["matches_found"] += 1
-                results["details"].append({
-                    "customer_id": str(customer_id),
-                    "status": screening_result.status,
-                    "matches": screening_result.total_matches
-                })
+                results["details"].append(
+                    {
+                        "customer_id": str(customer_id),
+                        "status": screening_result.status,
+                        "matches": screening_result.total_matches,
+                    }
+                )
             except Exception as e:
                 results["errors"] += 1
-                results["details"].append({
-                    "customer_id": str(customer_id),
-                    "status": "ERROR",
-                    "error": str(e)
-                })
+                results["details"].append(
+                    {"customer_id": str(customer_id), "status": "ERROR", "error": str(e)}
+                )
 
         return results
 
@@ -308,16 +301,15 @@ class ScreeningService:
         tenant_id: UUID,
         match_id: UUID,
         status: MatchStatus,
-        resolution_notes: Optional[str] = None,
-        resolved_by: Optional[UUID] = None,
+        resolution_notes: str | None = None,
+        resolved_by: UUID | None = None,
     ) -> ScreeningMatch:
         """
         Resolve a screening match as true positive or false positive.
         """
         result = await db.execute(
             select(ScreeningMatch).where(
-                ScreeningMatch.id == match_id,
-                ScreeningMatch.tenant_id == tenant_id
+                ScreeningMatch.id == match_id, ScreeningMatch.tenant_id == tenant_id
             )
         )
         match = result.scalar_one_or_none()
@@ -326,14 +318,12 @@ class ScreeningService:
 
         match.status = status
         match.resolution_notes = resolution_notes
-        match.resolved_at = datetime.now(timezone.utc)
+        match.resolved_at = datetime.now(UTC)
         match.resolved_by = resolved_by
 
         # Update screening result counts
         screening_result = await db.execute(
-            select(ScreeningResult).where(
-                ScreeningResult.id == match.screening_result_id
-            )
+            select(ScreeningResult).where(ScreeningResult.id == match.screening_result_id)
         )
         sr = screening_result.scalar_one_or_none()
         if sr:
@@ -351,10 +341,10 @@ class ScreeningService:
         await db.refresh(match)
         return match
 
-    async def get_entity_details(self, entity_id: str) -> Dict[str, Any]:
+    async def get_entity_details(self, entity_id: str) -> dict[str, Any]:
         """Get full details of a watchlist entity"""
         try:
-            result = await self._make_request('GET', f'/entities/{entity_id}')
+            result = await self._make_request("GET", f"/entities/{entity_id}")
             return result
         except Exception as e:
             logger.error(f"Failed to get entity {entity_id}: {e}")

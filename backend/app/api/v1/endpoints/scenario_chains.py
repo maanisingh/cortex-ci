@@ -1,26 +1,24 @@
 """Phase 2.2: Scenario Chains API - Cascading effect simulation."""
 
-from typing import Optional, List
-from uuid import UUID
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy import select
 
+from app.api.v1.deps import DB, CurrentTenant, CurrentUser, RequireWriter
 from app.models import (
-    ScenarioChain,
+    AuditAction,
+    AuditLog,
     ChainEffect,
-    EffectSeverity,
-    Entity,
     Dependency,
     DependencyLayer,
-    AuditLog,
-    AuditAction,
+    EffectSeverity,
+    Entity,
+    ScenarioChain,
 )
-from app.api.v1.deps import DB, CurrentUser, CurrentTenant, RequireWriter
-
 
 router = APIRouter()
 
@@ -34,30 +32,30 @@ class ChainEffectCreate(BaseModel):
     time_delay_days: int = 0
     risk_score_delta: float = 0.0
     probability: float = 1.0
-    caused_by_effect_id: Optional[UUID] = None
-    notes: Optional[str] = None
+    caused_by_effect_id: UUID | None = None
+    notes: str | None = None
 
 
 class ScenarioChainCreate(BaseModel):
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     trigger_event: str
-    trigger_entity_id: Optional[UUID] = None
+    trigger_entity_id: UUID | None = None
 
 
 class ScenarioChainResponse(BaseModel):
     id: UUID
     name: str
-    description: Optional[str]
+    description: str | None
     trigger_event: str
-    trigger_entity_id: Optional[UUID]
+    trigger_entity_id: UUID | None
     total_entities_affected: int
     max_cascade_depth: int
     estimated_timeline_days: int
     overall_severity: str
     total_risk_increase: float
     is_active: bool
-    last_simulated_at: Optional[datetime]
+    last_simulated_at: datetime | None
     created_at: datetime
 
     class Config:
@@ -67,14 +65,14 @@ class ScenarioChainResponse(BaseModel):
 class ChainEffectResponse(BaseModel):
     id: UUID
     entity_id: UUID
-    entity_name: Optional[str] = None
+    entity_name: str | None = None
     effect_description: str
     severity: str
     cascade_depth: int
     time_delay_days: int
     risk_score_delta: float
     probability: float
-    caused_by_effect_id: Optional[UUID]
+    caused_by_effect_id: UUID | None
 
     class Config:
         from_attributes = True
@@ -83,8 +81,8 @@ class ChainEffectResponse(BaseModel):
 class CascadeSimulationResult(BaseModel):
     scenario_chain_id: UUID
     trigger_event: str
-    immediate_effects: List[ChainEffectResponse]
-    delayed_effects: List[ChainEffectResponse]
+    immediate_effects: list[ChainEffectResponse]
+    delayed_effects: list[ChainEffectResponse]
     total_entities_affected: int
     max_cascade_depth: int
     estimated_timeline_days: int
@@ -92,7 +90,7 @@ class CascadeSimulationResult(BaseModel):
     risk_impact_summary: dict
 
 
-@router.get("", response_model=List[ScenarioChainResponse])
+@router.get("", response_model=list[ScenarioChainResponse])
 async def list_scenario_chains(
     db: DB,
     current_user: CurrentUser,
@@ -115,9 +113,7 @@ async def list_scenario_chains(
     return result.scalars().all()
 
 
-@router.post(
-    "", response_model=ScenarioChainResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("", response_model=ScenarioChainResponse, status_code=status.HTTP_201_CREATED)
 async def create_scenario_chain(
     data: ScenarioChainCreate,
     db: DB,
@@ -174,7 +170,7 @@ async def get_scenario_chain(
     return chain
 
 
-@router.get("/{chain_id}/effects", response_model=List[ChainEffectResponse])
+@router.get("/{chain_id}/effects", response_model=list[ChainEffectResponse])
 async def get_chain_effects(
     chain_id: UUID,
     db: DB,
@@ -271,9 +267,7 @@ async def add_chain_effect(
     # Update chain stats
     chain.total_entities_affected = (chain.total_entities_affected or 0) + 1
     chain.max_cascade_depth = max(chain.max_cascade_depth or 0, data.cascade_depth)
-    chain.estimated_timeline_days = max(
-        chain.estimated_timeline_days or 0, data.time_delay_days
-    )
+    chain.estimated_timeline_days = max(chain.estimated_timeline_days or 0, data.time_delay_days)
 
     await db.commit()
     await db.refresh(effect)

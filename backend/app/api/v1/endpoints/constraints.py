@@ -1,26 +1,24 @@
 from datetime import date, timedelta
-from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status, Query
-from sqlalchemy import select, func, or_
+from fastapi import APIRouter, HTTPException, Query, status
+from sqlalchemy import func, or_, select
 
+from app.api.v1.deps import DB, CurrentTenant, CurrentUser, RequireWriter
 from app.models import (
-    Constraint,
-    ConstraintType,
-    ConstraintSeverity,
-    AuditLog,
     AuditAction,
+    AuditLog,
+    Constraint,
+    ConstraintSeverity,
+    ConstraintType,
 )
 from app.schemas.constraint import (
     ConstraintCreate,
-    ConstraintUpdate,
-    ConstraintResponse,
     ConstraintListResponse,
+    ConstraintResponse,
     ConstraintSummary,
+    ConstraintUpdate,
 )
-from app.api.v1.deps import DB, CurrentUser, CurrentTenant, RequireWriter
-
 
 router = APIRouter()
 
@@ -32,11 +30,11 @@ async def list_constraints(
     tenant: CurrentTenant,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
-    type: Optional[ConstraintType] = None,
-    severity: Optional[ConstraintSeverity] = None,
-    search: Optional[str] = None,
+    type: ConstraintType | None = None,
+    severity: ConstraintSeverity | None = None,
+    search: str | None = None,
     is_active: bool = True,
-    is_mandatory: Optional[bool] = None,
+    is_mandatory: bool | None = None,
 ):
     """List constraints with pagination and filtering."""
     query = select(Constraint).where(
@@ -111,9 +109,7 @@ async def get_constraint_summary(
     today = date.today()
     thirty_days = today + timedelta(days=30)
     expiring_soon = sum(
-        1
-        for c in constraints
-        if c.expiry_date and today <= c.expiry_date <= thirty_days
+        1 for c in constraints if c.expiry_date and today <= c.expiry_date <= thirty_days
     )
 
     return ConstraintSummary(

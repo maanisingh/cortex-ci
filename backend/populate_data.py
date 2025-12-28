@@ -44,7 +44,7 @@ def main():
         # AI/ML Models - use "organization" type with entity_subtype in custom_data
         {
             "name": "Credit Scoring Model v3.2",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "ML Model",
             "subcategory": "Credit Risk",
             "criticality": 5,
@@ -60,7 +60,7 @@ def main():
         },
         {
             "name": "Fraud Detection System",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "ML Model",
             "subcategory": "Fraud Prevention",
             "criticality": 5,
@@ -75,7 +75,7 @@ def main():
         },
         {
             "name": "Customer Churn Predictor",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "ML Model",
             "subcategory": "Customer Analytics",
             "criticality": 3,
@@ -89,7 +89,7 @@ def main():
         },
         {
             "name": "Resume Screening AI",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "ML Model",
             "subcategory": "HR Automation",
             "criticality": 5,
@@ -103,7 +103,7 @@ def main():
         },
         {
             "name": "Loan Default Predictor",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "ML Model",
             "subcategory": "Credit Risk",
             "criticality": 5,
@@ -117,7 +117,7 @@ def main():
         },
         {
             "name": "Dynamic Pricing Engine",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "ML Model",
             "subcategory": "Pricing",
             "criticality": 4,
@@ -131,7 +131,7 @@ def main():
         },
         {
             "name": "Sentiment Analysis API",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "NLP Model",
             "subcategory": "Text Analytics",
             "criticality": 2,
@@ -145,7 +145,7 @@ def main():
         },
         {
             "name": "Document Classification System",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "NLP Model",
             "subcategory": "Document Processing",
             "criticality": 3,
@@ -159,7 +159,7 @@ def main():
         },
         {
             "name": "Image Recognition Model",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Computer Vision",
             "subcategory": "Object Detection",
             "criticality": 3,
@@ -173,7 +173,7 @@ def main():
         },
         {
             "name": "Speech-to-Text Engine",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Speech Model",
             "subcategory": "Transcription",
             "criticality": 3,
@@ -188,7 +188,7 @@ def main():
         # Data Systems
         {
             "name": "Customer Data Platform",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Data Platform",
             "subcategory": "CDP",
             "criticality": 5,
@@ -203,7 +203,7 @@ def main():
         },
         {
             "name": "Training Data Lake",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Data Lake",
             "subcategory": "ML Training",
             "criticality": 4,
@@ -217,7 +217,7 @@ def main():
         },
         {
             "name": "Feature Store",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "ML Infrastructure",
             "subcategory": "Feature Engineering",
             "criticality": 5,
@@ -231,7 +231,7 @@ def main():
         },
         {
             "name": "Model Registry",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "MLOps",
             "subcategory": "Model Management",
             "criticality": 4,
@@ -245,7 +245,7 @@ def main():
         },
         {
             "name": "Real-time Event Stream",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Data Pipeline",
             "subcategory": "Streaming",
             "criticality": 5,
@@ -329,7 +329,7 @@ def main():
         # Teams
         {
             "name": "ML Engineering Team",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Team",
             "subcategory": "Machine Learning",
             "criticality": 4,
@@ -343,7 +343,7 @@ def main():
         },
         {
             "name": "AI Ethics Committee",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Team",
             "subcategory": "Ethics",
             "criticality": 5,
@@ -357,7 +357,7 @@ def main():
         },
         {
             "name": "Data Science Team",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Team",
             "subcategory": "Data Science",
             "criticality": 3,
@@ -370,7 +370,7 @@ def main():
         },
         {
             "name": "Model Risk Management",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Team",
             "subcategory": "Model Risk",
             "criticality": 5,
@@ -384,7 +384,7 @@ def main():
         },
         {
             "name": "Data Engineering Team",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Team",
             "subcategory": "Data Engineering",
             "criticality": 4,
@@ -455,7 +455,7 @@ def main():
         # Vendors
         {
             "name": "OpenAI API Integration",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Vendor",
             "subcategory": "LLM Provider",
             "criticality": 3,
@@ -469,7 +469,7 @@ def main():
         },
         {
             "name": "AWS SageMaker",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Vendor",
             "subcategory": "ML Platform",
             "criticality": 4,
@@ -483,7 +483,7 @@ def main():
         },
         {
             "name": "Anthropic Claude Integration",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Vendor",
             "subcategory": "LLM Provider",
             "criticality": 3,
@@ -497,7 +497,7 @@ def main():
         },
         {
             "name": "Hugging Face Enterprise",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Vendor",
             "subcategory": "Model Hub",
             "criticality": 2,
@@ -510,7 +510,7 @@ def main():
         },
         {
             "name": "Databricks",
-            "type": "organization",
+            "type": "ORGANIZATION",
             "category": "Vendor",
             "subcategory": "Data Platform",
             "criticality": 4,

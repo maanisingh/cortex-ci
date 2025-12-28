@@ -1,6 +1,7 @@
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Any
 from uuid import UUID
+
 from pydantic import BaseModel, Field
 
 from app.models.dependency import DependencyLayer, RelationshipType
@@ -14,9 +15,9 @@ class DependencyBase(BaseModel):
     layer: DependencyLayer = DependencyLayer.OPERATIONAL
     relationship_type: RelationshipType
     criticality: int = Field(3, ge=1, le=5)
-    description: Optional[str] = None
+    description: str | None = None
     is_bidirectional: bool = False
-    custom_data: Dict[str, Any] = {}
+    custom_data: dict[str, Any] = {}
 
 
 class DependencyCreate(DependencyBase):
@@ -28,13 +29,13 @@ class DependencyCreate(DependencyBase):
 class DependencyUpdate(BaseModel):
     """Dependency update schema."""
 
-    layer: Optional[DependencyLayer] = None
-    relationship_type: Optional[RelationshipType] = None
-    criticality: Optional[int] = Field(None, ge=1, le=5)
-    description: Optional[str] = None
-    is_bidirectional: Optional[bool] = None
-    custom_data: Optional[Dict[str, Any]] = None
-    is_active: Optional[bool] = None
+    layer: DependencyLayer | None = None
+    relationship_type: RelationshipType | None = None
+    criticality: int | None = Field(None, ge=1, le=5)
+    description: str | None = None
+    is_bidirectional: bool | None = None
+    custom_data: dict[str, Any] | None = None
+    is_active: bool | None = None
 
 
 class DependencyResponse(DependencyBase):
@@ -47,8 +48,8 @@ class DependencyResponse(DependencyBase):
     updated_at: datetime
 
     # Optionally include related entity info
-    source_entity_name: Optional[str] = None
-    target_entity_name: Optional[str] = None
+    source_entity_name: str | None = None
+    target_entity_name: str | None = None
 
     class Config:
         from_attributes = True
@@ -57,7 +58,7 @@ class DependencyResponse(DependencyBase):
 class DependencyListResponse(BaseModel):
     """Paginated dependency list response."""
 
-    items: List[DependencyResponse]
+    items: list[DependencyResponse]
     total: int
     page: int
     page_size: int
@@ -71,8 +72,8 @@ class DependencyGraphNode(BaseModel):
     label: str
     type: str
     criticality: int
-    risk_level: Optional[str] = None
-    metadata: Dict[str, Any] = {}
+    risk_level: str | None = None
+    metadata: dict[str, Any] = {}
 
 
 class DependencyGraphEdge(BaseModel):
@@ -90,6 +91,6 @@ class DependencyGraphEdge(BaseModel):
 class DependencyGraphResponse(BaseModel):
     """Full dependency graph for visualization."""
 
-    nodes: List[DependencyGraphNode]
-    edges: List[DependencyGraphEdge]
-    stats: Dict[str, Any] = {}
+    nodes: list[DependencyGraphNode]
+    edges: list[DependencyGraphEdge]
+    stats: dict[str, Any] = {}

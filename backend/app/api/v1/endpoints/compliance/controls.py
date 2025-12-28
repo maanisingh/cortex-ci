@@ -1,40 +1,47 @@
 """Control Management API Endpoints"""
-from uuid import UUID, uuid4
-from typing import Optional, List
-from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func
-from pydantic import BaseModel
 
+from datetime import UTC, datetime
+from uuid import UUID, uuid4
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+from sqlalchemy import and_, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.v1.deps import get_current_tenant_id, get_current_user
 from app.core.database import get_db
-from app.api.v1.deps import get_current_user, get_current_tenant_id
 from app.models.compliance.framework import (
-    Control, ControlMapping,
-    Assessment, AssessmentStatus, AssessmentResult
+    Assessment,
+    AssessmentStatus,
+    Control,
+    ControlMapping,
 )
 
 router = APIRouter()
+
 
 class ControlResponse(BaseModel):
     id: UUID
     control_id: str
     title: str
     framework_id: UUID
-    implementation_status: Optional[str] = None
+    implementation_status: str | None = None
 
     class Config:
         from_attributes = True
 
+
 class ControlUpdateSchema(BaseModel):
-    implementation_status: Optional[str] = None
-    implementation_notes: Optional[str] = None
+    implementation_status: str | None = None
+    implementation_notes: str | None = None
+
 
 class AssessmentCreate(BaseModel):
     control_id: UUID
     assessment_type: str = "SELF_ASSESSMENT"
-    findings: Optional[str] = None
+    findings: str | None = None
     result: str
+
 
 class AssessmentResponse(BaseModel):
     id: UUID
@@ -42,22 +49,24 @@ class AssessmentResponse(BaseModel):
     assessment_type: str
     result: str
     assessed_at: datetime
-    assessed_by: Optional[UUID]
+    assessed_by: UUID | None
 
     class Config:
         from_attributes = True
+
 
 class ControlMappingCreate(BaseModel):
     source_control_id: UUID
     target_control_id: UUID
     relationship_type: str = "EQUIVALENT"
-    notes: Optional[str] = None
+    notes: str | None = None
 
-@router.get("/", response_model=List[ControlResponse])
+
+@router.get("/", response_model=list[ControlResponse])
 async def list_controls(
-    framework_id: Optional[UUID] = Query(None),
-    implementation_status: Optional[str] = Query(None),
-    search: Optional[str] = Query(None),
+    framework_id: UUID | None = Query(None),
+    implementation_status: str | None = Query(None),
+    search: str | None = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
@@ -72,10 +81,9 @@ async def list_controls(
         query = query.where(
             Control.title.ilike(f"%{search}%") | Control.control_id.ilike(f"%{search}%")
         )
-    result = await db.execute(
-        query.order_by(Control.control_id).offset(skip).limit(limit)
-    )
+    result = await db.execute(query.order_by(Control.control_id).offset(skip).limit(limit))
     return result.scalars().all()
+
 
 @router.get("/{control_id}", response_model=ControlResponse)
 async def get_control(
@@ -90,6 +98,7 @@ async def get_control(
     if not control:
         raise HTTPException(status_code=404, detail="Control not found")
     return control
+
 
 @router.patch("/{control_id}")
 async def update_control(
@@ -112,19 +121,21 @@ async def update_control(
     await db.commit()
     return {"message": "Control updated", "control_id": str(control_id)}
 
+
 # Control Assessments
-@router.get("/{control_id}/assessments", response_model=List[AssessmentResponse])
+@router.get("/{control_id}/assessments", response_model=list[AssessmentResponse])
 async def list_control_assessments(
     control_id: UUID,
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
 ):
     result = await db.execute(
-        select(Assessment).where(
-            and_(Assessment.control_id == control_id, Assessment.tenant_id == tenant_id)
-        ).order_by(Assessment.assessed_at.desc())
+        select(Assessment)
+        .where(and_(Assessment.control_id == control_id, Assessment.tenant_id == tenant_id))
+        .order_by(Assessment.assessed_at.desc())
     )
     return result.scalars().all()
+
 
 @router.post("/{control_id}/assessments", response_model=AssessmentResponse)
 async def create_assessment(
@@ -132,7 +143,7 @@ async def create_assessment(
     assessment: AssessmentCreate,
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     db_assessment = Assessment(
         id=uuid4(),
@@ -142,15 +153,13 @@ async def create_assessment(
         status=AssessmentStatus.COMPLETED,
         result=assessment.result,
         findings=assessment.findings,
-        assessed_at=datetime.now(timezone.utc),
+        assessed_at=datetime.now(UTC),
         assessed_by=current_user.id,
     )
     db.add(db_assessment)
 
     # Update control status based on assessment result
-    control_result = await db.execute(
-        select(Control).where(Control.id == control_id)
-    )
+    control_result = await db.execute(select(Control).where(Control.id == control_id))
     control = control_result.scalar_one_or_none()
     if control:
         if assessment.result == "PASS":
@@ -164,6 +173,7 @@ async def create_assessment(
     await db.refresh(db_assessment)
     return db_assessment
 
+
 # Control Mappings
 @router.get("/{control_id}/mappings")
 async def get_control_mappings(
@@ -174,13 +184,19 @@ async def get_control_mappings(
     # Get mappings where this control is the source
     source_result = await db.execute(
         select(ControlMapping).where(
-            and_(ControlMapping.source_control_id == control_id, ControlMapping.tenant_id == tenant_id)
+            and_(
+                ControlMapping.source_control_id == control_id,
+                ControlMapping.tenant_id == tenant_id,
+            )
         )
     )
     # Get mappings where this control is the target
     target_result = await db.execute(
         select(ControlMapping).where(
-            and_(ControlMapping.target_control_id == control_id, ControlMapping.tenant_id == tenant_id)
+            and_(
+                ControlMapping.target_control_id == control_id,
+                ControlMapping.tenant_id == tenant_id,
+            )
         )
     )
 
@@ -203,12 +219,13 @@ async def get_control_mappings(
         ],
     }
 
+
 @router.post("/mappings")
 async def create_control_mapping(
     mapping: ControlMappingCreate,
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     db_mapping = ControlMapping(
         id=uuid4(),
@@ -221,6 +238,7 @@ async def create_control_mapping(
     db.add(db_mapping)
     await db.commit()
     return {"message": "Control mapping created", "mapping_id": str(db_mapping.id)}
+
 
 @router.delete("/mappings/{mapping_id}")
 async def delete_control_mapping(
@@ -241,10 +259,11 @@ async def delete_control_mapping(
     await db.commit()
     return {"message": "Mapping deleted"}
 
+
 # Statistics
 @router.get("/stats/summary")
 async def get_control_statistics(
-    framework_id: Optional[UUID] = Query(None),
+    framework_id: UUID | None = Query(None),
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
 ):
@@ -267,7 +286,10 @@ async def get_control_statistics(
     )
     partially = await db.execute(
         select(func.count(Control.id)).where(
-            and_(Control.tenant_id == tenant_id, Control.implementation_status == "PARTIALLY_IMPLEMENTED")
+            and_(
+                Control.tenant_id == tenant_id,
+                Control.implementation_status == "PARTIALLY_IMPLEMENTED",
+            )
         )
     )
     not_impl = await db.execute(
@@ -291,6 +313,7 @@ async def get_control_statistics(
         "compliance_rate": round(compliance_rate, 1),
     }
 
+
 @router.get("/stats/by-framework")
 async def get_stats_by_framework(
     db: AsyncSession = Depends(get_db),
@@ -299,9 +322,7 @@ async def get_stats_by_framework(
     """Get control statistics grouped by framework"""
     from app.models.compliance.framework import Framework
 
-    frameworks_result = await db.execute(
-        select(Framework).where(Framework.tenant_id == tenant_id)
-    )
+    frameworks_result = await db.execute(select(Framework).where(Framework.tenant_id == tenant_id))
 
     stats = []
     for framework in frameworks_result.scalars().all():
@@ -315,7 +336,7 @@ async def get_stats_by_framework(
                 and_(
                     Control.tenant_id == tenant_id,
                     Control.framework_id == framework.id,
-                    Control.implementation_status == "IMPLEMENTED"
+                    Control.implementation_status == "IMPLEMENTED",
                 )
             )
         )
@@ -323,12 +344,16 @@ async def get_stats_by_framework(
         total_count = total.scalar() or 0
         impl_count = implemented.scalar() or 0
 
-        stats.append({
-            "framework_id": str(framework.id),
-            "framework_name": framework.name,
-            "total_controls": total_count,
-            "implemented": impl_count,
-            "compliance_rate": round((impl_count / total_count * 100) if total_count > 0 else 0, 1),
-        })
+        stats.append(
+            {
+                "framework_id": str(framework.id),
+                "framework_name": framework.name,
+                "total_controls": total_count,
+                "implemented": impl_count,
+                "compliance_rate": round(
+                    (impl_count / total_count * 100) if total_count > 0 else 0, 1
+                ),
+            }
+        )
 
     return stats

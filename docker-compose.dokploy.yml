@@ -5,15 +5,15 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: cortex
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-CortexCI_Secure_2024!}
-      POSTGRES_DB: cortex_ci
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-cortex_ci}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - cortex-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cortex -d cortex_ci"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cortex_ci"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -139,7 +139,7 @@ services:
     image: docuseal/docuseal:latest
     environment:
       - SECRET_KEY_BASE=${DOCUSEAL_SECRET:-docuseal_secret_key_2024}
-      - DATABASE_URL=postgresql://cortex:${POSTGRES_PASSWORD:-CortexCI_Secure_2024!}@db:5432/docuseal
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/docuseal
     depends_on:
       db:
         condition: service_healthy
@@ -154,8 +154,8 @@ services:
       PAPERLESS_REDIS: redis://redis:6379
       PAPERLESS_DBHOST: db
       PAPERLESS_DBNAME: paperless
-      PAPERLESS_DBUSER: cortex
-      PAPERLESS_DBPASS: ${POSTGRES_PASSWORD:-CortexCI_Secure_2024!}
+      PAPERLESS_DBUSER: ${POSTGRES_USER:-postgres}
+      PAPERLESS_DBPASS: ${POSTGRES_PASSWORD:-postgres}
       PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET:-paperless_secret_key_2024}
     volumes:
       - paperless_data:/usr/src/paperless/data
@@ -176,7 +176,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      - DATABASE_URL=postgresql+asyncpg://cortex:${POSTGRES_PASSWORD:-CortexCI_Secure_2024!}@db:5432/cortex_ci
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-cortex_ci}
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY:-your-production-secret-key-change-this}
       - DEBUG=false

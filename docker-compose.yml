@@ -7,7 +7,7 @@ services:
 
   # PostgreSQL Database
   db:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: cortex-db
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -32,7 +32,7 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "6379:6379"
+      - "6380:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -46,16 +46,13 @@ services:
     container_name: cortex-search
     environment:
       MEILI_MASTER_KEY: ${MEILISEARCH_MASTER_KEY:-masterkey}
-      MEILI_ENV: production
+      MEILI_ENV: development
     volumes:
       - meilisearch_data:/meili_data
     ports:
       - "7700:7700"
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:7700/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      disable: true
     restart: unless-stopped
 
   # =============================================================================
@@ -63,7 +60,7 @@ services:
   # =============================================================================
 
   keycloak-db:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: cortex-keycloak-db
     environment:
       POSTGRES_DB: keycloak
@@ -121,7 +118,7 @@ services:
       - "8100:8000"
     depends_on:
       elasticsearch:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
       interval: 30s
@@ -326,14 +323,14 @@ services:
       PAPERLESS_URL: http://paperless:8000
       PAPERLESS_API_KEY: ${PAPERLESS_API_KEY:-}
     ports:
-      - "8000:8000"
+      - "8003:8000"
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
       meilisearch:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health')"]
       interval: 30s
@@ -353,7 +350,7 @@ services:
       VITE_KEYCLOAK_REALM: cortex
       VITE_KEYCLOAK_CLIENT_ID: cortex-frontend
     ports:
-      - "80:80"
+      - "3002:80"
     depends_on:
       - backend
     restart: unless-stopped

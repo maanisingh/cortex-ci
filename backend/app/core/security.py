@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import bcrypt
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 from pydantic import BaseModel
 
 from app.core.config import settings
@@ -26,9 +25,7 @@ class TokenPair(BaseModel):
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against a hash."""
-    return bcrypt.checkpw(
-        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
-    )
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 def hash_password(password: str) -> str:
@@ -40,10 +37,10 @@ def create_access_token(
     user_id: UUID,
     tenant_id: UUID,
     role: str,
-    expires_delta: Optional[timedelta] = None,
+    expires_delta: timedelta | None = None,
 ) -> str:
     """Create an access token."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if expires_delta:
         expire = now + expires_delta
     else:
@@ -64,10 +61,10 @@ def create_refresh_token(
     user_id: UUID,
     tenant_id: UUID,
     role: str,
-    expires_delta: Optional[timedelta] = None,
+    expires_delta: timedelta | None = None,
 ) -> str:
     """Create a refresh token."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if expires_delta:
         expire = now + expires_delta
     else:
@@ -92,12 +89,10 @@ def create_token_pair(user_id: UUID, tenant_id: UUID, role: str) -> TokenPair:
     )
 
 
-def decode_token(token: str) -> Optional[TokenPayload]:
+def decode_token(token: str) -> TokenPayload | None:
     """Decode and validate a JWT token."""
     try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return TokenPayload(**payload)
     except JWTError:
         return None

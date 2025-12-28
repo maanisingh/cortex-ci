@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 from datetime import date
-from uuid import UUID, uuid4
-from typing import TYPE_CHECKING, Optional
 from decimal import Decimal
+from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
 
-from sqlalchemy import String, Text, ForeignKey, Date, Boolean, Numeric
+from sqlalchemy import Boolean, Date, ForeignKey, Numeric, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
 
 from app.core.database import Base
-from app.models.base import TimestampMixin, TenantMixin
+from app.models.base import TenantMixin, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.constraint import Constraint
@@ -25,9 +26,7 @@ class HistoricalSnapshot(Base, TimestampMixin, TenantMixin):
 
     __tablename__ = "historical_snapshots"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Entity being tracked
     entity_id: Mapped[UUID] = mapped_column(
@@ -45,9 +44,7 @@ class HistoricalSnapshot(Base, TimestampMixin, TenantMixin):
     risk_level: Mapped[str] = mapped_column(String(50), nullable=False)
 
     # Constraints that were active
-    constraints_applied: Mapped[list] = mapped_column(
-        JSONB, default=list
-    )  # List of constraint IDs
+    constraints_applied: Mapped[list] = mapped_column(JSONB, default=list)  # List of constraint IDs
 
     # Dependencies at this time
     dependency_count: Mapped[int] = mapped_column(default=0)
@@ -58,10 +55,10 @@ class HistoricalSnapshot(Base, TimestampMixin, TenantMixin):
     entity_data: Mapped[dict] = mapped_column(JSONB, default=dict)
 
     # Notes
-    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
-    entity: Mapped["Entity"] = relationship("Entity")
+    entity: Mapped[Entity] = relationship("Entity")
 
     def __repr__(self) -> str:
         return f"<HistoricalSnapshot entity={self.entity_id} date={self.snapshot_date}>"
@@ -72,9 +69,7 @@ class DecisionOutcome(Base, TimestampMixin, TenantMixin):
 
     __tablename__ = "decision_outcomes"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Decision info
     decision_date: Mapped[date] = mapped_column(Date, nullable=False)
@@ -82,14 +77,12 @@ class DecisionOutcome(Base, TimestampMixin, TenantMixin):
     decision_type: Mapped[str] = mapped_column(String(100), nullable=False)
 
     # Who made the decision
-    decision_maker_id: Mapped[Optional[UUID]] = mapped_column(
+    decision_maker_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    decision_maker_name: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
+    decision_maker_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Entities involved
     entities_involved: Mapped[list] = mapped_column(JSONB, default=list)
@@ -99,19 +92,19 @@ class DecisionOutcome(Base, TimestampMixin, TenantMixin):
     risk_scores_at_decision: Mapped[dict] = mapped_column(JSONB, default=dict)
 
     # Outcome tracking
-    outcome_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    outcome_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    outcome_success: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    outcome_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    outcome_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    outcome_success: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
 
     # Lessons learned
-    lessons_learned: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    lessons_learned: Mapped[str | None] = mapped_column(Text, nullable=True)
     tags: Mapped[list] = mapped_column(JSONB, default=list)
 
     # Status
     is_resolved: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Relationships
-    decision_maker: Mapped[Optional["User"]] = relationship("User")
+    decision_maker: Mapped[User | None] = relationship("User")
 
     def __repr__(self) -> str:
         return f"<DecisionOutcome {self.decision_type} on {self.decision_date}>"
@@ -122,9 +115,7 @@ class ConstraintChange(Base, TimestampMixin, TenantMixin):
 
     __tablename__ = "constraint_changes"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Which constraint changed
     constraint_id: Mapped[UUID] = mapped_column(
@@ -142,11 +133,11 @@ class ConstraintChange(Base, TimestampMixin, TenantMixin):
     change_summary: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Before/after states
-    before_state: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    before_state: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     after_state: Mapped[dict] = mapped_column(JSONB, nullable=False)
 
     # Who made the change
-    changed_by_id: Mapped[Optional[UUID]] = mapped_column(
+    changed_by_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
@@ -157,8 +148,8 @@ class ConstraintChange(Base, TimestampMixin, TenantMixin):
     risk_scores_affected: Mapped[int] = mapped_column(default=0)
 
     # Relationships
-    constraint: Mapped["Constraint"] = relationship("Constraint")
-    changed_by: Mapped[Optional["User"]] = relationship("User")
+    constraint: Mapped[Constraint] = relationship("Constraint")
+    changed_by: Mapped[User | None] = relationship("User")
 
     def __repr__(self) -> str:
         return f"<ConstraintChange {self.change_type} on {self.change_date}>"
@@ -169,9 +160,7 @@ class TransitionReport(Base, TimestampMixin, TenantMixin):
 
     __tablename__ = "transition_reports"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Report info
     title: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -191,7 +180,7 @@ class TransitionReport(Base, TimestampMixin, TenantMixin):
     statistics: Mapped[dict] = mapped_column(JSONB, default=dict)
 
     # Metadata
-    generated_by_id: Mapped[Optional[UUID]] = mapped_column(
+    generated_by_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
@@ -199,9 +188,7 @@ class TransitionReport(Base, TimestampMixin, TenantMixin):
     is_draft: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Relationships
-    generated_by: Mapped[Optional["User"]] = relationship("User")
+    generated_by: Mapped[User | None] = relationship("User")
 
     def __repr__(self) -> str:
-        return (
-            f"<TransitionReport {self.title} ({self.period_start} - {self.period_end})>"
-        )
+        return f"<TransitionReport {self.title} ({self.period_start} - {self.period_end})>"

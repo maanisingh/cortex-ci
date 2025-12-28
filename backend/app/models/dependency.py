@@ -1,12 +1,14 @@
-from uuid import UUID, uuid4
-from typing import Optional
 from enum import Enum
-from sqlalchemy import Text, ForeignKey, Integer, Enum as SQLEnum, Boolean
+from uuid import UUID, uuid4
+
+from sqlalchemy import Boolean, ForeignKey, Integer, Text
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
 
 from app.core.database import Base
-from app.models.base import TimestampMixin, TenantMixin
+from app.models.base import TenantMixin, TimestampMixin
 
 
 class DependencyLayer(str, Enum):
@@ -65,9 +67,7 @@ class Dependency(Base, TimestampMixin, TenantMixin):
 
     __tablename__ = "dependencies"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Related entities
     source_entity_id: Mapped[UUID] = mapped_column(
@@ -98,12 +98,10 @@ class Dependency(Base, TimestampMixin, TenantMixin):
     criticality: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
 
     # Description
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # For reversible relationships
-    is_bidirectional: Mapped[bool] = mapped_column(
-        Boolean, default=False, nullable=False
-    )
+    is_bidirectional: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Flexible custom data (contract numbers, amounts, dates, etc.)
     custom_data: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)

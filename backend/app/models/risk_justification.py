@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 from datetime import datetime
-from uuid import UUID, uuid4
-from typing import TYPE_CHECKING, Optional
 from decimal import Decimal
+from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
 
-from sqlalchemy import String, Text, ForeignKey, Boolean, Numeric
+from sqlalchemy import Boolean, ForeignKey, Numeric, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
 
 from app.core.database import Base
-from app.models.base import TimestampMixin, TenantMixin
+from app.models.base import TenantMixin, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.entity import Entity
@@ -24,9 +25,7 @@ class RiskJustification(Base, TimestampMixin, TenantMixin):
 
     __tablename__ = "risk_justifications"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Link to entity and risk score
     entity_id: Mapped[UUID] = mapped_column(
@@ -35,7 +34,7 @@ class RiskJustification(Base, TimestampMixin, TenantMixin):
         nullable=False,
         index=True,
     )
-    risk_score_id: Mapped[Optional[UUID]] = mapped_column(
+    risk_score_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("risk_scores.id", ondelete="SET NULL"),
         nullable=True,
@@ -63,26 +62,22 @@ class RiskJustification(Base, TimestampMixin, TenantMixin):
 
     # Override capability
     analyst_can_override: Mapped[bool] = mapped_column(Boolean, default=True)
-    overridden_by: Mapped[Optional[UUID]] = mapped_column(
+    overridden_by: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    overridden_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    override_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    original_score: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(10, 2), nullable=True
-    )
+    overridden_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    override_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    original_score: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
 
     # Version tracking for audit
     version: Mapped[int] = mapped_column(default=1)
-    previous_version_id: Mapped[Optional[UUID]] = mapped_column(
-        PGUUID(as_uuid=True), nullable=True
-    )
+    previous_version_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), nullable=True)
 
     # Relationships
-    entity: Mapped["Entity"] = relationship("Entity")
-    risk_score_obj: Mapped[Optional["RiskScore"]] = relationship("RiskScore")
+    entity: Mapped[Entity] = relationship("Entity")
+    risk_score_obj: Mapped[RiskScore | None] = relationship("RiskScore")
 
     def __repr__(self) -> str:
         return f"<RiskJustification entity={self.entity_id} score={self.risk_score}>"
@@ -101,20 +96,14 @@ class RiskJustification(Base, TimestampMixin, TenantMixin):
                     "factors": self.uncertainty_factors,
                 },
                 "sources": self.source_citations,
-                "generated_at": self.created_at.isoformat()
-                if self.created_at
-                else None,
+                "generated_at": self.created_at.isoformat() if self.created_at else None,
                 "analyst_can_override": self.analyst_can_override,
             },
             "override": {
                 "was_overridden": self.overridden_by is not None,
-                "overridden_at": self.overridden_at.isoformat()
-                if self.overridden_at
-                else None,
+                "overridden_at": self.overridden_at.isoformat() if self.overridden_at else None,
                 "reason": self.override_reason,
-                "original_score": float(self.original_score)
-                if self.original_score
-                else None,
+                "original_score": float(self.original_score) if self.original_score else None,
             }
             if self.overridden_by
             else None,

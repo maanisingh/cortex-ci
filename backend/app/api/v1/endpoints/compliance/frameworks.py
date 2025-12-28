@@ -2,19 +2,20 @@
 Regulatory Framework API Endpoints
 Manage compliance frameworks (NIST, ISO, SOC2, etc.) and their controls
 """
-from uuid import UUID
-from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
-from pydantic import BaseModel, Field
-from datetime import date
 
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+from sqlalchemy import and_, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.v1.deps import get_current_tenant_id, get_current_user
 from app.core.database import get_db
-from app.api.v1.deps import get_current_user, get_current_tenant_id
 from app.models.compliance.framework import (
-    Framework, FrameworkType, Control, ControlMapping,
-    Assessment, AssessmentStatus, AssessmentResult
+    Control,
+    ControlMapping,
+    Framework,
 )
 
 router = APIRouter()
@@ -24,13 +25,14 @@ router = APIRouter()
 # SCHEMAS
 # ============================================================================
 
+
 class FrameworkCreate(BaseModel):
     type: str = Field(..., description="Framework type (NIST_800_53, ISO_27001, etc.)")
     name: str = Field(..., max_length=255)
     version: str = Field(..., max_length=50)
-    description: Optional[str] = None
-    source_url: Optional[str] = None
-    publisher: Optional[str] = None
+    description: str | None = None
+    source_url: str | None = None
+    publisher: str | None = None
 
 
 class FrameworkResponse(BaseModel):
@@ -38,9 +40,9 @@ class FrameworkResponse(BaseModel):
     type: str
     name: str
     version: str
-    description: Optional[str]
-    source_url: Optional[str]
-    publisher: Optional[str]
+    description: str | None
+    source_url: str | None
+    publisher: str | None
     total_controls: int
     is_active: bool
 
@@ -54,11 +56,11 @@ class ControlResponse(BaseModel):
     control_id: str
     title: str
     description: str
-    family: Optional[str]
-    category: Optional[str]
-    baseline_impact: Optional[str]
+    family: str | None
+    category: str | None
+    baseline_impact: str | None
     implementation_status: str
-    guidance: Optional[str]
+    guidance: str | None
 
     class Config:
         from_attributes = True
@@ -85,16 +87,17 @@ class GapAnalysisResponse(BaseModel):
     not_applicable: int
     not_assessed: int
     compliance_percentage: float
-    gaps: List[dict]
+    gaps: list[dict]
 
 
 # ============================================================================
 # FRAMEWORK ENDPOINTS
 # ============================================================================
 
-@router.get("/", response_model=List[FrameworkResponse])
+
+@router.get("/", response_model=list[FrameworkResponse])
 async def list_frameworks(
-    type: Optional[str] = Query(None, description="Filter by framework type"),
+    type: str | None = Query(None, description="Filter by framework type"),
     is_active: bool = Query(True, description="Filter by active status"),
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
@@ -129,12 +132,12 @@ async def get_framework(
     return framework
 
 
-@router.get("/{framework_id}/controls", response_model=List[ControlResponse])
+@router.get("/{framework_id}/controls", response_model=list[ControlResponse])
 async def get_framework_controls(
     framework_id: UUID,
-    family: Optional[str] = Query(None, description="Filter by control family"),
-    status: Optional[str] = Query(None, description="Filter by implementation status"),
-    search: Optional[str] = Query(None, description="Search in title/description"),
+    family: str | None = Query(None, description="Filter by control family"),
+    status: str | None = Query(None, description="Filter by implementation status"),
+    search: str | None = Query(None, description="Search in title/description"),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
@@ -178,12 +181,9 @@ async def get_gap_analysis(
 
     # Get control counts by status
     status_counts = await db.execute(
-        select(
-            Control.implementation_status,
-            func.count(Control.id).label("count")
-        ).where(
-            and_(Control.framework_id == framework_id, Control.tenant_id == tenant_id)
-        ).group_by(Control.implementation_status)
+        select(Control.implementation_status, func.count(Control.id).label("count"))
+        .where(and_(Control.framework_id == framework_id, Control.tenant_id == tenant_id))
+        .group_by(Control.implementation_status)
     )
 
     counts = {row[0]: row[1] for row in status_counts.fetchall()}
@@ -201,13 +201,16 @@ async def get_gap_analysis(
 
     # Get gaps (not implemented or partially implemented controls)
     gaps_result = await db.execute(
-        select(Control).where(
+        select(Control)
+        .where(
             and_(
                 Control.framework_id == framework_id,
                 Control.tenant_id == tenant_id,
-                Control.implementation_status.in_(["NOT_IMPLEMENTED", "PARTIALLY_IMPLEMENTED"])
+                Control.implementation_status.in_(["NOT_IMPLEMENTED", "PARTIALLY_IMPLEMENTED"]),
             )
-        ).order_by(Control.control_id).limit(50)
+        )
+        .order_by(Control.control_id)
+        .limit(50)
     )
     gaps = [
         {"control_id": c.control_id, "title": c.title, "status": c.implementation_status}
@@ -224,7 +227,7 @@ async def get_gap_analysis(
         not_applicable=not_app,
         not_assessed=not_assessed,
         compliance_percentage=round(compliance_pct, 2),
-        gaps=gaps
+        gaps=gaps,
     )
 
 
@@ -232,35 +235,45 @@ async def get_gap_analysis(
 async def update_control_status(
     control_id: UUID,
     status: str = Query(..., description="New implementation status"),
-    notes: Optional[str] = Query(None, description="Implementation notes"),
+    notes: str | None = Query(None, description="Implementation notes"),
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     """Update control implementation status."""
     result = await db.execute(
-        select(Control).where(
-            and_(Control.id == control_id, Control.tenant_id == tenant_id)
-        )
+        select(Control).where(and_(Control.id == control_id, Control.tenant_id == tenant_id))
     )
     control = result.scalar_one_or_none()
     if not control:
         raise HTTPException(status_code=404, detail="Control not found")
 
-    valid_statuses = ["NOT_ASSESSED", "FULLY_IMPLEMENTED", "PARTIALLY_IMPLEMENTED",
-                      "NOT_IMPLEMENTED", "NOT_APPLICABLE", "PLANNED"]
+    valid_statuses = [
+        "NOT_ASSESSED",
+        "FULLY_IMPLEMENTED",
+        "PARTIALLY_IMPLEMENTED",
+        "NOT_IMPLEMENTED",
+        "NOT_APPLICABLE",
+        "PLANNED",
+    ]
     if status not in valid_statuses:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}"
+        )
 
     control.implementation_status = status
     if notes:
         control.implementation_notes = notes
 
     await db.commit()
-    return {"message": "Control status updated", "control_id": str(control_id), "new_status": status}
+    return {
+        "message": "Control status updated",
+        "control_id": str(control_id),
+        "new_status": status,
+    }
 
 
-@router.get("/controls/{control_id}/mappings", response_model=List[ControlMappingResponse])
+@router.get("/controls/{control_id}/mappings", response_model=list[ControlMappingResponse])
 async def get_control_mappings(
     control_id: UUID,
     db: AsyncSession = Depends(get_db),
@@ -271,8 +284,8 @@ async def get_control_mappings(
         select(ControlMapping).where(
             and_(
                 ControlMapping.tenant_id == tenant_id,
-                (ControlMapping.source_control_id == control_id) |
-                (ControlMapping.target_control_id == control_id)
+                (ControlMapping.source_control_id == control_id)
+                | (ControlMapping.target_control_id == control_id),
             )
         )
     )
@@ -285,16 +298,52 @@ async def list_framework_types():
     """List all supported framework types."""
     return {
         "types": [
-            {"code": "NIST_800_53", "name": "NIST SP 800-53", "description": "Security and Privacy Controls"},
-            {"code": "NIST_CSF", "name": "NIST Cybersecurity Framework", "description": "Cybersecurity Framework"},
-            {"code": "ISO_27001", "name": "ISO/IEC 27001", "description": "Information Security Management"},
+            {
+                "code": "NIST_800_53",
+                "name": "NIST SP 800-53",
+                "description": "Security and Privacy Controls",
+            },
+            {
+                "code": "NIST_CSF",
+                "name": "NIST Cybersecurity Framework",
+                "description": "Cybersecurity Framework",
+            },
+            {
+                "code": "ISO_27001",
+                "name": "ISO/IEC 27001",
+                "description": "Information Security Management",
+            },
             {"code": "SOC_2", "name": "SOC 2", "description": "Trust Services Criteria"},
-            {"code": "PCI_DSS", "name": "PCI-DSS", "description": "Payment Card Industry Data Security"},
-            {"code": "HIPAA", "name": "HIPAA", "description": "Health Insurance Portability and Accountability"},
+            {
+                "code": "PCI_DSS",
+                "name": "PCI-DSS",
+                "description": "Payment Card Industry Data Security",
+            },
+            {
+                "code": "HIPAA",
+                "name": "HIPAA",
+                "description": "Health Insurance Portability and Accountability",
+            },
             {"code": "GDPR", "name": "GDPR", "description": "General Data Protection Regulation"},
-            {"code": "CIS_CONTROLS", "name": "CIS Controls", "description": "Critical Security Controls"},
-            {"code": "MITRE_ATTACK", "name": "MITRE ATT&CK", "description": "Adversarial Tactics and Techniques"},
-            {"code": "CMMC", "name": "CMMC", "description": "Cybersecurity Maturity Model Certification"},
-            {"code": "FEDRAMP", "name": "FedRAMP", "description": "Federal Risk and Authorization Management"},
+            {
+                "code": "CIS_CONTROLS",
+                "name": "CIS Controls",
+                "description": "Critical Security Controls",
+            },
+            {
+                "code": "MITRE_ATTACK",
+                "name": "MITRE ATT&CK",
+                "description": "Adversarial Tactics and Techniques",
+            },
+            {
+                "code": "CMMC",
+                "name": "CMMC",
+                "description": "Cybersecurity Maturity Model Certification",
+            },
+            {
+                "code": "FEDRAMP",
+                "name": "FedRAMP",
+                "description": "Federal Risk and Authorization Management",
+            },
         ]
     }

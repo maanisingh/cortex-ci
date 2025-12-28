@@ -1,7 +1,9 @@
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from ipaddress import IPv4Address, IPv6Address
+from typing import Any
 from uuid import UUID
-from pydantic import BaseModel, field_serializer
+
+from pydantic import BaseModel, field_validator
 
 from app.models.audit import AuditAction
 
@@ -12,25 +14,30 @@ class AuditLogResponse(BaseModel):
     id: UUID
     tenant_id: UUID
     created_at: datetime
-    user_id: Optional[UUID] = None
-    user_email: Optional[str] = None
-    user_role: Optional[str] = None
+    user_id: UUID | None = None
+    user_email: str | None = None
+    user_role: str | None = None
     action: AuditAction
-    resource_type: Optional[str] = None
-    resource_id: Optional[UUID] = None
-    resource_name: Optional[str] = None
-    before_state: Optional[Dict[str, Any]] = None
-    after_state: Optional[Dict[str, Any]] = None
-    changes: Optional[Dict[str, Any]] = None
-    description: Optional[str] = None
-    context_data: Optional[Dict[str, Any]] = None
-    ip_address: Optional[str] = None
+    resource_type: str | None = None
+    resource_id: UUID | None = None
+    resource_name: str | None = None
+    before_state: dict[str, Any] | None = None
+    after_state: dict[str, Any] | None = None
+    changes: dict[str, Any] | None = None
+    description: str | None = None
+    context_data: dict[str, Any] | None = None
+    ip_address: str | None = None
     success: bool
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
-    @field_serializer("ip_address")
-    def serialize_ip(self, v):
-        return str(v) if v else None
+    @field_validator("ip_address", mode="before")
+    @classmethod
+    def convert_ip_to_string(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, (IPv4Address, IPv6Address)):
+            return str(v)
+        return v
 
     class Config:
         from_attributes = True
@@ -39,7 +46,7 @@ class AuditLogResponse(BaseModel):
 class AuditLogListResponse(BaseModel):
     """Paginated audit log list response."""
 
-    items: List[AuditLogResponse]
+    items: list[AuditLogResponse]
     total: int
     page: int
     page_size: int
@@ -49,12 +56,12 @@ class AuditLogListResponse(BaseModel):
 class AuditLogSearchRequest(BaseModel):
     """Search audit logs."""
 
-    user_id: Optional[UUID] = None
-    actions: Optional[List[AuditAction]] = None
-    resource_type: Optional[str] = None
-    resource_id: Optional[UUID] = None
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
+    user_id: UUID | None = None
+    actions: list[AuditAction] | None = None
+    resource_type: str | None = None
+    resource_id: UUID | None = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None
     success_only: bool = False
 
 
@@ -63,7 +70,7 @@ class AuditExportRequest(BaseModel):
 
     start_date: datetime
     end_date: datetime
-    actions: Optional[List[AuditAction]] = None
+    actions: list[AuditAction] | None = None
     format: str = "json"  # json, csv
 
 
@@ -72,6 +79,6 @@ class AuditExportResponse(BaseModel):
 
     export_id: str
     status: str
-    download_url: Optional[str] = None
+    download_url: str | None = None
     record_count: int
-    file_size: Optional[int] = None
+    file_size: int | None = None

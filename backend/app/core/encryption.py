@@ -4,18 +4,20 @@ Implements field-level encryption for sensitive database columns.
 """
 
 import base64
-from typing import Optional, TypeVar, Callable
+from collections.abc import Callable
 from functools import wraps
+from typing import Optional, TypeVar
+
+import structlog
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import structlog
 
 from app.core.config import settings
 
 logger = structlog.get_logger()
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class DataEncryption:
@@ -25,7 +27,7 @@ class DataEncryption:
     """
 
     _instance: Optional["DataEncryption"] = None
-    _fernet: Optional[Fernet] = None
+    _fernet: Fernet | None = None
 
     def __new__(cls):
         """Singleton pattern for consistent encryption key."""
@@ -49,9 +51,7 @@ class DataEncryption:
                 salt=salt,
                 iterations=150000,
             )
-            key = base64.urlsafe_b64encode(
-                kdf.derive(settings.ENCRYPTION_KEY.encode())
-            )
+            key = base64.urlsafe_b64encode(kdf.derive(settings.ENCRYPTION_KEY.encode()))
             self._fernet = Fernet(key)
             logger.info("Data encryption initialized successfully")
         except Exception as e:
@@ -182,16 +182,16 @@ class EncryptedString:
     Automatically encrypts on write and decrypts on read.
     """
 
-    def __init__(self, encryption: Optional[DataEncryption] = None):
+    def __init__(self, encryption: DataEncryption | None = None):
         self._encryption = encryption or data_encryption
 
-    def process_bind_param(self, value: Optional[str], _dialect) -> Optional[str]:
+    def process_bind_param(self, value: str | None, _dialect) -> str | None:
         """Encrypt value before storing in database."""
         if value is None:
             return None
         return self._encryption.encrypt(value)
 
-    def process_result_value(self, value: Optional[str], _dialect) -> Optional[str]:
+    def process_result_value(self, value: str | None, _dialect) -> str | None:
         """Decrypt value when reading from database."""
         if value is None:
             return None
@@ -207,6 +207,7 @@ def encrypt_on_store(field_names: list):
         async def create_entity(data: dict):
             ...
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -223,7 +224,9 @@ def encrypt_on_store(field_names: list):
                     kwargs[key] = data_encryption.encrypt_dict_fields(value, field_names)
 
             return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -236,6 +239,7 @@ def decrypt_on_load(field_names: list):
         async def get_entity(id: str):
             ...
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -243,14 +247,16 @@ def decrypt_on_load(field_names: list):
 
             if isinstance(result, dict):
                 return data_encryption.decrypt_dict_fields(result, field_names)
-            elif hasattr(result, '__dict__'):
+            elif hasattr(result, "__dict__"):
                 for field in field_names:
                     if hasattr(result, field):
                         value = getattr(result, field)
                         if value and isinstance(value, str):
                             setattr(result, field, data_encryption.decrypt(value))
             return result
+
         return wrapper
+
     return decorator
 
 
@@ -310,6 +316,7 @@ def hash_for_comparison(value: str) -> str:
         Hex-encoded SHA-256 hash
     """
     import hashlib
+
     return hashlib.sha256(value.encode()).hexdigest()
 
 

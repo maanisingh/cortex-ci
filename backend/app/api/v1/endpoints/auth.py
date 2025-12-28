@@ -1,42 +1,41 @@
 from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 
-from app.core.security import (
-    verify_password,
-    hash_password,
-    create_token_pair,
-    decode_token,
-    validate_token_type,
-)
+from app.api.v1.deps import DB, CurrentUser, get_current_tenant
+from app.core.config import settings
 from app.core.mfa import (
     MFAManager,
     generate_mfa_token,
     verify_mfa_token,
     verify_totp,
 )
-from app.core.config import settings
-from app.models import User, Tenant, AuditLog, AuditAction
+from app.core.security import (
+    create_token_pair,
+    decode_token,
+    hash_password,
+    validate_token_type,
+    verify_password,
+)
+from app.models import AuditAction, AuditLog, Tenant, User
 from app.schemas.auth import (
-    Token,
     LoginRequest,
     LoginResponse,
-    RegisterRequest,
-    PasswordChangeRequest,
-    RefreshTokenRequest,
-    MFASetupResponse,
-    MFAVerifyRequest,
-    MFAVerifyResponse,
-    MFALoginVerifyRequest,
     MFABackupCodeRequest,
     MFADisableRequest,
+    MFALoginVerifyRequest,
+    MFASetupResponse,
     MFAStatusResponse,
+    MFAVerifyRequest,
+    MFAVerifyResponse,
+    PasswordChangeRequest,
+    RefreshTokenRequest,
+    RegisterRequest,
+    Token,
 )
 from app.schemas.user import UserResponse
-from app.api.v1.deps import CurrentUser, DB, get_current_tenant
-
 
 router = APIRouter()
 
@@ -165,9 +164,7 @@ async def login(
     )
 
 
-@router.post(
-    "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(
     request: Request,
     register_data: RegisterRequest,
@@ -308,9 +305,7 @@ async def change_password(
     db: DB,
 ):
     """Change current user's password."""
-    if not verify_password(
-        password_data.current_password, current_user.hashed_password
-    ):
+    if not verify_password(password_data.current_password, current_user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect",
@@ -356,9 +351,7 @@ async def verify_mfa_login(
         )
 
     # Get user
-    result = await db.execute(
-        select(User).where(User.id == UUID(user_id), User.is_active)
-    )
+    result = await db.execute(select(User).where(User.id == UUID(user_id), User.is_active))
     user = result.scalar_one_or_none()
 
     if not user:
@@ -423,9 +416,7 @@ async def use_backup_code(
         )
 
     # Get user
-    result = await db.execute(
-        select(User).where(User.id == UUID(user_id), User.is_active)
-    )
+    result = await db.execute(select(User).where(User.id == UUID(user_id), User.is_active))
     user = result.scalar_one_or_none()
 
     if not user:
@@ -609,9 +600,7 @@ async def disable_mfa(
         )
 
     # Verify password and MFA code
-    if not await MFAManager.disable_mfa(
-        current_user, disable_data.password, disable_data.code
-    ):
+    if not await MFAManager.disable_mfa(current_user, disable_data.password, disable_data.code):
         audit = AuditLog(
             tenant_id=current_user.tenant_id,
             user_id=current_user.id,

@@ -104,7 +104,13 @@ export type ConstraintStatus = "active" | "pending" | "expired" | "revoked";
 
 export interface ConstraintCondition {
   field: string;
-  operator: "equals" | "contains" | "greater_than" | "less_than" | "in" | "not_in";
+  operator:
+    | "equals"
+    | "contains"
+    | "greater_than"
+    | "less_than"
+    | "in"
+    | "not_in";
   value: string | number | string[];
 }
 
@@ -367,7 +373,12 @@ export type ScenarioType =
   | "stress_test"
   | "what_if";
 
-export type ScenarioStatus = "draft" | "running" | "completed" | "archived" | "failed";
+export type ScenarioStatus =
+  | "draft"
+  | "running"
+  | "completed"
+  | "archived"
+  | "failed";
 
 export interface ScenarioParameter {
   name: string;

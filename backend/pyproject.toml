@@ -1,0 +1,118 @@
+[project]
+name = "cortex-ci-backend"
+version = "1.0.0"
+description = "CORTEX Compliance Intelligence Platform - Backend"
+requires-python = ">=3.11"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+exclude = [
+    ".git",
+    ".ruff_cache",
+    "__pycache__",
+    "alembic/versions",
+    ".venv",
+    "venv",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # do not perform function calls in argument defaults
+    "B904",   # raise without from inside except
+    "ARG001", # unused function argument (common in FastAPI)
+    "ARG002", # unused method argument (common in abstract methods)
+    "E712",   # comparison to True/False (common in SQLAlchemy)
+    "SIM102", # nested if (sometimes more readable)
+    "SIM108", # ternary operator (sometimes less readable)
+    "SIM110", # any/all refactoring (sometimes less readable)
+    "C401",   # unnecessary generator (sometimes clearer)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/*" = ["ARG001", "S101"]
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+exclude = [
+    ".venv",
+    "venv",
+    "alembic/versions",
+    "__pycache__",
+]
+reportMissingImports = true
+reportMissingTypeStubs = false
+reportAttributeAccessIssue = "warning"
+reportGeneralTypeIssues = "warning"
+reportOptionalMemberAccess = "warning"
+reportOptionalOperand = "warning"
+reportArgumentType = "warning"
+reportCallIssue = "warning"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short --timeout=60 --timeout-method=thread"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests that require external services",
+]
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/alembic/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+fail_under = 50
+show_missing = true
+
+[tool.vulture]
+min_confidence = 80
+paths = ["app"]
+exclude = ["alembic/", "tests/"]
+
+[tool.bandit]
+exclude_dirs = ["tests", "alembic"]
+skips = ["B101", "B104", "B105", "B108", "B324"]
+
+[tool.interrogate]
+ignore-init-method = true
+ignore-init-module = true
+ignore-magic = true
+ignore-semiprivate = true
+ignore-private = true
+ignore-module = true
+fail-under = 30
+exclude = ["alembic", "tests"]
+verbose = 1
+
+[tool.radon]
+exclude = "tests/*,alembic/*"
+cc_min = "C"

@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 from datetime import datetime
-from uuid import UUID, uuid4
-from typing import TYPE_CHECKING, Optional
 from decimal import Decimal
 from enum import Enum
+from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
 
-from sqlalchemy import String, Text, ForeignKey, Enum as SQLEnum, Boolean, Numeric
+from sqlalchemy import Boolean, ForeignKey, Numeric, String, Text
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
 
 from app.core.database import Base
-from app.models.base import TimestampMixin, TenantMixin
+from app.models.base import TenantMixin, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.entity import Entity
@@ -47,14 +49,10 @@ class AIAnalysis(Base, TimestampMixin, TenantMixin):
 
     __tablename__ = "ai_analyses"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Analysis type and status
-    analysis_type: Mapped[AIAnalysisType] = mapped_column(
-        SQLEnum(AIAnalysisType), nullable=False
-    )
+    analysis_type: Mapped[AIAnalysisType] = mapped_column(SQLEnum(AIAnalysisType), nullable=False)
     status: Mapped[AIAnalysisStatus] = mapped_column(
         SQLEnum(AIAnalysisStatus), default=AIAnalysisStatus.PENDING
     )
@@ -72,12 +70,12 @@ class AIAnalysis(Base, TimestampMixin, TenantMixin):
     input_entity_ids: Mapped[list] = mapped_column(JSONB, default=list)
 
     # Output
-    output: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    output_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    output: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    output_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Confidence and explainability
     confidence: Mapped[Decimal] = mapped_column(Numeric(5, 2), default=Decimal("0.00"))
-    explanation: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    explanation: Mapped[str | None] = mapped_column(Text, nullable=True)
     model_card: Mapped[dict] = mapped_column(JSONB, default=dict)
 
     # Model info
@@ -86,25 +84,23 @@ class AIAnalysis(Base, TimestampMixin, TenantMixin):
 
     # Human approval workflow
     requires_human_approval: Mapped[bool] = mapped_column(Boolean, default=True)
-    approved_by_id: Mapped[Optional[UUID]] = mapped_column(
+    approved_by_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    approved_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    approval_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    approved_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    approval_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Processing metrics
-    processing_started_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    processing_completed_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    processing_started_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    processing_completed_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
-    requested_by: Mapped["User"] = relationship("User", foreign_keys=[requested_by_id])
-    approved_by: Mapped[Optional["User"]] = relationship(
-        "User", foreign_keys=[approved_by_id]
-    )
+    requested_by: Mapped[User] = relationship("User", foreign_keys=[requested_by_id])
+    approved_by: Mapped[User | None] = relationship("User", foreign_keys=[approved_by_id])
 
     def __repr__(self) -> str:
         return f"<AIAnalysis {self.analysis_type.value} status={self.status.value}>"
@@ -176,12 +172,10 @@ class AnomalyDetection(Base, TimestampMixin, TenantMixin):
 
     __tablename__ = "anomaly_detections"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Source analysis
-    ai_analysis_id: Mapped[Optional[UUID]] = mapped_column(
+    ai_analysis_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("ai_analyses.id", ondelete="SET NULL"),
         nullable=True,
@@ -196,32 +190,28 @@ class AnomalyDetection(Base, TimestampMixin, TenantMixin):
     )
     anomaly_type: Mapped[str] = mapped_column(String(100), nullable=False)
     anomaly_description: Mapped[str] = mapped_column(Text, nullable=False)
-    anomaly_score: Mapped[Decimal] = mapped_column(
-        Numeric(5, 2), nullable=False
-    )  # 0-1 scale
+    anomaly_score: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)  # 0-1 scale
 
     # Context
-    baseline_value: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    detected_value: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    deviation_percentage: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(10, 2), nullable=True
-    )
+    baseline_value: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    detected_value: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    deviation_percentage: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
 
     # Review status
     is_reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
-    reviewed_by_id: Mapped[Optional[UUID]] = mapped_column(
+    reviewed_by_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    reviewed_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    is_confirmed_anomaly: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
-    review_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    is_confirmed_anomaly: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    review_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
-    entity: Mapped["Entity"] = relationship("Entity")
-    ai_analysis: Mapped[Optional["AIAnalysis"]] = relationship("AIAnalysis")
-    reviewed_by: Mapped[Optional["User"]] = relationship("User")
+    entity: Mapped[Entity] = relationship("Entity")
+    ai_analysis: Mapped[AIAnalysis | None] = relationship("AIAnalysis")
+    reviewed_by: Mapped[User | None] = relationship("User")
 
     def __repr__(self) -> str:
         return f"<AnomalyDetection {self.anomaly_type} entity={self.entity_id}>"

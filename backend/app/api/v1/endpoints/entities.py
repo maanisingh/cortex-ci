@@ -1,20 +1,18 @@
-from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status, Query
-from sqlalchemy import select, func, or_
+from fastapi import APIRouter, HTTPException, Query, status
+from sqlalchemy import func, or_, select
 
-from app.models import Entity, EntityType, AuditLog, AuditAction
+from app.api.v1.deps import DB, CurrentTenant, CurrentUser, RequireWriter
+from app.models import AuditAction, AuditLog, Entity, EntityType
 from app.schemas.entity import (
-    EntityCreate,
-    EntityUpdate,
-    EntityResponse,
-    EntityListResponse,
     EntityBulkImportRequest,
     EntityBulkImportResponse,
+    EntityCreate,
+    EntityListResponse,
+    EntityResponse,
+    EntityUpdate,
 )
-from app.api.v1.deps import DB, CurrentUser, CurrentTenant, RequireWriter
-
 
 router = APIRouter()
 
@@ -26,9 +24,9 @@ async def list_entities(
     tenant: CurrentTenant,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=500),
-    type: Optional[EntityType] = None,
-    search: Optional[str] = None,
-    country_code: Optional[str] = None,
+    type: EntityType | None = None,
+    search: str | None = None,
+    country_code: str | None = None,
     is_active: bool = True,
 ):
     """List entities with pagination and filtering."""

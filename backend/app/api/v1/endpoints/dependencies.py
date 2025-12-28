@@ -1,21 +1,20 @@
-from typing import Optional, Dict, Any
+from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status, Query
-from sqlalchemy import select, func, or_
+from fastapi import APIRouter, HTTPException, Query, status
+from sqlalchemy import func, or_, select
 
-from app.models import Dependency, DependencyLayer, Entity, AuditLog, AuditAction
+from app.api.v1.deps import DB, CurrentTenant, CurrentUser, RequireWriter
+from app.models import AuditAction, AuditLog, Dependency, DependencyLayer, Entity
 from app.schemas.dependency import (
     DependencyCreate,
-    DependencyUpdate,
-    DependencyResponse,
-    DependencyListResponse,
-    DependencyGraphResponse,
-    DependencyGraphNode,
     DependencyGraphEdge,
+    DependencyGraphNode,
+    DependencyGraphResponse,
+    DependencyListResponse,
+    DependencyResponse,
+    DependencyUpdate,
 )
-from app.api.v1.deps import DB, CurrentUser, CurrentTenant, RequireWriter
-
 
 router = APIRouter()
 
@@ -27,8 +26,8 @@ async def list_dependencies(
     tenant: CurrentTenant,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
-    layer: Optional[DependencyLayer] = None,
-    entity_id: Optional[UUID] = None,
+    layer: DependencyLayer | None = None,
+    entity_id: UUID | None = None,
     is_active: bool = True,
 ):
     """List dependencies with pagination and filtering."""
@@ -73,8 +72,8 @@ async def get_dependency_graph(
     db: DB,
     current_user: CurrentUser,
     tenant: CurrentTenant,
-    entity_id: Optional[UUID] = None,
-    layer: Optional[DependencyLayer] = None,
+    entity_id: UUID | None = None,
+    layer: DependencyLayer | None = None,
     depth: int = Query(2, ge=1, le=5),
 ):
     """Get dependency graph for visualization."""
@@ -329,7 +328,7 @@ async def get_layer_summary(
     db: DB,
     current_user: CurrentUser,
     tenant: CurrentTenant,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get summary statistics for each dependency layer."""
     # Count by layer
     layer_query = (
@@ -383,7 +382,7 @@ async def get_cross_layer_impact(
     db: DB,
     current_user: CurrentUser,
     tenant: CurrentTenant,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Calculate cross-layer impact for an entity.
 
@@ -417,14 +416,13 @@ async def get_cross_layer_impact(
 
     # Calculate impact by layer
     layer_impact = {
-        layer.value: {"outgoing": 0, "incoming": 0, "risk_score": 0.0}
-        for layer in DependencyLayer
+        layer.value: {"outgoing": 0, "incoming": 0, "risk_score": 0.0} for layer in DependencyLayer
     }
 
     for dep in outgoing_deps:
         layer_impact[dep.layer.value]["outgoing"] += 1
-        layer_impact[dep.layer.value]["risk_score"] += (
-            dep.criticality * _get_layer_risk_weight(dep.layer)
+        layer_impact[dep.layer.value]["risk_score"] += dep.criticality * _get_layer_risk_weight(
+            dep.layer
         )
 
     for dep in incoming_deps:
@@ -480,8 +478,6 @@ def _get_risk_recommendation(total_risk: float, primary_layer: str) -> str:
     elif total_risk > 25:
         return f"MEDIUM PRIORITY: Notable dependency concentration in {primary_layer} layer. Consider backup arrangements."
     elif total_risk > 10:
-        return (
-            f"LOW PRIORITY: Moderate {primary_layer} dependencies. Monitor for changes."
-        )
+        return f"LOW PRIORITY: Moderate {primary_layer} dependencies. Monitor for changes."
     else:
         return "MINIMAL: Low cross-layer exposure. Standard monitoring sufficient."

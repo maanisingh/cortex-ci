@@ -4,11 +4,11 @@ Provides system health, metrics, and alert management.
 """
 
 from datetime import datetime
-from typing import Optional, List
+
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
 
 from app.core.database import get_db
 
@@ -41,13 +41,13 @@ class Alert(BaseModel):
     type: str
     severity: str
     message: str
-    entity_id: Optional[str] = None
+    entity_id: str | None = None
     created_at: str
     is_acknowledged: bool = False
 
 
 class AlertsResponse(BaseModel):
-    alerts: List[Alert]
+    alerts: list[Alert]
     total_count: int
     unacknowledged_count: int
 
@@ -105,26 +105,29 @@ async def get_system_metrics(db: AsyncSession = Depends(get_db)):
         try:
             critical_result = await db.execute(
                 text(
-                    "SELECT COUNT(*) FROM constraints WHERE severity IN ('critical', 'high') AND is_active = true"
+                    "SELECT COUNT(*) FROM constraints WHERE severity IN ('CRITICAL', 'HIGH') AND is_active = true"
                 )
             )
             critical_constraints = critical_result.scalar() or 0
         except Exception:
-            # Fallback if critical enum doesn't exist
-            critical_result = await db.execute(
-                text(
-                    "SELECT COUNT(*) FROM constraints WHERE severity = 'high' AND is_active = true"
+            await db.rollback()
+            try:
+                critical_result = await db.execute(
+                    text(
+                        "SELECT COUNT(*) FROM constraints WHERE severity = 'HIGH' AND is_active = true"
+                    )
                 )
-            )
-            critical_constraints = critical_result.scalar() or 0
+                critical_constraints = critical_result.scalar() or 0
+            except Exception:
+                await db.rollback()
+                critical_constraints = 0
 
         # Scenario chains count (Phase 2)
         try:
-            chains_result = await db.execute(
-                text("SELECT COUNT(*) FROM scenario_chains")
-            )
+            chains_result = await db.execute(text("SELECT COUNT(*) FROM scenario_chains"))
             scenario_chains_count = chains_result.scalar() or 0
         except Exception:
+            await db.rollback()
             scenario_chains_count = 0
 
         # AI analyses count (Phase 2)
@@ -132,27 +135,31 @@ async def get_system_metrics(db: AsyncSession = Depends(get_db)):
             ai_result = await db.execute(text("SELECT COUNT(*) FROM ai_analyses"))
             ai_analyses_count = ai_result.scalar() or 0
         except Exception:
+            await db.rollback()
             ai_analyses_count = 0
 
         # Pending anomalies (Phase 2)
         try:
             anomalies_result = await db.execute(
-                text(
-                    "SELECT COUNT(*) FROM anomaly_detections WHERE is_confirmed IS NULL"
-                )
+                text("SELECT COUNT(*) FROM anomaly_detections WHERE is_confirmed IS NULL")
             )
             pending_anomalies_count = anomalies_result.scalar() or 0
         except Exception:
+            await db.rollback()
             pending_anomalies_count = 0
 
         # Recent audit events (last 24h)
-        recent_audit_result = await db.execute(
-            text("""
-                SELECT COUNT(*) FROM audit_logs
-                WHERE created_at >= NOW() - INTERVAL '24 hours'
-            """)
-        )
-        recent_audit_events = recent_audit_result.scalar() or 0
+        try:
+            recent_audit_result = await db.execute(
+                text("""
+                    SELECT COUNT(*) FROM audit_log
+                    WHERE created_at >= NOW() - INTERVAL '24 hours'
+                """)
+            )
+            recent_audit_events = recent_audit_result.scalar() or 0
+        except Exception:
+            await db.rollback()
+            recent_audit_events = 0
 
         return SystemMetrics(
             entities_count=entities_count,
@@ -167,15 +174,13 @@ async def get_system_metrics(db: AsyncSession = Depends(get_db)):
             critical_constraints=critical_constraints,
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to fetch metrics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch metrics: {str(e)}")
 
 
 @router.get("/alerts", response_model=AlertsResponse)
 async def get_alerts(
-    severity: Optional[str] = None,
-    acknowledged: Optional[bool] = None,
+    severity: str | None = None,
+    acknowledged: bool | None = None,
     db: AsyncSession = Depends(get_db),
 ):
     """Get system alerts based on current data conditions."""
@@ -229,7 +234,7 @@ async def get_alerts(
                     )
                 )
         except Exception:
-            pass  # Table may not exist in older deployments
+            await db.rollback()  # Rollback to recover from failed transaction
 
         # Alert 3: AI analyses awaiting approval
         try:
@@ -254,30 +259,33 @@ async def get_alerts(
                     )
                 )
         except Exception:
-            pass  # Table may not exist in older deployments
+            await db.rollback()  # Rollback to recover from failed transaction
 
         # Alert 4: Check for entities with no recent risk calculation
-        stale_risk_result = await db.execute(
-            text("""
-                SELECT COUNT(*)
-                FROM entities e
-                LEFT JOIN risk_scores rs ON e.id = rs.entity_id
-                WHERE e.is_active = true
-                AND (rs.calculated_at IS NULL OR rs.calculated_at < NOW() - INTERVAL '7 days')
-            """)
-        )
-        stale_count = stale_risk_result.scalar() or 0
-        if stale_count > 100:
-            alerts.append(
-                Alert(
-                    id="stale-risk-scores",
-                    type="stale_data",
-                    severity="low",
-                    message=f"{stale_count} entities have stale or missing risk scores (>7 days old)",
-                    created_at=datetime.utcnow().isoformat(),
-                    is_acknowledged=False,
-                )
+        try:
+            stale_risk_result = await db.execute(
+                text("""
+                    SELECT COUNT(*)
+                    FROM entities e
+                    LEFT JOIN risk_scores rs ON e.id = rs.entity_id
+                    WHERE e.is_active = true
+                    AND (rs.calculated_at IS NULL OR rs.calculated_at < NOW() - INTERVAL '7 days')
+                """)
             )
+            stale_count = stale_risk_result.scalar() or 0
+            if stale_count > 100:
+                alerts.append(
+                    Alert(
+                        id="stale-risk-scores",
+                        type="stale_data",
+                        severity="low",
+                        message=f"{stale_count} entities have stale or missing risk scores (>7 days old)",
+                        created_at=datetime.utcnow().isoformat(),
+                        is_acknowledged=False,
+                    )
+                )
+        except Exception:
+            await db.rollback()  # Rollback to recover from failed transaction
 
         # Filter by severity if specified
         if severity:
@@ -293,9 +301,7 @@ async def get_alerts(
             unacknowledged_count=sum(1 for a in alerts if not a.is_acknowledged),
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to generate alerts: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to generate alerts: {str(e)}")
 
 
 @router.get("/dashboard")

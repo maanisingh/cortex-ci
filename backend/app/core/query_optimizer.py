@@ -3,14 +3,14 @@ Query Optimizer (Phase 5.2)
 Database query optimization utilities and patterns.
 """
 
-from typing import List, Optional, Any, TypeVar, Generic
 from dataclasses import dataclass
 from enum import Enum
-import structlog
+from typing import Any, Generic, TypeVar
 
-from sqlalchemy import select, func, text
-from sqlalchemy.orm import selectinload
+import structlog
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 logger = structlog.get_logger()
 
@@ -19,6 +19,7 @@ T = TypeVar("T")
 
 class SortOrder(str, Enum):
     """Sort order for queries."""
+
     ASC = "asc"
     DESC = "desc"
 
@@ -26,6 +27,7 @@ class SortOrder(str, Enum):
 @dataclass
 class PaginationParams:
     """Pagination parameters."""
+
     page: int = 1
     page_size: int = 20
     max_page_size: int = 100
@@ -50,6 +52,7 @@ class PaginationParams:
 @dataclass
 class SortParams:
     """Sorting parameters."""
+
     field: str
     order: SortOrder = SortOrder.DESC
 
@@ -66,6 +69,7 @@ class SortParams:
 @dataclass
 class FilterParams:
     """Filter parameters."""
+
     field: str
     operator: str  # eq, ne, gt, lt, gte, lte, like, in, is_null
     value: Any
@@ -103,7 +107,8 @@ class FilterParams:
 @dataclass
 class PaginatedResult(Generic[T]):
     """Paginated result container."""
-    items: List[T]
+
+    items: list[T]
     total: int
     page: int
     page_size: int
@@ -179,13 +184,13 @@ class QueryBuilder:
 
         return query
 
-    async def all(self) -> List:
+    async def all(self) -> list:
         """Execute query and return all results."""
         query = self._build_query()
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
-    async def first(self) -> Optional[Any]:
+    async def first(self) -> Any | None:
         """Execute query and return first result."""
         query = self._build_query().limit(1)
         result = await self.db.execute(query)
@@ -199,10 +204,7 @@ class QueryBuilder:
         result = await self.db.execute(count_query)
         return result.scalar() or 0
 
-    async def paginate(
-        self,
-        pagination: PaginationParams
-    ) -> PaginatedResult:
+    async def paginate(self, pagination: PaginationParams) -> PaginatedResult:
         """Execute paginated query."""
         # Get total count
         total = await self.count()
@@ -244,7 +246,7 @@ class BatchProcessor:
         self,
         model,
         processor: callable,
-        filters: Optional[List[FilterParams]] = None,
+        filters: list[FilterParams] | None = None,
     ) -> dict:
         """
         Process all matching records in batches.
@@ -315,7 +317,7 @@ class QueryAnalyzer:
         except Exception as e:
             return {"error": str(e)}
 
-    def _extract_cost(self, plan: List[str]) -> Optional[float]:
+    def _extract_cost(self, plan: list[str]) -> float | None:
         """Extract cost from execution plan."""
         for line in plan:
             if "cost=" in line:
@@ -326,7 +328,7 @@ class QueryAnalyzer:
                     pass
         return None
 
-    async def get_slow_queries(self, threshold_ms: int = 100) -> List[dict]:
+    async def get_slow_queries(self, threshold_ms: int = 100) -> list[dict]:
         """Get slow queries from pg_stat_statements if available."""
         try:
             query = text("""
@@ -380,6 +382,8 @@ def query(model):
     Usage:
         results = await query(Entity).filter_by(tenant_id=tid).all()
     """
+
     async def builder(db: AsyncSession) -> QueryBuilder:
         return QueryBuilder(model, db)
+
     return builder

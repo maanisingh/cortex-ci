@@ -1,10 +1,12 @@
-from datetime import datetime, timezone
-from uuid import UUID, uuid4
-from typing import Optional
+from datetime import UTC, datetime
 from enum import Enum
-from sqlalchemy import String, Text, ForeignKey, DateTime, Enum as SQLEnum
+from uuid import UUID, uuid4
+
+from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy.dialects.postgresql import INET, JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB, INET
 
 from app.core.database import Base
 from app.models.base import TenantMixin
@@ -78,64 +80,54 @@ class AuditLog(Base, TenantMixin):
 
     __tablename__ = "audit_log"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # When
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
 
     # Who
-    user_id: Mapped[Optional[UUID]] = mapped_column(
+    user_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )
-    user_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    user_role: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    user_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    user_role: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # What
-    action: Mapped[AuditAction] = mapped_column(
-        SQLEnum(AuditAction), nullable=False, index=True
-    )
-    resource_type: Mapped[Optional[str]] = mapped_column(
-        String(100), nullable=True, index=True
-    )
-    resource_id: Mapped[Optional[UUID]] = mapped_column(
-        PGUUID(as_uuid=True), nullable=True
-    )
-    resource_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    action: Mapped[AuditAction] = mapped_column(SQLEnum(AuditAction), nullable=False, index=True)
+    resource_type: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    resource_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), nullable=True)
+    resource_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # State changes
-    before_state: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    after_state: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
-    changes: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    before_state: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    after_state: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    changes: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     # Context
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     context_data: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
 
     # Request info
-    ip_address: Mapped[Optional[str]] = mapped_column(INET, nullable=True)
-    user_agent: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    request_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(INET, nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(Text, nullable=True)
+    request_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Result
     success: Mapped[bool] = mapped_column(default=True, nullable=False)
-    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
     user = relationship("User", foreign_keys=[user_id])
 
     def __repr__(self) -> str:
-        return (
-            f"<AuditLog {self.action.value} by {self.user_email} at {self.created_at}>"
-        )
+        return f"<AuditLog {self.action.value} by {self.user_email} at {self.created_at}>"
 
     # Note: This table is append-only. No updates or deletes should ever be performed.

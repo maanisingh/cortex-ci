@@ -1,15 +1,13 @@
-from typing import Optional, List
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status, Query
-from sqlalchemy import select, func
+from fastapi import APIRouter, HTTPException, Query, status
+from sqlalchemy import func, select
 
-from app.models import Tenant, User, AuditLog, AuditAction
-from app.schemas.tenant import TenantCreate, TenantUpdate, TenantResponse
-from app.schemas.user import UserCreate, UserUpdate, UserResponse, UserListResponse
-from app.core.security import hash_password, Role
 from app.api.v1.deps import DB, CurrentTenant, RequireAdmin
-
+from app.core.security import Role, hash_password
+from app.models import AuditAction, AuditLog, Tenant, User
+from app.schemas.tenant import TenantCreate, TenantResponse, TenantUpdate
+from app.schemas.user import UserCreate, UserListResponse, UserResponse, UserUpdate
 
 router = APIRouter()
 
@@ -17,7 +15,7 @@ router = APIRouter()
 # Tenant Management
 
 
-@router.get("/tenants", response_model=List[TenantResponse])
+@router.get("/tenants", response_model=list[TenantResponse])
 async def list_tenants(
     db: DB,
     current_user: RequireAdmin,
@@ -34,9 +32,7 @@ async def list_tenants(
     return tenants
 
 
-@router.post(
-    "/tenants", response_model=TenantResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/tenants", response_model=TenantResponse, status_code=status.HTTP_201_CREATED)
 async def create_tenant(
     tenant_data: TenantCreate,
     db: DB,
@@ -147,7 +143,7 @@ async def list_users(
     tenant: CurrentTenant,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
-    role: Optional[str] = None,
+    role: str | None = None,
     is_active: bool = True,
 ):
     """List users in the current tenant."""

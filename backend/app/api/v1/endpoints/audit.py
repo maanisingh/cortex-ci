@@ -1,20 +1,18 @@
-from typing import Optional, List
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status, Query
-from sqlalchemy import select, func
+from fastapi import APIRouter, HTTPException, Query, status
+from sqlalchemy import func, select
 
-from app.models import AuditLog, AuditAction
+from app.api.v1.deps import DB, CurrentTenant, CurrentUser, RequireAdmin
+from app.models import AuditAction, AuditLog
 from app.schemas.audit import (
-    AuditLogResponse,
-    AuditLogListResponse,
-    AuditLogSearchRequest,
     AuditExportRequest,
     AuditExportResponse,
+    AuditLogListResponse,
+    AuditLogResponse,
+    AuditLogSearchRequest,
 )
-from app.api.v1.deps import DB, CurrentUser, CurrentTenant, RequireAdmin
-
 
 router = APIRouter()
 
@@ -26,11 +24,11 @@ async def list_audit_logs(
     tenant: CurrentTenant,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
-    user_id: Optional[UUID] = None,
-    action: Optional[AuditAction] = None,
-    resource_type: Optional[str] = None,
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
+    user_id: UUID | None = None,
+    action: AuditAction | None = None,
+    resource_type: str | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
 ):
     """List audit logs with pagination and filtering."""
     query = select(AuditLog).where(AuditLog.tenant_id == tenant.id)
@@ -148,9 +146,7 @@ async def search_audit_logs(
     )
 
 
-@router.get(
-    "/resource/{resource_type}/{resource_id}", response_model=List[AuditLogResponse]
-)
+@router.get("/resource/{resource_type}/{resource_id}", response_model=list[AuditLogResponse])
 async def get_resource_history(
     resource_type: str,
     resource_id: UUID,

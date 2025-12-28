@@ -107,7 +107,7 @@ export default function ConstraintForm({
       onClose();
     },
     onError: (err: any) => {
-      setError(err.response?.data?.detail || "Failed to save constraint");
+      setError(err.response?.data?.detail || "Failed to save control");
     },
   });
 
@@ -174,7 +174,7 @@ export default function ConstraintForm({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEdit ? "Edit Constraint" : "Add New Constraint"}
+      title={isEdit ? "Edit Control" : "Add New Control"}
       size="lg"
     >
       <form
@@ -199,7 +199,7 @@ export default function ConstraintForm({
               onChange={handleChange}
               required
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              placeholder="Constraint name"
+              placeholder="Control name"
             />
           </div>
 
@@ -249,7 +249,7 @@ export default function ConstraintForm({
               onChange={handleChange}
               rows={3}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              placeholder="Describe the constraint"
+              placeholder="Describe the control"
             />
           </div>
 
@@ -359,7 +359,7 @@ export default function ConstraintForm({
               className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
             />
             <label className="ml-2 block text-sm text-gray-700">
-              Mandatory constraint
+              Mandatory control
             </label>
           </div>
 
@@ -418,8 +418,8 @@ export default function ConstraintForm({
             {mutation.isPending
               ? "Saving..."
               : isEdit
-                ? "Update Constraint"
-                : "Create Constraint"}
+                ? "Update Control"
+                : "Create Control"}
           </button>
         </div>
       </form>

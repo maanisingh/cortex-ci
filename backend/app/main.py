@@ -4,18 +4,18 @@ Government-grade Sanctions & Constraint Intelligence Platform
 """
 
 from contextlib import asynccontextmanager
+
+import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-import structlog
 
+from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import init_db
-from app.api.v1.router import api_router
 from app.middleware.rate_limit import RateLimitMiddleware, rate_limiter
-from app.middleware.security import SecurityHeadersMiddleware, RequestLoggingMiddleware
 from app.middleware.request_validation import RequestValidationMiddleware
-
+from app.middleware.security import RequestLoggingMiddleware, SecurityHeadersMiddleware
 
 # Configure structured logging
 structlog.configure(
@@ -62,6 +62,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
+    redirect_slashes=False,  # Prevent 307 redirects through reverse proxy
     description="""
     ## CORTEX-CI: Government-grade Constraint Intelligence Platform
 
@@ -115,12 +116,14 @@ app.add_middleware(RateLimitMiddleware)
 cors_origins = settings.get_allowed_origins_list()
 if settings.is_development():
     # Allow localhost in development
-    cors_origins.extend([
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-    ])
+    cors_origins.extend(
+        [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+        ]
+    )
     cors_origins = list(set(cors_origins))  # Deduplicate
 
 app.add_middleware(

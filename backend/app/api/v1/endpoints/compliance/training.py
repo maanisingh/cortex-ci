@@ -1,29 +1,38 @@
 """Training & Awareness API Endpoints"""
-from uuid import UUID, uuid4
-from typing import Optional, List
-from datetime import datetime, timezone, date
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func
-from pydantic import BaseModel
 
+from datetime import UTC, date, datetime
+from uuid import UUID, uuid4
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
+from sqlalchemy import and_, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.v1.deps import get_current_tenant_id, get_current_user
 from app.core.database import get_db
-from app.api.v1.deps import get_current_user, get_current_tenant_id
 from app.models.compliance.training import (
-    Course, CourseStatus, TrainingAssignment, AssignmentStatus,
-    TrainingCompletion, PhishingCampaign, CampaignStatus, PhishingResult
+    AssignmentStatus,
+    CampaignStatus,
+    Course,
+    CourseStatus,
+    PhishingCampaign,
+    PhishingResult,
+    TrainingAssignment,
+    TrainingCompletion,
 )
 
 router = APIRouter()
 
+
 class CourseCreate(BaseModel):
     title: str
-    description: Optional[str] = None
+    description: str | None = None
     category: str
     duration_minutes: int = 30
     passing_score: int = 80
     is_mandatory: bool = False
-    content_url: Optional[str] = None
+    content_url: str | None = None
+
 
 class CourseResponse(BaseModel):
     id: UUID
@@ -38,23 +47,26 @@ class CourseResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class AssignmentResponse(BaseModel):
     id: UUID
     course_id: UUID
     user_id: UUID
     status: str
     assigned_at: datetime
-    due_date: Optional[date]
-    completed_at: Optional[datetime]
+    due_date: date | None
+    completed_at: datetime | None
 
     class Config:
         from_attributes = True
+
 
 class PhishingCampaignCreate(BaseModel):
     name: str
     template_name: str
     target_group: str
-    scheduled_start: Optional[datetime] = None
+    scheduled_start: datetime | None = None
+
 
 class PhishingCampaignResponse(BaseModel):
     id: UUID
@@ -71,11 +83,12 @@ class PhishingCampaignResponse(BaseModel):
     class Config:
         from_attributes = True
 
-@router.get("/courses", response_model=List[CourseResponse])
+
+@router.get("/courses", response_model=list[CourseResponse])
 async def list_courses(
-    category: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
-    is_mandatory: Optional[bool] = Query(None),
+    category: str | None = Query(None),
+    status: str | None = Query(None),
+    is_mandatory: bool | None = Query(None),
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
 ):
@@ -88,6 +101,7 @@ async def list_courses(
         query = query.where(Course.is_mandatory == is_mandatory)
     result = await db.execute(query.order_by(Course.title))
     return result.scalars().all()
+
 
 @router.post("/courses", response_model=CourseResponse, status_code=status.HTTP_201_CREATED)
 async def create_course(
@@ -114,6 +128,7 @@ async def create_course(
     await db.refresh(db_course)
     return db_course
 
+
 @router.post("/courses/{course_id}/publish")
 async def publish_course(
     course_id: UUID,
@@ -131,11 +146,12 @@ async def publish_course(
     await db.commit()
     return {"message": "Course published", "course_id": str(course_id)}
 
+
 @router.post("/courses/{course_id}/assign", response_model=AssignmentResponse)
 async def assign_course(
     course_id: UUID,
     user_id: UUID = Query(...),
-    due_date: Optional[date] = Query(None),
+    due_date: date | None = Query(None),
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
 ):
@@ -144,7 +160,7 @@ async def assign_course(
         tenant_id=tenant_id,
         course_id=course_id,
         user_id=user_id,
-        assigned_at=datetime.now(timezone.utc),
+        assigned_at=datetime.now(UTC),
         due_date=due_date,
         status=AssignmentStatus.ASSIGNED,
     )
@@ -153,17 +169,17 @@ async def assign_course(
     await db.refresh(assignment)
     return assignment
 
-@router.get("/assignments", response_model=List[AssignmentResponse])
+
+@router.get("/assignments", response_model=list[AssignmentResponse])
 async def list_my_assignments(
-    status: Optional[str] = Query(None),
+    status: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     query = select(TrainingAssignment).where(
         and_(
-            TrainingAssignment.tenant_id == tenant_id,
-            TrainingAssignment.user_id == current_user.id
+            TrainingAssignment.tenant_id == tenant_id, TrainingAssignment.user_id == current_user.id
         )
     )
     if status:
@@ -171,13 +187,14 @@ async def list_my_assignments(
     result = await db.execute(query.order_by(TrainingAssignment.due_date))
     return result.scalars().all()
 
+
 @router.post("/assignments/{assignment_id}/complete")
 async def complete_assignment(
     assignment_id: UUID,
     score: int = Query(..., ge=0, le=100),
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     result = await db.execute(
         select(TrainingAssignment).where(
@@ -194,7 +211,7 @@ async def complete_assignment(
     passing_score = course.passing_score if course else 80
 
     passed = score >= passing_score
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     assignment.status = AssignmentStatus.COMPLETED if passed else AssignmentStatus.FAILED
     assignment.completed_at = now
@@ -215,10 +232,11 @@ async def complete_assignment(
     await db.commit()
     return {"message": "Assignment completed", "passed": passed, "score": score}
 
+
 # Phishing Campaigns
-@router.get("/phishing/campaigns", response_model=List[PhishingCampaignResponse])
+@router.get("/phishing/campaigns", response_model=list[PhishingCampaignResponse])
 async def list_phishing_campaigns(
-    status: Optional[str] = Query(None),
+    status: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
 ):
@@ -228,7 +246,12 @@ async def list_phishing_campaigns(
     result = await db.execute(query.order_by(PhishingCampaign.created_at.desc()))
     return result.scalars().all()
 
-@router.post("/phishing/campaigns", response_model=PhishingCampaignResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/phishing/campaigns",
+    response_model=PhishingCampaignResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_phishing_campaign(
     campaign: PhishingCampaignCreate,
     db: AsyncSession = Depends(get_db),
@@ -250,6 +273,7 @@ async def create_phishing_campaign(
     await db.refresh(db_campaign)
     return db_campaign
 
+
 @router.post("/phishing/campaigns/{campaign_id}/launch")
 async def launch_phishing_campaign(
     campaign_id: UUID,
@@ -266,11 +290,12 @@ async def launch_phishing_campaign(
         raise HTTPException(status_code=404, detail="Campaign not found")
 
     campaign.status = CampaignStatus.ACTIVE
-    campaign.actual_start = datetime.now(timezone.utc)
+    campaign.actual_start = datetime.now(UTC)
     await db.commit()
 
     # In production, this would trigger GoPhish API
     return {"message": "Campaign launched", "campaign_id": str(campaign_id)}
+
 
 @router.get("/phishing/campaigns/{campaign_id}/results")
 async def get_campaign_results(
@@ -313,8 +338,9 @@ async def get_campaign_results(
                 "reported": r.reported,
             }
             for r in results.scalars().all()
-        ]
+        ],
     }
+
 
 @router.get("/compliance-rate")
 async def get_training_compliance_rate(
@@ -333,7 +359,7 @@ async def get_training_compliance_rate(
     completed_query = select(func.count(TrainingAssignment.id)).where(
         and_(
             TrainingAssignment.tenant_id == tenant_id,
-            TrainingAssignment.status == AssignmentStatus.COMPLETED
+            TrainingAssignment.status == AssignmentStatus.COMPLETED,
         )
     )
     completed_result = await db.execute(completed_query)
@@ -343,8 +369,10 @@ async def get_training_compliance_rate(
     overdue_query = select(func.count(TrainingAssignment.id)).where(
         and_(
             TrainingAssignment.tenant_id == tenant_id,
-            TrainingAssignment.status.in_([AssignmentStatus.ASSIGNED, AssignmentStatus.IN_PROGRESS]),
-            TrainingAssignment.due_date < date.today()
+            TrainingAssignment.status.in_(
+                [AssignmentStatus.ASSIGNED, AssignmentStatus.IN_PROGRESS]
+            ),
+            TrainingAssignment.due_date < date.today(),
         )
     )
     overdue_result = await db.execute(overdue_query)

@@ -1,7 +1,7 @@
-from pydantic_settings import BaseSettings
-from pydantic import Field, validator
 from functools import lru_cache
-from typing import List
+
+from pydantic import Field, validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -23,8 +23,7 @@ class Settings(BaseSettings):
 
     # Security - Core
     SECRET_KEY: str = Field(
-        default="change-this-in-production-use-openssl-rand-hex-32",
-        env="SECRET_KEY"
+        default="change-this-in-production-use-openssl-rand-hex-32", env="SECRET_KEY"
     )
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -33,17 +32,14 @@ class Settings(BaseSettings):
     # Security - CORS (Phase 3)
     ALLOWED_ORIGINS: str = Field(
         default="http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000",
-        env="ALLOWED_ORIGINS"
+        env="ALLOWED_ORIGINS",
     )
-    ALLOWED_HOSTS: str = Field(
-        default="localhost,127.0.0.1",
-        env="ALLOWED_HOSTS"
-    )
+    ALLOWED_HOSTS: str = Field(default="localhost,127.0.0.1", env="ALLOWED_HOSTS")
 
     # Security - Rate Limiting (Phase 3)
     RATE_LIMIT_ENABLED: bool = True
     RATE_LIMIT_REQUESTS_PER_MINUTE: int = 60
-    RATE_LIMIT_AUTH_REQUESTS_PER_MINUTE: int = 5
+    RATE_LIMIT_AUTH_REQUESTS_PER_MINUTE: int = 60
     RATE_LIMIT_EXPORT_REQUESTS_PER_HOUR: int = 10
     RATE_LIMIT_BULK_REQUESTS_PER_HOUR: int = 20
 
@@ -53,10 +49,7 @@ class Settings(BaseSettings):
     MFA_REQUIRED_FOR_ADMIN: bool = True
 
     # Security - Encryption (Phase 3)
-    ENCRYPTION_KEY: str = Field(
-        default="",
-        env="ENCRYPTION_KEY"
-    )
+    ENCRYPTION_KEY: str = Field(default="", env="ENCRYPTION_KEY")
     ENCRYPT_SENSITIVE_FIELDS: bool = True
 
     # Security - Password Policy (Phase 3)
@@ -93,14 +86,8 @@ class Settings(BaseSettings):
     RISK_THRESHOLD_HIGH: float = 80.0
 
     # Search (Meilisearch)
-    MEILISEARCH_URL: str = Field(
-        default="http://meilisearch:7700",
-        env="MEILISEARCH_URL"
-    )
-    MEILISEARCH_API_KEY: str = Field(
-        default="",
-        env="MEILISEARCH_API_KEY"
-    )
+    MEILISEARCH_URL: str = Field(default="http://meilisearch:7700", env="MEILISEARCH_URL")
+    MEILISEARCH_API_KEY: str = Field(default="", env="MEILISEARCH_API_KEY")
 
     # WebSocket (Phase 4)
     WEBSOCKET_ENABLED: bool = True
@@ -121,13 +108,13 @@ class Settings(BaseSettings):
             return v
         return ",".join(v) if v else ""
 
-    def get_allowed_origins_list(self) -> List[str]:
+    def get_allowed_origins_list(self) -> list[str]:
         """Get list of allowed CORS origins."""
         if not self.ALLOWED_ORIGINS:
             return []
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
 
-    def get_allowed_hosts_list(self) -> List[str]:
+    def get_allowed_hosts_list(self) -> list[str]:
         """Get list of allowed hosts."""
         if not self.ALLOWED_HOSTS:
             return []
@@ -146,7 +133,7 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     return Settings()
 

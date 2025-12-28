@@ -68,13 +68,17 @@ export default function Simulations() {
   const [whatIfName, setWhatIfName] = useState("");
   const [whatIfRiskMultiplier, setWhatIfRiskMultiplier] = useState(1.0);
   const [selectedScenarios, setSelectedScenarios] = useState<string[]>([]);
-  const [activeResult, setActiveResult] = useState<SimulationResult | null>(null);
+  const [activeResult, setActiveResult] = useState<SimulationResult | null>(
+    null,
+  );
 
   // Fetch simulation history
-  const { data: simulations, refetch } = useQuery<{ simulations: SimulationResult[] }>({
+  const { data: simulations, refetch } = useQuery<{
+    simulations: SimulationResult[];
+  }>({
     queryKey: ["simulations"],
     queryFn: async () => {
-      const response = await api.get("/v1/simulations/");
+      const response = await api.get("/simulations/");
       return response.data;
     },
     refetchInterval: 5000,
@@ -181,7 +185,9 @@ export default function Simulations() {
                 max={10000}
                 step={100}
                 value={monteCarloIterations}
-                onChange={(e) => setMonteCarloIterations(Number(e.target.value))}
+                onChange={(e) =>
+                  setMonteCarloIterations(Number(e.target.value))
+                }
                 className="w-full"
               />
               <span className="text-sm text-gray-500">
@@ -231,7 +237,9 @@ export default function Simulations() {
                 onChange={(e) => setCascadeDepth(Number(e.target.value))}
                 className="w-full"
               />
-              <span className="text-sm text-gray-500">{cascadeDepth} levels</span>
+              <span className="text-sm text-gray-500">
+                {cascadeDepth} levels
+              </span>
             </div>
           </div>
         );
@@ -260,7 +268,9 @@ export default function Simulations() {
                 max={2.0}
                 step={0.1}
                 value={whatIfRiskMultiplier}
-                onChange={(e) => setWhatIfRiskMultiplier(Number(e.target.value))}
+                onChange={(e) =>
+                  setWhatIfRiskMultiplier(Number(e.target.value))
+                }
                 className="w-full"
               />
               <span className="text-sm text-gray-500">
@@ -290,7 +300,7 @@ export default function Simulations() {
                       setSelectedScenarios([...selectedScenarios, scenario]);
                     } else {
                       setSelectedScenarios(
-                        selectedScenarios.filter((s) => s !== scenario)
+                        selectedScenarios.filter((s) => s !== scenario),
                       );
                     }
                   }}
@@ -324,8 +334,8 @@ export default function Simulations() {
               result.status === "completed"
                 ? "bg-green-100 text-green-800"
                 : result.status === "running"
-                ? "bg-blue-100 text-blue-800"
-                : "bg-red-100 text-red-800"
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-red-100 text-red-800"
             }`}
           >
             {result.status}
@@ -417,8 +427,12 @@ export default function Simulations() {
                         : "text-gray-400"
                     }`}
                   />
-                  <h3 className="mt-2 font-medium text-gray-900">{type.name}</h3>
-                  <p className="text-xs text-gray-500 mt-1">{type.description}</p>
+                  <h3 className="mt-2 font-medium text-gray-900">
+                    {type.name}
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {type.description}
+                  </p>
                 </button>
               ))}
             </div>
@@ -484,7 +498,9 @@ export default function Simulations() {
                 </p>
               </button>
             )) || (
-              <p className="text-gray-500 text-center py-4">No simulations yet</p>
+              <p className="text-gray-500 text-center py-4">
+                No simulations yet
+              </p>
             )}
           </div>
         </div>

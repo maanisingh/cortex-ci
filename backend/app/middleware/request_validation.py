@@ -4,10 +4,11 @@ Implements input sanitization and validation.
 """
 
 import re
-from typing import Callable
+from collections.abc import Callable
+
+import structlog
 from fastapi import Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
-import structlog
 
 logger = structlog.get_logger()
 
@@ -158,8 +159,7 @@ def sanitize_string(value: str, max_length: int = 1000) -> str:
 
     # Basic HTML entity escaping
     value = (
-        value
-        .replace("&", "&amp;")
+        value.replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")
         .replace('"', "&quot;")
@@ -188,8 +188,10 @@ def sanitize_dict(data: dict, max_depth: int = 10) -> dict:
             sanitized[clean_key] = sanitize_dict(value, max_depth - 1)
         elif isinstance(value, list):
             sanitized[clean_key] = [
-                sanitize_dict(v, max_depth - 1) if isinstance(v, dict)
-                else sanitize_string(v) if isinstance(v, str)
+                sanitize_dict(v, max_depth - 1)
+                if isinstance(v, dict)
+                else sanitize_string(v)
+                if isinstance(v, str)
                 else v
                 for v in value
             ]

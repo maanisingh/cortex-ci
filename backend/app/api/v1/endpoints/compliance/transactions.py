@@ -2,21 +2,26 @@
 Transaction Monitoring API Endpoints
 AML transaction monitoring, alerts, and rules management
 """
-from uuid import UUID, uuid4
-from typing import Optional, List
-from datetime import datetime, timezone
-from decimal import Decimal
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
-from pydantic import BaseModel, Field
 
+from datetime import UTC, datetime
+from decimal import Decimal
+from uuid import UUID, uuid4
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
+from sqlalchemy import and_, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.v1.deps import get_current_tenant_id, get_current_user
 from app.core.database import get_db
-from app.api.v1.deps import get_current_user, get_current_tenant_id
 from app.models.compliance.transaction import (
-    Transaction, TransactionType, TransactionStatus,
-    TransactionAlert, AlertSeverity, AlertStatus,
-    MonitoringRule, RuleType
+    AlertSeverity,
+    AlertStatus,
+    MonitoringRule,
+    RuleType,
+    Transaction,
+    TransactionAlert,
+    TransactionStatus,
 )
 
 router = APIRouter()
@@ -28,12 +33,12 @@ class TransactionCreate(BaseModel):
     amount: Decimal
     currency: str = "USD"
     direction: str  # INBOUND, OUTBOUND
-    originator_name: Optional[str] = None
-    originator_bank_country: Optional[str] = None
-    beneficiary_name: Optional[str] = None
-    beneficiary_bank_country: Optional[str] = None
-    purpose: Optional[str] = None
-    customer_id: Optional[UUID] = None
+    originator_name: str | None = None
+    originator_bank_country: str | None = None
+    beneficiary_name: str | None = None
+    beneficiary_bank_country: str | None = None
+    purpose: str | None = None
+    customer_id: UUID | None = None
 
 
 class TransactionResponse(BaseModel):
@@ -44,8 +49,8 @@ class TransactionResponse(BaseModel):
     amount: Decimal
     currency: str
     direction: str
-    originator_name: Optional[str]
-    beneficiary_name: Optional[str]
+    originator_name: str | None
+    beneficiary_name: str | None
     risk_score: float
     has_alert: bool
     initiated_at: datetime
@@ -78,7 +83,7 @@ class MonitoringRuleResponse(BaseModel):
     default_severity: str
     is_active: bool
     total_alerts: int
-    precision_rate: Optional[float]
+    precision_rate: float | None
 
     class Config:
         from_attributes = True
@@ -126,7 +131,7 @@ async def create_transaction(
         purpose=txn.purpose,
         risk_score=risk_score,
         risk_factors=risk_factors,
-        initiated_at=datetime.now(timezone.utc),
+        initiated_at=datetime.now(UTC),
         has_alert=risk_score >= 50,
     )
 
@@ -144,7 +149,7 @@ async def create_transaction(
             status=AlertStatus.NEW,
             title=f"High-risk transaction detected: {txn.transaction_ref}",
             description=f"Risk factors: {', '.join(risk_factors)}",
-            triggered_at=datetime.now(timezone.utc),
+            triggered_at=datetime.now(UTC),
         )
         db.add(alert)
         db_txn.alert_count = 1
@@ -154,12 +159,12 @@ async def create_transaction(
     return db_txn
 
 
-@router.get("/", response_model=List[TransactionResponse])
+@router.get("/", response_model=list[TransactionResponse])
 async def list_transactions(
-    customer_id: Optional[UUID] = Query(None),
-    status: Optional[str] = Query(None),
-    has_alert: Optional[bool] = Query(None),
-    min_amount: Optional[Decimal] = Query(None),
+    customer_id: UUID | None = Query(None),
+    status: str | None = Query(None),
+    has_alert: bool | None = Query(None),
+    min_amount: Decimal | None = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
@@ -183,10 +188,10 @@ async def list_transactions(
     return result.scalars().all()
 
 
-@router.get("/alerts", response_model=List[AlertResponse])
+@router.get("/alerts", response_model=list[AlertResponse])
 async def list_alerts(
-    status: Optional[str] = Query(None),
-    severity: Optional[str] = Query(None),
+    status: str | None = Query(None),
+    severity: str | None = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
@@ -210,10 +215,10 @@ async def list_alerts(
 async def update_alert_status(
     alert_id: UUID,
     new_status: str = Query(...),
-    notes: Optional[str] = Query(None),
+    notes: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     """Update alert status."""
     result = await db.execute(
@@ -229,15 +234,15 @@ async def update_alert_status(
     if notes:
         alert.investigation_notes = notes
     if new_status in ["CLOSED_LEGITIMATE", "CLOSED_SUSPICIOUS", "SAR_FILED"]:
-        alert.closed_at = datetime.now(timezone.utc)
+        alert.closed_at = datetime.now(UTC)
 
     await db.commit()
     return {"message": "Alert status updated", "alert_id": str(alert_id)}
 
 
-@router.get("/rules", response_model=List[MonitoringRuleResponse])
+@router.get("/rules", response_model=list[MonitoringRuleResponse])
 async def list_monitoring_rules(
-    category: Optional[str] = Query(None),
+    category: str | None = Query(None),
     is_active: bool = Query(True),
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),

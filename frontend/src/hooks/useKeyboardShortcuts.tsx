@@ -84,7 +84,7 @@ export function useKeyboardShortcuts(onShowShortcuts?: () => void) {
         onShowShortcuts?.();
       }
     },
-    [navigate, onShowShortcuts]
+    [navigate, onShowShortcuts],
   );
 
   useEffect(() => {
@@ -123,49 +123,65 @@ export function KeyboardShortcutsHelp({
               </h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Dashboard</span>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Dashboard
+                  </span>
                   <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
                     Alt+D
                   </kbd>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Entities</span>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Entities
+                  </span>
                   <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
                     Alt+E
                   </kbd>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Constraints</span>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Constraints
+                  </span>
                   <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
                     Alt+C
                   </kbd>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Risks</span>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Risks
+                  </span>
                   <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
                     Alt+R
                   </kbd>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Scenarios</span>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Scenarios
+                  </span>
                   <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
                     Alt+S
                   </kbd>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Audit Log</span>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Audit Log
+                  </span>
                   <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
                     Alt+A
                   </kbd>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Layers</span>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Layers
+                  </span>
                   <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
                     Alt+L
                   </kbd>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">History</span>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    History
+                  </span>
                   <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
                     Alt+H
                   </kbd>
@@ -178,13 +194,17 @@ export function KeyboardShortcutsHelp({
               </h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Show shortcuts</span>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Show shortcuts
+                  </span>
                   <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
                     Shift+?
                   </kbd>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Close modal</span>
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Close modal
+                  </span>
                   <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">
                     Esc
                   </kbd>

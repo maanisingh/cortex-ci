@@ -50,7 +50,8 @@ const mockCrossLayerImpactData = {
   total_outgoing: 11,
   total_incoming: 8,
   unique_entities_affected: 15,
-  recommendation: "HIGH PRIORITY: Entity has significant cross-layer exposure, primarily in financial. Recommend immediate diversification strategy.",
+  recommendation:
+    "HIGH PRIORITY: Entity has significant cross-layer exposure, primarily in financial. Recommend immediate diversification strategy.",
 };
 
 function renderWithProviders(component: React.ReactNode) {
@@ -65,7 +66,7 @@ function renderWithProviders(component: React.ReactNode) {
   return render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>{component}</BrowserRouter>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   );
 }
 
@@ -78,12 +79,16 @@ describe("CrossLayerAnalysis Page", () => {
     renderWithProviders(<CrossLayerAnalysis />);
 
     expect(screen.getByText("Cross-Layer Impact Analysis")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Search entities by name/i)).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(/Search entities by name/i),
+    ).toBeInTheDocument();
     expect(screen.getByText("Select an Entity")).toBeInTheDocument();
   });
 
   it("searches for entities when typing", async () => {
-    vi.mocked(entitiesApi.list).mockResolvedValue(mockAxiosResponse(mockEntitiesData));
+    vi.mocked(entitiesApi.list).mockResolvedValue(
+      mockAxiosResponse(mockEntitiesData),
+    );
 
     renderWithProviders(<CrossLayerAnalysis />);
 
@@ -99,7 +104,9 @@ describe("CrossLayerAnalysis Page", () => {
   });
 
   it("displays search results as dropdown", async () => {
-    vi.mocked(entitiesApi.list).mockResolvedValue(mockAxiosResponse(mockEntitiesData));
+    vi.mocked(entitiesApi.list).mockResolvedValue(
+      mockAxiosResponse(mockEntitiesData),
+    );
 
     renderWithProviders(<CrossLayerAnalysis />);
 
@@ -112,9 +119,11 @@ describe("CrossLayerAnalysis Page", () => {
   });
 
   it("loads cross-layer impact after selecting entity", async () => {
-    vi.mocked(entitiesApi.list).mockResolvedValue(mockAxiosResponse(mockEntitiesData));
+    vi.mocked(entitiesApi.list).mockResolvedValue(
+      mockAxiosResponse(mockEntitiesData),
+    );
     vi.mocked(dependencyLayersApi.crossLayerImpact).mockResolvedValue(
-      mockAxiosResponse(mockCrossLayerImpactData)
+      mockAxiosResponse(mockCrossLayerImpactData),
     );
 
     renderWithProviders(<CrossLayerAnalysis />);
@@ -130,14 +139,18 @@ describe("CrossLayerAnalysis Page", () => {
     fireEvent.click(screen.getByText("Test Bank Corp"));
 
     await waitFor(() => {
-      expect(dependencyLayersApi.crossLayerImpact).toHaveBeenCalledWith("entity-1");
+      expect(dependencyLayersApi.crossLayerImpact).toHaveBeenCalledWith(
+        "entity-1",
+      );
     });
   });
 
   it("displays total risk score and risk level", async () => {
-    vi.mocked(entitiesApi.list).mockResolvedValue(mockAxiosResponse(mockEntitiesData));
+    vi.mocked(entitiesApi.list).mockResolvedValue(
+      mockAxiosResponse(mockEntitiesData),
+    );
     vi.mocked(dependencyLayersApi.crossLayerImpact).mockResolvedValue(
-      mockAxiosResponse(mockCrossLayerImpactData)
+      mockAxiosResponse(mockCrossLayerImpactData),
     );
 
     renderWithProviders(<CrossLayerAnalysis />);
@@ -156,9 +169,11 @@ describe("CrossLayerAnalysis Page", () => {
   });
 
   it("displays outgoing and incoming dependency counts", async () => {
-    vi.mocked(entitiesApi.list).mockResolvedValue(mockAxiosResponse(mockEntitiesData));
+    vi.mocked(entitiesApi.list).mockResolvedValue(
+      mockAxiosResponse(mockEntitiesData),
+    );
     vi.mocked(dependencyLayersApi.crossLayerImpact).mockResolvedValue(
-      mockAxiosResponse(mockCrossLayerImpactData)
+      mockAxiosResponse(mockCrossLayerImpactData),
     );
 
     renderWithProviders(<CrossLayerAnalysis />);
@@ -179,9 +194,11 @@ describe("CrossLayerAnalysis Page", () => {
   });
 
   it("displays recommendation based on risk", async () => {
-    vi.mocked(entitiesApi.list).mockResolvedValue(mockAxiosResponse(mockEntitiesData));
+    vi.mocked(entitiesApi.list).mockResolvedValue(
+      mockAxiosResponse(mockEntitiesData),
+    );
     vi.mocked(dependencyLayersApi.crossLayerImpact).mockResolvedValue(
-      mockAxiosResponse(mockCrossLayerImpactData)
+      mockAxiosResponse(mockCrossLayerImpactData),
     );
 
     renderWithProviders(<CrossLayerAnalysis />);
@@ -199,9 +216,11 @@ describe("CrossLayerAnalysis Page", () => {
   });
 
   it("displays primary exposure layer", async () => {
-    vi.mocked(entitiesApi.list).mockResolvedValue(mockAxiosResponse(mockEntitiesData));
+    vi.mocked(entitiesApi.list).mockResolvedValue(
+      mockAxiosResponse(mockEntitiesData),
+    );
     vi.mocked(dependencyLayersApi.crossLayerImpact).mockResolvedValue(
-      mockAxiosResponse(mockCrossLayerImpactData)
+      mockAxiosResponse(mockCrossLayerImpactData),
     );
 
     renderWithProviders(<CrossLayerAnalysis />);
@@ -221,9 +240,11 @@ describe("CrossLayerAnalysis Page", () => {
   });
 
   it("displays layer-by-layer breakdown", async () => {
-    vi.mocked(entitiesApi.list).mockResolvedValue(mockAxiosResponse(mockEntitiesData));
+    vi.mocked(entitiesApi.list).mockResolvedValue(
+      mockAxiosResponse(mockEntitiesData),
+    );
     vi.mocked(dependencyLayersApi.crossLayerImpact).mockResolvedValue(
-      mockAxiosResponse(mockCrossLayerImpactData)
+      mockAxiosResponse(mockCrossLayerImpactData),
     );
 
     renderWithProviders(<CrossLayerAnalysis />);
@@ -241,9 +262,11 @@ describe("CrossLayerAnalysis Page", () => {
   });
 
   it("displays entities affected count", async () => {
-    vi.mocked(entitiesApi.list).mockResolvedValue(mockAxiosResponse(mockEntitiesData));
+    vi.mocked(entitiesApi.list).mockResolvedValue(
+      mockAxiosResponse(mockEntitiesData),
+    );
     vi.mocked(dependencyLayersApi.crossLayerImpact).mockResolvedValue(
-      mockAxiosResponse(mockCrossLayerImpactData)
+      mockAxiosResponse(mockCrossLayerImpactData),
     );
 
     renderWithProviders(<CrossLayerAnalysis />);
@@ -265,7 +288,9 @@ describe("CrossLayerAnalysis Page", () => {
 describe("Risk Level Classification", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(entitiesApi.list).mockResolvedValue(mockAxiosResponse(mockEntitiesData));
+    vi.mocked(entitiesApi.list).mockResolvedValue(
+      mockAxiosResponse(mockEntitiesData),
+    );
   });
 
   it("displays HIGH for risk > 50", async () => {
@@ -273,7 +298,7 @@ describe("Risk Level Classification", () => {
       mockAxiosResponse({
         ...mockCrossLayerImpactData,
         total_cross_layer_risk: 75.0,
-      })
+      }),
     );
 
     renderWithProviders(<CrossLayerAnalysis />);
@@ -292,7 +317,7 @@ describe("Risk Level Classification", () => {
       mockAxiosResponse({
         ...mockCrossLayerImpactData,
         total_cross_layer_risk: 35.0,
-      })
+      }),
     );
 
     renderWithProviders(<CrossLayerAnalysis />);
@@ -311,7 +336,7 @@ describe("Risk Level Classification", () => {
       mockAxiosResponse({
         ...mockCrossLayerImpactData,
         total_cross_layer_risk: 15.0,
-      })
+      }),
     );
 
     renderWithProviders(<CrossLayerAnalysis />);
@@ -330,7 +355,7 @@ describe("Risk Level Classification", () => {
       mockAxiosResponse({
         ...mockCrossLayerImpactData,
         total_cross_layer_risk: 5.0,
-      })
+      }),
     );
 
     renderWithProviders(<CrossLayerAnalysis />);

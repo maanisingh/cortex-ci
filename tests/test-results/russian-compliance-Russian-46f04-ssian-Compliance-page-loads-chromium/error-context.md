@@ -1,0 +1,215 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]: "Select Language:"
+    - generic [ref=e6]:
+      - button "🇷🇺Русский" [ref=e7] [cursor=pointer]
+      - button "🇬🇧English" [ref=e8] [cursor=pointer]
+      - button "🇰🇿Қазақша" [ref=e9] [cursor=pointer]
+      - button "🇺🇿Oʻzbekcha" [ref=e10] [cursor=pointer]
+      - button "🏳️Татарча" [ref=e11] [cursor=pointer]
+      - button "+7" [ref=e13] [cursor=pointer]:
+        - generic [ref=e14]: "+7"
+        - img [ref=e15]
+  - generic [ref=e17]:
+    - generic [ref=e19]:
+      - generic [ref=e21]: CORTEX GRC
+      - navigation [ref=e22]:
+        - list [ref=e23]:
+          - listitem [ref=e24]:
+            - list [ref=e25]:
+              - listitem [ref=e26]:
+                - link "GRC Dashboard" [ref=e27] [cursor=pointer]:
+                  - /url: /dashboard
+                  - img [ref=e28]
+                  - text: GRC Dashboard
+          - listitem [ref=e30]:
+            - generic [ref=e31]: Risk Management
+            - list [ref=e32]:
+              - listitem [ref=e33]:
+                - link "Risk Register" [ref=e34] [cursor=pointer]:
+                  - /url: /risks
+                  - img [ref=e35]
+                  - text: Risk Register
+              - listitem [ref=e37]:
+                - link "Risk Objects" [ref=e38] [cursor=pointer]:
+                  - /url: /entities
+                  - img [ref=e39]
+                  - text: Risk Objects
+              - listitem [ref=e41]:
+                - link "Risk Relationships" [ref=e42] [cursor=pointer]:
+                  - /url: /dependencies
+                  - img [ref=e43]
+                  - text: Risk Relationships
+              - listitem [ref=e45]:
+                - link "Risk Scenarios" [ref=e46] [cursor=pointer]:
+                  - /url: /scenarios
+                  - img [ref=e47]
+                  - text: Risk Scenarios
+              - listitem [ref=e49]:
+                - link "Risk Layers" [ref=e50] [cursor=pointer]:
+                  - /url: /dependency-layers
+                  - img [ref=e51]
+                  - text: Risk Layers
+              - listitem [ref=e53]:
+                - link "Cross-Layer Analysis" [ref=e54] [cursor=pointer]:
+                  - /url: /cross-layer-analysis
+                  - img [ref=e55]
+                  - text: Cross-Layer Analysis
+              - listitem [ref=e57]:
+                - link "Scenario Chains" [ref=e58] [cursor=pointer]:
+                  - /url: /scenario-chains
+                  - img [ref=e59]
+                  - text: Scenario Chains
+              - listitem [ref=e61]:
+                - link "Risk Justification" [ref=e62] [cursor=pointer]:
+                  - /url: /risk-justification
+                  - img [ref=e63]
+                  - text: Risk Justification
+              - listitem [ref=e65]:
+                - link "Simulations" [ref=e66] [cursor=pointer]:
+                  - /url: /simulations
+                  - img [ref=e67]
+                  - text: Simulations
+          - listitem [ref=e69]:
+            - generic [ref=e70]: Compliance
+            - list [ref=e71]:
+              - listitem [ref=e72]:
+                - link "Compliance Dashboard" [ref=e73] [cursor=pointer]:
+                  - /url: /compliance
+                  - img [ref=e74]
+                  - text: Compliance Dashboard
+              - listitem [ref=e76]:
+                - link "Controls" [ref=e77] [cursor=pointer]:
+                  - /url: /constraints
+                  - img [ref=e78]
+                  - text: Controls
+              - listitem [ref=e80]:
+                - link "Policies" [ref=e81] [cursor=pointer]:
+                  - /url: /policies
+                  - img [ref=e82]
+                  - text: Policies
+          - listitem [ref=e84]:
+            - generic [ref=e85]: Audit
+            - list [ref=e86]:
+              - listitem [ref=e87]:
+                - link "Audit Planning" [ref=e88] [cursor=pointer]:
+                  - /url: /audits
+                  - img [ref=e89]
+                  - text: Audit Planning
+              - listitem [ref=e91]:
+                - link "Findings" [ref=e92] [cursor=pointer]:
+                  - /url: /findings
+                  - img [ref=e93]
+                  - text: Findings
+              - listitem [ref=e95]:
+                - link "Incidents" [ref=e96] [cursor=pointer]:
+                  - /url: /incidents
+                  - img [ref=e97]
+                  - text: Incidents
+              - listitem [ref=e99]:
+                - link "Activity Log" [ref=e100] [cursor=pointer]:
+                  - /url: /audit
+                  - img [ref=e101]
+                  - text: Activity Log
+          - listitem [ref=e103]:
+            - generic [ref=e104]: Third Party
+            - list [ref=e105]:
+              - listitem [ref=e106]:
+                - link "Vendor Register" [ref=e107] [cursor=pointer]:
+                  - /url: /vendors
+                  - img [ref=e108]
+                  - text: Vendor Register
+              - listitem [ref=e110]:
+                - link "Evidence Library" [ref=e111] [cursor=pointer]:
+                  - /url: /evidence
+                  - img [ref=e112]
+                  - text: Evidence Library
+          - listitem [ref=e114]:
+            - generic [ref=e115]: Intelligence
+            - list [ref=e116]:
+              - listitem [ref=e117]:
+                - link "Historical Analysis" [ref=e118] [cursor=pointer]:
+                  - /url: /history
+                  - img [ref=e119]
+                  - text: Historical Analysis
+              - listitem [ref=e121]:
+                - link "AI Insights" [ref=e122] [cursor=pointer]:
+                  - /url: /ai-analysis
+                  - img [ref=e123]
+                  - text: AI Insights
+              - listitem [ref=e125]:
+                - link "Monitoring" [ref=e126] [cursor=pointer]:
+                  - /url: /monitoring
+                  - img [ref=e127]
+                  - text: Monitoring
+          - listitem [ref=e129]:
+            - generic [ref=e130]: Administration
+            - list [ref=e131]:
+              - listitem [ref=e132]:
+                - link "User Management" [ref=e133] [cursor=pointer]:
+                  - /url: /admin/users
+                  - img [ref=e134]
+                  - text: User Management
+              - listitem [ref=e136]:
+                - link "Analytics & Reports" [ref=e137] [cursor=pointer]:
+                  - /url: /analytics
+                  - img [ref=e138]
+                  - text: Analytics & Reports
+              - listitem [ref=e140]:
+                - link "Bulk Operations" [ref=e141] [cursor=pointer]:
+                  - /url: /bulk-operations
+                  - img [ref=e142]
+                  - text: Bulk Operations
+              - listitem [ref=e144]:
+                - link "Settings" [ref=e145] [cursor=pointer]:
+                  - /url: /settings
+                  - img [ref=e146]
+                  - text: Settings
+          - listitem [ref=e149]:
+            - list [ref=e150]:
+              - listitem [ref=e151]:
+                - link "Profile" [ref=e152] [cursor=pointer]:
+                  - /url: /profile
+                  - img [ref=e153]
+                  - text: Profile
+              - listitem [ref=e155]:
+                - link "Security" [ref=e156] [cursor=pointer]:
+                  - /url: /security
+                  - img [ref=e157]
+                  - text: Security
+            - generic [ref=e159]:
+              - text: Demo Admin
+              - generic [ref=e160]: admin@cortex.io
+            - button "Sign out" [ref=e161] [cursor=pointer]
+    - generic [ref=e162]:
+      - generic [ref=e165]:
+        - button "🇬🇧 English" [ref=e168] [cursor=pointer]:
+          - img [ref=e169]
+          - generic [ref=e171]: 🇬🇧
+          - generic [ref=e172]: English
+          - img [ref=e173]
+        - button "Switch to dark mode" [ref=e175] [cursor=pointer]:
+          - img [ref=e176]
+        - button [ref=e179] [cursor=pointer]:
+          - img [ref=e180]
+        - generic [ref=e183]: "Role: admin"
+      - main [ref=e184]
+    - button "Help & User Guide" [ref=e185] [cursor=pointer]:
+      - img [ref=e186]
+      - generic [ref=e188]: Help & User Guide
+    - generic [ref=e191]:
+      - generic [ref=e192]:
+        - img [ref=e194]
+        - generic [ref=e196]:
+          - heading "Welcome to CORTEX-CI" [level=3] [ref=e197]
+          - paragraph [ref=e198]: Step 1 of 5
+      - paragraph [ref=e199]: This is your executive dashboard showing key metrics and risk overview.
+      - generic [ref=e200]:
+        - button "Skip Tour" [ref=e201] [cursor=pointer]
+        - button "Next" [ref=e203] [cursor=pointer]:
+          - text: Next
+          - img [ref=e204]
+```

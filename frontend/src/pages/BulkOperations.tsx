@@ -31,10 +31,30 @@ interface BulkOperation {
 }
 
 const EXPORT_FORMATS = [
-  { value: "csv", label: "CSV", icon: TableCellsIcon, description: "Comma-separated values" },
-  { value: "json", label: "JSON", icon: DocumentTextIcon, description: "JavaScript Object Notation" },
-  { value: "xlsx", label: "Excel", icon: DocumentChartBarIcon, description: "Microsoft Excel format" },
-  { value: "pdf", label: "PDF", icon: DocumentArrowDownIcon, description: "Portable Document Format" },
+  {
+    value: "csv",
+    label: "CSV",
+    icon: TableCellsIcon,
+    description: "Comma-separated values",
+  },
+  {
+    value: "json",
+    label: "JSON",
+    icon: DocumentTextIcon,
+    description: "JavaScript Object Notation",
+  },
+  {
+    value: "xlsx",
+    label: "Excel",
+    icon: DocumentChartBarIcon,
+    description: "Microsoft Excel format",
+  },
+  {
+    value: "pdf",
+    label: "PDF",
+    icon: DocumentArrowDownIcon,
+    description: "Portable Document Format",
+  },
 ];
 
 export default function BulkOperations() {
@@ -64,7 +84,10 @@ export default function BulkOperations() {
     mutationFn: async (formData: FormData) => {
       const response = await api.post("/bulk/import/entities", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        params: { skip_duplicates: skipDuplicates, update_existing: updateExisting },
+        params: {
+          skip_duplicates: skipDuplicates,
+          update_existing: updateExisting,
+        },
       });
       return response.data;
     },
@@ -83,7 +106,8 @@ export default function BulkOperations() {
     mutationFn: async () => {
       const response = await api.get(`/export/${exportType}`, {
         params: { format: exportFormat },
-        responseType: exportFormat === "pdf" || exportFormat === "xlsx" ? "blob" : "json",
+        responseType:
+          exportFormat === "pdf" || exportFormat === "xlsx" ? "blob" : "json",
       });
       return response.data;
     },
@@ -174,7 +198,8 @@ export default function BulkOperations() {
             Bulk Import
           </h2>
           <p className="text-sm text-gray-600 mb-4">
-            Import entities from CSV or JSON files. Supports up to 10,000 records per import.
+            Import entities from CSV or JSON files. Supports up to 10,000
+            records per import.
           </p>
 
           {/* File Upload Area */}
@@ -191,9 +216,12 @@ export default function BulkOperations() {
               <ArrowUpTrayIcon className="h-12 w-12 mx-auto text-gray-400 mb-2" />
               {selectedFile ? (
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {selectedFile.name}
+                  </p>
                   <p className="text-xs text-gray-500">
-                    {(selectedFile.size / 1024).toFixed(1)} KB - {importType.toUpperCase()}
+                    {(selectedFile.size / 1024).toFixed(1)} KB -{" "}
+                    {importType.toUpperCase()}
                   </p>
                 </div>
               ) : (
@@ -218,7 +246,9 @@ export default function BulkOperations() {
                 onChange={(e) => setSkipDuplicates(e.target.checked)}
                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
-              <span className="text-sm text-gray-700">Skip duplicate entities</span>
+              <span className="text-sm text-gray-700">
+                Skip duplicate entities
+              </span>
             </label>
             <label className="flex items-center gap-2">
               <input
@@ -227,7 +257,9 @@ export default function BulkOperations() {
                 onChange={(e) => setUpdateExisting(e.target.checked)}
                 className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
-              <span className="text-sm text-gray-700">Update existing entities</span>
+              <span className="text-sm text-gray-700">
+                Update existing entities
+              </span>
             </label>
           </div>
 
@@ -302,7 +334,9 @@ export default function BulkOperations() {
                   <format.icon className="h-5 w-5" />
                   <div className="text-left">
                     <p className="text-sm font-medium">{format.label}</p>
-                    <p className="text-xs text-gray-500">{format.description}</p>
+                    <p className="text-xs text-gray-500">
+                      {format.description}
+                    </p>
                   </div>
                 </button>
               ))}
@@ -322,7 +356,10 @@ export default function BulkOperations() {
             ) : (
               <>
                 <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
-                Export {exportType.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                Export{" "}
+                {exportType
+                  .replace("_", " ")
+                  .replace(/\b\w/g, (l) => l.toUpperCase())}
               </>
             )}
           </button>
@@ -367,7 +404,7 @@ export default function BulkOperations() {
                         {getStatusIcon(op.status)}
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(
-                            op.status
+                            op.status,
                           )}`}
                         >
                           {op.status}
@@ -391,9 +428,13 @@ export default function BulkOperations() {
                       </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <span className="text-green-600">{op.successful_items} success</span>
+                      <span className="text-green-600">
+                        {op.successful_items} success
+                      </span>
                       {op.failed_items > 0 && (
-                        <span className="text-red-600 ml-2">{op.failed_items} failed</span>
+                        <span className="text-red-600 ml-2">
+                          {op.failed_items} failed
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">

@@ -3,14 +3,13 @@ MFA/TOTP Authentication Module (Phase 3)
 Implements Time-based One-Time Password (TOTP) authentication.
 """
 
-import secrets
 import base64
-from typing import List, Optional
-from datetime import datetime
 import hashlib
 import hmac
+import secrets
 import struct
 import time
+from datetime import datetime
 
 import structlog
 
@@ -43,7 +42,7 @@ class TOTPGenerator:
         padded = self.secret + "=" * ((8 - len(self.secret) % 8) % 8)
         return base64.b32decode(padded.upper())
 
-    def _get_counter(self, timestamp: Optional[float] = None) -> int:
+    def _get_counter(self, timestamp: float | None = None) -> int:
         """Get current counter value based on time."""
         if timestamp is None:
             timestamp = time.time()
@@ -72,12 +71,12 @@ class TOTPGenerator:
         otp = binary % (10**self.digits)
         return str(otp).zfill(self.digits)
 
-    def generate(self, timestamp: Optional[float] = None) -> str:
+    def generate(self, timestamp: float | None = None) -> str:
         """Generate current TOTP value."""
         counter = self._get_counter(timestamp)
         return self._generate_hotp(counter)
 
-    def verify(self, code: str, window: int = 1, timestamp: Optional[float] = None) -> bool:
+    def verify(self, code: str, window: int = 1, timestamp: float | None = None) -> bool:
         """
         Verify TOTP code with time window tolerance.
 
@@ -114,7 +113,7 @@ def generate_secret(length: int = 32) -> str:
     return base64.b32encode(random_bytes).decode("utf-8").rstrip("=")
 
 
-def generate_backup_codes(count: int = 10) -> List[str]:
+def generate_backup_codes(count: int = 10) -> list[str]:
     """
     Generate backup codes for MFA recovery.
 
@@ -145,7 +144,7 @@ def hash_backup_code(code: str) -> str:
     return hashlib.sha256(code.encode()).hexdigest()
 
 
-def verify_backup_code(code: str, hashed_codes: List[str]) -> Optional[int]:
+def verify_backup_code(code: str, hashed_codes: list[str]) -> int | None:
     """
     Verify a backup code against stored hashes.
 
@@ -166,7 +165,7 @@ def verify_backup_code(code: str, hashed_codes: List[str]) -> Optional[int]:
 def generate_provisioning_uri(
     secret: str,
     email: str,
-    issuer: Optional[str] = None,
+    issuer: str | None = None,
 ) -> str:
     """
     Generate otpauth:// URI for QR code generation.
@@ -224,8 +223,9 @@ def generate_mfa_token(user_id: str, expires_minutes: int = 5) -> str:
     Returns:
         Encrypted MFA session token
     """
-    from app.core.security import create_access_token
     from datetime import timedelta
+
+    from app.core.security import create_access_token
 
     # Create a short-lived token for MFA session
     return create_access_token(
@@ -236,7 +236,7 @@ def generate_mfa_token(user_id: str, expires_minutes: int = 5) -> str:
     )
 
 
-def verify_mfa_token(token: str) -> Optional[str]:
+def verify_mfa_token(token: str) -> str | None:
     """
     Verify and decode an MFA session token.
 
@@ -290,7 +290,7 @@ class MFAManager:
         }
 
     @staticmethod
-    async def enable_mfa(user, secret: str, code: str, hashed_backup_codes: List[str]) -> bool:
+    async def enable_mfa(user, secret: str, code: str, hashed_backup_codes: list[str]) -> bool:
         """
         Enable MFA after verification.
 
@@ -403,7 +403,7 @@ class MFAManager:
         return True
 
     @staticmethod
-    def regenerate_backup_codes(user) -> List[str]:
+    def regenerate_backup_codes(user) -> list[str]:
         """
         Regenerate backup codes for a user.
 

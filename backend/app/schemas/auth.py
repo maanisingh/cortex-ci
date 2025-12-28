@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -27,18 +27,18 @@ class LoginRequest(BaseModel):
 
     email: EmailStr
     password: str = Field(..., min_length=8)
-    tenant_slug: Optional[str] = None
-    mfa_code: Optional[str] = Field(None, min_length=6, max_length=6)
+    tenant_slug: str | None = None
+    mfa_code: str | None = Field(None, min_length=6, max_length=6)
 
 
 class LoginResponse(BaseModel):
     """Login response - may require MFA."""
 
-    access_token: Optional[str] = None
-    refresh_token: Optional[str] = None
+    access_token: str | None = None
+    refresh_token: str | None = None
     token_type: str = "bearer"
     mfa_required: bool = False
-    mfa_token: Optional[str] = None
+    mfa_token: str | None = None
 
 
 class RegisterRequest(BaseModel):
@@ -47,8 +47,8 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
     full_name: str = Field(..., min_length=2, max_length=255)
-    job_title: Optional[str] = None
-    department: Optional[str] = None
+    job_title: str | None = None
+    department: str | None = None
 
 
 class PasswordChangeRequest(BaseModel):
@@ -70,7 +70,7 @@ class MFASetupResponse(BaseModel):
 
     secret: str
     provisioning_uri: str
-    backup_codes: List[str]
+    backup_codes: list[str]
 
 
 class MFAVerifyRequest(BaseModel):
@@ -111,5 +111,5 @@ class MFAStatusResponse(BaseModel):
     """MFA status for current user."""
 
     mfa_enabled: bool
-    mfa_verified_at: Optional[datetime] = None
+    mfa_verified_at: datetime | None = None
     backup_codes_remaining: int = 0

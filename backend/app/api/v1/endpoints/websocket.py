@@ -4,11 +4,12 @@ Real-time communication endpoints for alerts and notifications.
 """
 
 from uuid import UUID
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
-import structlog
 
-from app.core.websocket import ws_manager, AlertType, AlertPriority, Alert
+import structlog
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+
 from app.core.security import decode_token
+from app.core.websocket import Alert, AlertPriority, AlertType, ws_manager
 
 logger = structlog.get_logger()
 router = APIRouter()

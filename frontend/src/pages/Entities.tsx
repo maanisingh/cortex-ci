@@ -4,8 +4,10 @@ import { Link } from "react-router-dom";
 import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { entitiesApi } from "../services/api";
 import EntityForm from "../components/forms/EntityForm";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function Entities() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
@@ -34,9 +36,9 @@ export default function Entities() {
     <div>
       <div className="sm:flex sm:items-center mb-6">
         <div className="sm:flex-auto">
-          <h1 className="text-2xl font-bold text-gray-900">Entities</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            Organizations, individuals, and other monitored entities
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("riskObjects")}</h1>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+            {t("riskObjectsDescription")}
           </p>
         </div>
         <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
@@ -49,7 +51,7 @@ export default function Entities() {
             }}
           >
             <PlusIcon className="h-5 w-5 mr-2" />
-            Add Entity
+            {t("addRiskObject")}
           </button>
         </div>
       </div>
@@ -71,7 +73,7 @@ export default function Entities() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search entities..."
+            placeholder={t("searchRiskObjects")}
             className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
           />
         </div>
@@ -83,12 +85,12 @@ export default function Entities() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="table-header">Name</th>
-                <th className="table-header">Type</th>
-                <th className="table-header">Country</th>
-                <th className="table-header">Criticality</th>
-                <th className="table-header">Created</th>
-                <th className="table-header">Actions</th>
+                <th className="table-header">{t("name")}</th>
+                <th className="table-header">{t("type")}</th>
+                <th className="table-header">{t("country")}</th>
+                <th className="table-header">{t("criticality")}</th>
+                <th className="table-header">{t("created")}</th>
+                <th className="table-header">{t("actions")}</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -98,7 +100,7 @@ export default function Entities() {
                     colSpan={6}
                     className="px-6 py-4 text-center text-gray-500"
                   >
-                    Loading...
+                    {t("loading")}
                   </td>
                 </tr>
               ) : data?.items?.length === 0 ? (
@@ -107,7 +109,7 @@ export default function Entities() {
                     colSpan={6}
                     className="px-6 py-4 text-center text-gray-500"
                   >
-                    No entities found
+                    {t("noRiskObjectsFound")}
                   </td>
                 </tr>
               ) : (
@@ -160,7 +162,7 @@ export default function Entities() {
                         to={`/entities/${entity.id}`}
                         className="text-primary-600 hover:text-primary-900 text-sm"
                       >
-                        View Details
+                        {t("viewDetails")}
                       </Link>
                     </td>
                   </tr>
@@ -179,22 +181,22 @@ export default function Entities() {
                 disabled={page === 1}
                 className="btn-secondary"
               >
-                Previous
+                {t("previous")}
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(data.pages, p + 1))}
                 disabled={page === data.pages}
                 className="btn-secondary"
               >
-                Next
+                {t("next")}
               </button>
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
-                  Showing page <span className="font-medium">{page}</span> of{" "}
+                  {t("showingPage")} <span className="font-medium">{page}</span> {t("of")}{" "}
                   <span className="font-medium">{data.pages}</span> (
-                  {data.total} total)
+                  {data.total} {t("total")})
                 </p>
               </div>
               <div className="flex gap-2">
@@ -203,14 +205,14 @@ export default function Entities() {
                   disabled={page === 1}
                   className="btn-secondary"
                 >
-                  Previous
+                  {t("previous")}
                 </button>
                 <button
                   onClick={() => setPage((p) => Math.min(data.pages, p + 1))}
                   disabled={page === data.pages}
                   className="btn-secondary"
                 >
-                  Next
+                  {t("next")}
                 </button>
               </div>
             </div>

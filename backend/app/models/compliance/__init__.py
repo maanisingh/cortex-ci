@@ -1,113 +1,135 @@
 # Compliance Platform Models
 # Full enterprise compliance platform models
 
-from app.models.compliance.framework import (
-    Framework,
-    FrameworkType,
-    Control,
-    ControlCategory,
-    ControlMapping,
-    MappingRelationship,
-    Assessment,
-    AssessmentStatus,
-    AssessmentResult,
-)
-from app.models.compliance.customer import (
-    Customer,
-    CustomerType,
-    CustomerStatus,
-    CustomerRiskRating,
-    CustomerDocument,
-    DocumentType,
-    CustomerReview,
-    ReviewType,
-)
-from app.models.compliance.screening import (
-    ScreeningResult,
-    ScreeningStatus,
-    ScreeningType,
-    ScreeningMatch,
-    MatchDisposition,
-    WatchlistEntity,
-    WatchlistSource,
-)
-from app.models.compliance.transaction import (
-    Transaction,
-    TransactionType,
-    TransactionStatus,
-    TransactionAlert,
-    AlertSeverity,
-    AlertStatus,
-    MonitoringRule,
-    RuleType,
-)
-from app.models.compliance.policy import (
-    Policy,
-    PolicyStatus,
-    PolicyCategory,
-    PolicyVersion,
-    PolicyAcknowledgement,
-    PolicyException,
-    ExceptionStatus,
-)
-from app.models.compliance.evidence import (
-    Evidence,
-    EvidenceType,
-    EvidenceStatus,
-    EvidenceLink,
-    EvidenceReview,
-)
 from app.models.compliance.audit import (
     Audit,
-    AuditType,
-    AuditStatus,
     AuditFinding,
+    AuditStatus,
+    AuditType,
     FindingSeverity,
     FindingStatus,
     RemediationPlan,
     RemediationStatus,
 )
-from app.models.compliance.vendor import (
-    Vendor,
-    VendorTier,
-    VendorStatus,
-    VendorAssessment,
-    VendorQuestionnaire,
-    QuestionnaireResponse,
-    VendorContract,
-    ContractStatus,
-)
-from app.models.compliance.incident import (
-    Incident,
-    IncidentSeverity,
-    IncidentStatus,
-    IncidentCategory,
-    IncidentTimeline,
-    IncidentResponse,
-    ResponseAction,
-    BreachNotification,
-    NotificationStatus,
-)
-from app.models.compliance.training import (
-    Course,
-    CourseType,
-    CourseStatus,
-    TrainingAssignment,
-    AssignmentStatus,
-    TrainingCompletion,
-    PhishingCampaign,
-    PhishingResult,
-)
 from app.models.compliance.case import (
     Case,
-    CaseType,
-    CaseStatus,
-    CasePriority,
     CaseNote,
+    CasePriority,
+    CaseStatus,
     CaseTask,
-    TaskStatus,
+    CaseType,
     SARReport,
     SARStatus,
+    TaskStatus,
+)
+from app.models.compliance.customer import (
+    Customer,
+    CustomerDocument,
+    CustomerReview,
+    CustomerRiskRating,
+    CustomerStatus,
+    CustomerType,
+    DocumentType,
+    ReviewType,
+)
+from app.models.compliance.evidence import (
+    Evidence,
+    EvidenceLink,
+    EvidenceReview,
+    EvidenceStatus,
+    EvidenceType,
+)
+from app.models.compliance.framework import (
+    Assessment,
+    AssessmentResult,
+    AssessmentStatus,
+    Control,
+    ControlCategory,
+    ControlMapping,
+    Framework,
+    FrameworkType,
+    MappingRelationship,
+)
+from app.models.compliance.incident import (
+    BreachNotification,
+    Incident,
+    IncidentCategory,
+    IncidentResponse,
+    IncidentSeverity,
+    IncidentStatus,
+    IncidentTimeline,
+    NotificationStatus,
+    ResponseAction,
+)
+from app.models.compliance.policy import (
+    ExceptionStatus,
+    Policy,
+    PolicyAcknowledgement,
+    PolicyCategory,
+    PolicyException,
+    PolicyStatus,
+    PolicyVersion,
+)
+from app.models.compliance.screening import (
+    MatchDisposition,
+    ScreeningMatch,
+    ScreeningResult,
+    ScreeningStatus,
+    ScreeningType,
+    WatchlistEntity,
+    WatchlistSource,
+)
+from app.models.compliance.training import (
+    AssignmentStatus,
+    Course,
+    CourseStatus,
+    CourseType,
+    PhishingCampaign,
+    PhishingResult,
+    TrainingAssignment,
+    TrainingCompletion,
+)
+from app.models.compliance.transaction import (
+    AlertSeverity,
+    AlertStatus,
+    MonitoringRule,
+    RuleType,
+    Transaction,
+    TransactionAlert,
+    TransactionStatus,
+    TransactionType,
+)
+from app.models.compliance.vendor import (
+    ContractStatus,
+    QuestionnaireResponse,
+    Vendor,
+    VendorAssessment,
+    VendorContract,
+    VendorQuestionnaire,
+    VendorStatus,
+    VendorTier,
+)
+
+# Russian Compliance Requirements
+from app.models.compliance.russian import (
+    DocumentStatus as RuDocumentStatus,
+    DocumentType as RuDocumentType,
+    ISPDNCategory,
+    KIICategory,
+    ProtectionLevel,
+    ResponsibleRole,
+    RuCompanyProfile,
+    RuComplianceDocument,
+    RuComplianceTask,
+    RuDocumentTemplate,
+    RuEmailTemplate,
+    RuFrameworkType,
+    RuISPDN,
+    RuRequirement,
+    RuResponsiblePerson,
+    TaskPriority as RuTaskPriority,
+    TaskStatus as RuTaskStatus,
+    ThreatType,
 )
 
 __all__ = [
@@ -208,4 +230,23 @@ __all__ = [
     "TaskStatus",
     "SARReport",
     "SARStatus",
+    # Russian Compliance
+    "RuFrameworkType",
+    "ProtectionLevel",
+    "ISPDNCategory",
+    "ThreatType",
+    "KIICategory",
+    "RuDocumentStatus",
+    "RuDocumentType",
+    "ResponsibleRole",
+    "RuTaskPriority",
+    "RuTaskStatus",
+    "RuCompanyProfile",
+    "RuResponsiblePerson",
+    "RuISPDN",
+    "RuComplianceDocument",
+    "RuDocumentTemplate",
+    "RuComplianceTask",
+    "RuRequirement",
+    "RuEmailTemplate",
 ]

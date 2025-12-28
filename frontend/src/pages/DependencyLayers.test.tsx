@@ -54,7 +54,7 @@ function renderWithProviders(component: React.ReactNode) {
   return render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>{component}</BrowserRouter>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   );
 }
 
@@ -65,17 +65,19 @@ describe("DependencyLayers Page", () => {
 
   it("displays loading state initially", () => {
     vi.mocked(dependencyLayersApi.summary).mockReturnValue(
-      new Promise(() => {}) // Never resolves
+      new Promise(() => {}), // Never resolves
     );
 
-    renderWithProviders(<DependencyLayers />);
+    const { container } = renderWithProviders(<DependencyLayers />);
     // Check for loading spinner (div with animate-spin class)
-    const loadingContainer = screen.getByText("").closest("div.flex.items-center.justify-center");
-    expect(loadingContainer).toBeInTheDocument();
+    const loadingSpinner = container.querySelector(".animate-spin");
+    expect(loadingSpinner).toBeInTheDocument();
   });
 
   it("displays layer summary data after loading", async () => {
-    vi.mocked(dependencyLayersApi.summary).mockResolvedValue(mockAxiosResponse(mockSummaryData));
+    vi.mocked(dependencyLayersApi.summary).mockResolvedValue(
+      mockAxiosResponse(mockSummaryData),
+    );
 
     renderWithProviders(<DependencyLayers />);
 
@@ -97,17 +99,25 @@ describe("DependencyLayers Page", () => {
   });
 
   it("displays layer descriptions", async () => {
-    vi.mocked(dependencyLayersApi.summary).mockResolvedValue(mockAxiosResponse(mockSummaryData));
+    vi.mocked(dependencyLayersApi.summary).mockResolvedValue(
+      mockAxiosResponse(mockSummaryData),
+    );
 
     renderWithProviders(<DependencyLayers />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Contracts, grants, legal obligations/i)).toBeInTheDocument();
+      // Description appears multiple times (card and table), use getAllByText
+      const descriptions = screen.getAllByText(
+        /Contracts, grants, legal obligations/i,
+      );
+      expect(descriptions.length).toBeGreaterThan(0);
     });
   });
 
   it("displays risk weights for each layer", async () => {
-    vi.mocked(dependencyLayersApi.summary).mockResolvedValue(mockAxiosResponse(mockSummaryData));
+    vi.mocked(dependencyLayersApi.summary).mockResolvedValue(
+      mockAxiosResponse(mockSummaryData),
+    );
 
     renderWithProviders(<DependencyLayers />);
 
@@ -118,17 +128,23 @@ describe("DependencyLayers Page", () => {
   });
 
   it("displays error state on API failure", async () => {
-    vi.mocked(dependencyLayersApi.summary).mockRejectedValue(new Error("API Error"));
+    vi.mocked(dependencyLayersApi.summary).mockRejectedValue(
+      new Error("API Error"),
+    );
 
     renderWithProviders(<DependencyLayers />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Failed to load layer summary/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Failed to load layer summary/i),
+      ).toBeInTheDocument();
     });
   });
 
   it("calculates and displays highest risk layer", async () => {
-    vi.mocked(dependencyLayersApi.summary).mockResolvedValue(mockAxiosResponse(mockSummaryData));
+    vi.mocked(dependencyLayersApi.summary).mockResolvedValue(
+      mockAxiosResponse(mockSummaryData),
+    );
 
     renderWithProviders(<DependencyLayers />);
 
@@ -139,7 +155,9 @@ describe("DependencyLayers Page", () => {
   });
 
   it("displays active layers count", async () => {
-    vi.mocked(dependencyLayersApi.summary).mockResolvedValue(mockAxiosResponse(mockSummaryData));
+    vi.mocked(dependencyLayersApi.summary).mockResolvedValue(
+      mockAxiosResponse(mockSummaryData),
+    );
 
     renderWithProviders(<DependencyLayers />);
 
@@ -152,13 +170,17 @@ describe("DependencyLayers Page", () => {
 
 describe("Layer Colors", () => {
   it("has correct color scheme for each layer", async () => {
-    vi.mocked(dependencyLayersApi.summary).mockResolvedValue(mockAxiosResponse(mockSummaryData));
+    vi.mocked(dependencyLayersApi.summary).mockResolvedValue(
+      mockAxiosResponse(mockSummaryData),
+    );
 
     renderWithProviders(<DependencyLayers />);
 
     await waitFor(() => {
       // Verify layer cards exist (descriptions appear multiple times - use getAllByText)
-      const legalDescriptions = screen.getAllByText(/Contracts, grants, legal obligations/);
+      const legalDescriptions = screen.getAllByText(
+        /Contracts, grants, legal obligations/,
+      );
       expect(legalDescriptions.length).toBeGreaterThan(0);
     });
   });
@@ -166,7 +188,9 @@ describe("Layer Colors", () => {
 
 describe("Layer Risk Weight Table", () => {
   it("displays risk weight explanation table", async () => {
-    vi.mocked(dependencyLayersApi.summary).mockResolvedValue(mockAxiosResponse(mockSummaryData));
+    vi.mocked(dependencyLayersApi.summary).mockResolvedValue(
+      mockAxiosResponse(mockSummaryData),
+    );
 
     renderWithProviders(<DependencyLayers />);
 

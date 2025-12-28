@@ -3,10 +3,11 @@ Security Headers Middleware (Phase 3)
 Implements security headers for XSS, clickjacking, and content type protection.
 """
 
-from typing import Callable
+from collections.abc import Callable
+
+import structlog
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-import structlog
 
 from app.core.config import settings
 
@@ -90,8 +91,10 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
         # Get client info
         forwarded = request.headers.get("X-Forwarded-For")
-        client_ip = forwarded.split(",")[0].strip() if forwarded else (
-            request.client.host if request.client else "unknown"
+        client_ip = (
+            forwarded.split(",")[0].strip()
+            if forwarded
+            else (request.client.host if request.client else "unknown")
         )
 
         # Log request

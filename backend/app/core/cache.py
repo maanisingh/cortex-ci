@@ -3,10 +3,12 @@ Caching Layer (Phase 5.2)
 Redis-based caching with intelligent invalidation.
 """
 
-import json
 import hashlib
-from typing import Any, Optional, Callable, TypeVar
+import json
+from collections.abc import Callable
 from functools import wraps
+from typing import Any, TypeVar
+
 import structlog
 
 from app.core.config import settings
@@ -31,6 +33,7 @@ class CacheManager:
         if self._redis is None:
             try:
                 import redis.asyncio as redis
+
                 self._redis = redis.from_url(
                     settings.REDIS_URL,
                     encoding="utf-8",
@@ -49,7 +52,7 @@ class CacheManager:
         key_str = ":".join(key_parts)
         return f"cache:{hashlib.md5(key_str.encode()).hexdigest()[:16]}:{prefix}"
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """Get value from cache."""
         if not self._enabled:
             return None
@@ -111,10 +114,7 @@ class CacheManager:
                     await redis.delete(key)
                     count += 1
             else:
-                keys_to_delete = [
-                    k for k in self._local_cache
-                    if pattern.replace("*", "") in k
-                ]
+                keys_to_delete = [k for k in self._local_cache if pattern.replace("*", "") in k]
                 for k in keys_to_delete:
                     del self._local_cache[k]
                     count += 1
@@ -174,6 +174,7 @@ class CacheManager:
 # Cache key prefixes
 class CacheKeys:
     """Cache key prefixes for different data types."""
+
     ENTITY = "entity"
     ENTITY_LIST = "entity_list"
     CONSTRAINT = "constraint"
@@ -191,6 +192,7 @@ class CacheKeys:
 # TTL configurations (in seconds)
 class CacheTTL:
     """Cache TTL configurations."""
+
     SHORT = 60  # 1 minute
     MEDIUM = 300  # 5 minutes
     LONG = 900  # 15 minutes
@@ -201,7 +203,7 @@ class CacheTTL:
 def cached(
     prefix: str,
     ttl: int = CacheTTL.MEDIUM,
-    key_args: Optional[list] = None,
+    key_args: list | None = None,
 ):
     """
     Decorator for caching function results.
@@ -211,6 +213,7 @@ def cached(
         async def get_entity(entity_id: str, db: AsyncSession) -> Entity:
             ...
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -241,7 +244,9 @@ def cached(
                 await cache_manager.set(cache_key, cache_value, ttl)
 
             return result
+
         return wrapper
+
     return decorator
 
 
@@ -254,6 +259,7 @@ def invalidate_cache(*patterns: str):
         async def update_entity(entity_id: str, data: dict, db: AsyncSession):
             ...
     """
+
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -261,7 +267,9 @@ def invalidate_cache(*patterns: str):
             for pattern in patterns:
                 await cache_manager.invalidate_pattern(pattern)
             return result
+
         return wrapper
+
     return decorator
 
 

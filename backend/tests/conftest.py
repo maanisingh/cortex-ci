@@ -3,6 +3,7 @@ Pytest configuration and fixtures for CORTEX-CI tests.
 """
 
 import asyncio
+import os
 from typing import AsyncGenerator, Generator
 from uuid import uuid4
 
@@ -11,6 +12,7 @@ import pytest_asyncio
 from fastapi import FastAPI
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.pool import NullPool
 
 from app.core.database import Base, get_db
 from app.models import (
@@ -22,11 +24,20 @@ from app.models import (
     EntityType,
     RelationshipType,
 )
-from app.core.security import get_password_hash
+from app.core.security import hash_password
 
 
-# Use in-memory SQLite for tests
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# Use PostgreSQL for tests (matches models that use PostgreSQL-specific types)
+# Use db hostname when running in Docker, localhost otherwise
+TEST_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql+asyncpg://postgres:postgres@db:5432/cortex_test"
+)
+
+# Connection settings to prevent hanging
+ENGINE_OPTIONS = {
+    "poolclass": NullPool,  # Don't pool connections in tests
+}
 
 
 @pytest.fixture(scope="session")
@@ -39,23 +50,32 @@ def event_loop() -> Generator:
 
 @pytest_asyncio.fixture(scope="function")
 async def test_db() -> AsyncGenerator[AsyncSession, None]:
-    """Create a test database session."""
-    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    async_session = async_sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
+    """Create a test database session with timeouts to prevent hanging."""
+    engine = create_async_engine(
+        TEST_DATABASE_URL,
+        echo=False,
+        **ENGINE_OPTIONS
     )
 
-    async with async_session() as session:
-        yield session
+    try:
+        async with asyncio.timeout(30):  # 30 second timeout for setup
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        async_session = async_sessionmaker(
+            engine, class_=AsyncSession, expire_on_commit=False
+        )
 
-    await engine.dispose()
+        async with async_session() as session:
+            yield session
+
+        async with asyncio.timeout(10):  # 10 second timeout for teardown
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.drop_all)
+    except asyncio.TimeoutError:
+        pytest.skip("Database connection timed out")
+    finally:
+        await engine.dispose()
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -80,7 +100,7 @@ async def test_user(test_db: AsyncSession, test_tenant: Tenant) -> User:
         id=uuid4(),
         tenant_id=test_tenant.id,
         email="test@example.com",
-        hashed_password=get_password_hash("testpassword"),
+        hashed_password=hash_password("testpassword"),
         full_name="Test User",
         role="admin",
         is_active=True,

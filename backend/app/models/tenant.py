@@ -1,8 +1,9 @@
 from uuid import UUID, uuid4
-from typing import Optional
-from sqlalchemy import String, Boolean, Text
+
+from sqlalchemy import Boolean, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
 
 from app.core.database import Base
 from app.models.base import TimestampMixin
@@ -13,14 +14,10 @@ class Tenant(Base, TimestampMixin):
 
     __tablename__ = "tenants"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    slug: Mapped[str] = mapped_column(
-        String(100), unique=True, nullable=False, index=True
-    )
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     # Settings stored as JSONB for flexibility
@@ -40,9 +37,7 @@ class Tenant(Base, TimestampMixin):
 
     # Relationships
     users = relationship("User", back_populates="tenant", cascade="all, delete-orphan")
-    entities = relationship(
-        "Entity", back_populates="tenant", cascade="all, delete-orphan"
-    )
+    entities = relationship("Entity", back_populates="tenant", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Tenant {self.slug}>"

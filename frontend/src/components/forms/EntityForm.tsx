@@ -94,7 +94,7 @@ export default function EntityForm({
       onClose();
     },
     onError: (err: any) => {
-      setError(err.response?.data?.detail || "Failed to save entity");
+      setError(err.response?.data?.detail || "Failed to save risk object");
     },
   });
 
@@ -145,7 +145,7 @@ export default function EntityForm({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEdit ? "Edit Entity" : "Add New Entity"}
+      title={isEdit ? "Edit Risk Object" : "Add New Risk Object"}
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -167,7 +167,7 @@ export default function EntityForm({
               onChange={handleChange}
               required
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              placeholder="Entity name"
+              placeholder="Risk object name"
             />
           </div>
 
@@ -361,8 +361,8 @@ export default function EntityForm({
             {mutation.isPending
               ? "Saving..."
               : isEdit
-                ? "Update Entity"
-                : "Create Entity"}
+                ? "Update Risk Object"
+                : "Create Risk Object"}
           </button>
         </div>
       </form>

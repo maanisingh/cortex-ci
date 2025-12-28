@@ -1,5 +1,8 @@
 import { Component, ErrorInfo, ReactNode } from "react";
-import { ExclamationTriangleIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import {
+  ExclamationTriangleIcon,
+  ArrowPathIcon,
+} from "@heroicons/react/24/outline";
 
 interface Props {
   children: ReactNode;
@@ -82,7 +85,9 @@ export function ErrorDisplay({
         <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
           {title}
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{message}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          {message}
+        </p>
         {onRetry && (
           <button
             onClick={onRetry}

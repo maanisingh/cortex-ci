@@ -33,6 +33,7 @@ import {
   constraintsApi,
   dependenciesApi,
 } from "../services/api";
+import { useLanguage } from "../contexts/LanguageContext";
 
 // Tooltip component for contextual help
 function InfoTooltip({ text }: { text: string }) {
@@ -64,6 +65,8 @@ function classNames(...classes: string[]) {
 }
 
 export default function Dashboard() {
+  const { t } = useLanguage();
+
   // Fetch risk summary
   const { data: riskSummary, isLoading: loadingRisk } = useQuery({
     queryKey: ["risk-summary"],
@@ -111,28 +114,28 @@ export default function Dashboard() {
 
   const stats = [
     {
-      name: "Monitored Entities",
+      name: t("riskObjects"),
       value: entitiesData?.total || 0,
       icon: BuildingOfficeIcon,
       color: "bg-blue-500",
       href: "/entities",
     },
     {
-      name: "Active Constraints",
+      name: t("activeControls"),
       value: constraintsSummary?.total || 0,
       icon: DocumentTextIcon,
       color: "bg-purple-500",
       href: "/constraints",
     },
     {
-      name: "Dependencies",
+      name: t("riskRelationships"),
       value: graphData?.stats?.total_edges || 0,
       icon: LinkIcon,
       color: "bg-green-500",
       href: "/dependencies",
     },
     {
-      name: "Critical Risks",
+      name: t("criticalRisks"),
       value: riskSummary?.critical_count || 0,
       icon: ExclamationTriangleIcon,
       color: "bg-red-500",
@@ -142,7 +145,7 @@ export default function Dashboard() {
 
   // Risk distribution chart data
   const riskDistributionData = {
-    labels: ["Critical", "High", "Medium", "Low"],
+    labels: [t("critical"), t("high"), t("medium"), t("low")],
     datasets: [
       {
         data: [
@@ -170,7 +173,7 @@ export default function Dashboard() {
     labels: trendLabels,
     datasets: [
       {
-        label: "Average Risk Score",
+        label: t("averageRiskScore"),
         data:
           riskTrends?.map((t: { average_score: number }) => t.average_score) ||
           [],
@@ -186,11 +189,11 @@ export default function Dashboard() {
     <div data-tour="dashboard">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-          Executive Dashboard
-          <InfoTooltip text="Your central command center for monitoring compliance status, risk levels, and key metrics across all monitored entities." />
+          {t("grcDashboard")}
+          <InfoTooltip text={t("grcDashboardTooltip")} />
         </h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Constraint intelligence and risk monitoring overview
+          {t("grcDashboardSubtitle")}
         </p>
       </div>
 
@@ -231,8 +234,8 @@ export default function Dashboard() {
       {/* Quick Actions */}
       <div className="mb-8">
         <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3 flex items-center">
-          Quick Actions
-          <InfoTooltip text="Common actions for managing your compliance workflow. Click any button to get started." />
+          {t("quickActions")}
+          <InfoTooltip text={t("quickActionsTooltip")} />
         </h3>
         <div className="flex flex-wrap gap-3">
           <Link
@@ -240,28 +243,35 @@ export default function Dashboard() {
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
           >
             <PlusIcon className="h-4 w-4 mr-2" />
-            Add Entity
+            {t("addRiskObject")}
+          </Link>
+          <Link
+            to="/constraints?action=new"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+          >
+            <PlusIcon className="h-4 w-4 mr-2" />
+            {t("addControl")}
           </Link>
           <Link
             to="/scenarios?action=new"
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
           >
             <BeakerIcon className="h-4 w-4 mr-2" />
-            New Scenario
-          </Link>
-          <Link
-            to="/audit"
-            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-          >
-            <DocumentMagnifyingGlassIcon className="h-4 w-4 mr-2" />
-            View Audit Log
+            {t("newRiskScenario")}
           </Link>
           <Link
             to="/risks"
             className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
           >
             <ArrowPathIcon className="h-4 w-4 mr-2" />
-            Recalculate Risks
+            {t("riskRegister")}
+          </Link>
+          <Link
+            to="/compliance"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+          >
+            <DocumentMagnifyingGlassIcon className="h-4 w-4 mr-2" />
+            {t("complianceStatus")}
           </Link>
         </div>
       </div>
@@ -271,12 +281,12 @@ export default function Dashboard() {
         {/* Risk Distribution */}
         <div className="card">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-            Risk Distribution
-            <InfoTooltip text="Shows how entities are distributed across risk levels. Critical and high-risk entities require immediate attention." />
+            {t("riskDistribution")}
+            <InfoTooltip text={t("riskDistributionTooltip")} />
           </h3>
           <div className="h-64 flex items-center justify-center">
             {loadingRisk ? (
-              <div className="text-gray-500">Loading...</div>
+              <div className="text-gray-500">{t("loading")}</div>
             ) : riskSummary?.total_entities > 0 ? (
               <Pie
                 data={riskDistributionData}
@@ -291,7 +301,7 @@ export default function Dashboard() {
                 }}
               />
             ) : (
-              <div className="text-gray-500">No risk data available</div>
+              <div className="text-gray-500">{t("noRiskData")}</div>
             )}
           </div>
         </div>
@@ -299,8 +309,8 @@ export default function Dashboard() {
         {/* Risk Trend */}
         <div className="card">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-            Risk Trend (30 days)
-            <InfoTooltip text="Track how your overall risk posture has changed over the past month. A downward trend indicates improving compliance." />
+            {t("riskTrend")}
+            <InfoTooltip text={t("riskTrendTooltip")} />
           </h3>
           <div className="h-64">
             {riskTrends?.length > 0 ? (
@@ -324,7 +334,7 @@ export default function Dashboard() {
               />
             ) : (
               <div className="flex items-center justify-center h-full text-gray-500">
-                No trend data available
+                {t("noTrendData")}
               </div>
             )}
           </div>
@@ -336,8 +346,8 @@ export default function Dashboard() {
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-              Recent Escalations
-              <InfoTooltip text="Entities whose risk levels have increased in the past 30 days. These require review to understand what changed." />
+              {t("recentEscalations")}
+              <InfoTooltip text={t("recentEscalationsTooltip")} />
             </h3>
             <span className="flex items-center text-red-600">
               <ArrowTrendingUpIcon className="h-5 w-5 mr-1" />
@@ -345,15 +355,15 @@ export default function Dashboard() {
             </span>
           </div>
           <p className="text-sm text-gray-500">
-            Entities with increased risk level in the last 30 days
+            {t("escalationsDescription")}
           </p>
         </div>
 
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
-              Recent Improvements
-              <InfoTooltip text="Entities whose risk levels have decreased. This indicates successful mitigation efforts or constraint resolution." />
+              {t("recentImprovements")}
+              <InfoTooltip text={t("recentImprovementsTooltip")} />
             </h3>
             <span className="flex items-center text-green-600">
               <ArrowTrendingDownIcon className="h-5 w-5 mr-1" />
@@ -361,18 +371,18 @@ export default function Dashboard() {
             </span>
           </div>
           <p className="text-sm text-gray-500">
-            Entities with decreased risk level in the last 30 days
+            {t("improvementsDescription")}
           </p>
         </div>
       </div>
 
       {/* Constraint & Dependency Overview */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        {/* Constraints by Type */}
+        {/* Controls by Type */}
         <div className="card" data-tour="constraints">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-            Constraints by Type
-            <InfoTooltip text="Breakdown of active constraints affecting your entities. Each constraint type represents a different regulatory or compliance category." />
+            {t("controlsByType")}
+            <InfoTooltip text={t("controlsByTypeTooltip")} />
           </h3>
           <div className="space-y-3">
             {constraintsSummary?.by_type &&
@@ -394,25 +404,24 @@ export default function Dashboard() {
               )}
             {!constraintsSummary?.by_type && (
               <p className="text-sm text-gray-500">
-                No constraints configured yet
+                {t("noControlsConfigured")}
               </p>
             )}
           </div>
           {constraintsSummary?.expiring_soon > 0 && (
             <div className="mt-4 p-3 bg-orange-50 rounded-md">
               <p className="text-sm text-orange-800">
-                <strong>{constraintsSummary.expiring_soon}</strong> constraints
-                expiring within 30 days
+                <strong>{constraintsSummary.expiring_soon}</strong> {t("controlsRequireReview")}
               </p>
             </div>
           )}
         </div>
 
-        {/* Dependencies by Layer */}
+        {/* Risk Relationships by Layer */}
         <div className="card">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-            Dependencies by Layer
-            <InfoTooltip text="Multi-layer dependency mapping shows relationships across legal, financial, operational, and other layers. Critical for understanding cascading risks." />
+            {t("riskRelationshipsByLayer")}
+            <InfoTooltip text={t("riskRelationshipsByLayerTooltip")} />
           </h3>
           <div className="space-y-3">
             {graphData?.stats?.layers &&
@@ -437,7 +446,7 @@ export default function Dashboard() {
                 (v) => v === 0,
               )) && (
               <p className="text-sm text-gray-500">
-                No dependencies mapped yet
+                {t("noDependenciesMapped")}
               </p>
             )}
           </div>

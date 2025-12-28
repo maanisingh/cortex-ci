@@ -5,24 +5,25 @@ Monte Carlo simulations, what-if analysis, cascade modeling.
 
 import asyncio
 import random
-from datetime import datetime
-from typing import List, Dict, Any, Optional
-from uuid import UUID, uuid4
-from enum import Enum
 from dataclasses import dataclass, field
-import structlog
-import numpy as np
+from datetime import datetime
+from enum import Enum
+from typing import Any
+from uuid import UUID, uuid4
 
+import numpy as np
+import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Entity, Constraint, Dependency
+from app.models import Constraint, Dependency, Entity
 
 logger = structlog.get_logger()
 
 
 class SimulationType(str, Enum):
     """Types of simulations available."""
+
     MONTE_CARLO = "monte_carlo"
     WHAT_IF = "what_if"
     CASCADE = "cascade"
@@ -32,6 +33,7 @@ class SimulationType(str, Enum):
 
 class SimulationStatus(str, Enum):
     """Status of simulation runs."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -42,19 +44,20 @@ class SimulationStatus(str, Enum):
 @dataclass
 class SimulationResult:
     """Result of a simulation run."""
+
     simulation_id: str
     simulation_type: SimulationType
     status: SimulationStatus
     started_at: datetime
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
     iterations: int = 0
     total_iterations: int = 0
-    results: Dict[str, Any] = field(default_factory=dict)
-    metrics: Dict[str, float] = field(default_factory=dict)
-    affected_entities: List[Dict[str, Any]] = field(default_factory=list)
-    cascade_paths: List[List[str]] = field(default_factory=list)
-    confidence_interval: Dict[str, float] = field(default_factory=dict)
-    errors: List[str] = field(default_factory=list)
+    results: dict[str, Any] = field(default_factory=dict)
+    metrics: dict[str, float] = field(default_factory=dict)
+    affected_entities: list[dict[str, Any]] = field(default_factory=list)
+    cascade_paths: list[list[str]] = field(default_factory=list)
+    confidence_interval: dict[str, float] = field(default_factory=dict)
+    errors: list[str] = field(default_factory=list)
 
     @property
     def progress(self) -> float:
@@ -62,7 +65,7 @@ class SimulationResult:
             return 0.0
         return (self.iterations / self.total_iterations) * 100
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "simulation_id": self.simulation_id,
             "simulation_type": self.simulation_type.value,
@@ -79,9 +82,7 @@ class SimulationResult:
             "confidence_interval": self.confidence_interval,
             "errors": self.errors,
             "duration_seconds": (
-                (self.completed_at - self.started_at).total_seconds()
-                if self.completed_at
-                else None
+                (self.completed_at - self.started_at).total_seconds() if self.completed_at else None
             ),
         }
 
@@ -89,20 +90,22 @@ class SimulationResult:
 @dataclass
 class MonteCarloConfig:
     """Configuration for Monte Carlo simulation."""
+
     iterations: int = 1000
     confidence_level: float = 0.95
     risk_volatility: float = 0.15
-    seed: Optional[int] = None
+    seed: int | None = None
 
 
 @dataclass
 class WhatIfScenario:
     """What-if scenario configuration."""
+
     name: str
     description: str
-    constraint_changes: List[Dict[str, Any]] = field(default_factory=list)
-    entity_changes: List[Dict[str, Any]] = field(default_factory=list)
-    global_modifiers: Dict[str, float] = field(default_factory=dict)
+    constraint_changes: list[dict[str, Any]] = field(default_factory=list)
+    entity_changes: list[dict[str, Any]] = field(default_factory=list)
+    global_modifiers: dict[str, float] = field(default_factory=dict)
 
 
 class AdvancedSimulationEngine:
@@ -111,15 +114,15 @@ class AdvancedSimulationEngine:
     """
 
     def __init__(self):
-        self._simulations: Dict[str, SimulationResult] = {}
-        self._running_tasks: Dict[str, asyncio.Task] = {}
+        self._simulations: dict[str, SimulationResult] = {}
+        self._running_tasks: dict[str, asyncio.Task] = {}
 
     async def run_monte_carlo(
         self,
         db: AsyncSession,
         tenant_id: UUID,
-        entity_ids: Optional[List[UUID]] = None,
-        config: Optional[MonteCarloConfig] = None,
+        entity_ids: list[UUID] | None = None,
+        config: MonteCarloConfig | None = None,
     ) -> SimulationResult:
         """
         Run Monte Carlo simulation for risk score distribution.
@@ -167,10 +170,8 @@ class AdvancedSimulationEngine:
                 return result
 
             # Run Monte Carlo iterations
-            risk_distributions: Dict[str, List[float]] = {
-                str(e.id): [] for e in entities
-            }
-            portfolio_scores: List[float] = []
+            risk_distributions: dict[str, list[float]] = {str(e.id): [] for e in entities}
+            portfolio_scores: list[float] = []
 
             for i in range(config.iterations):
                 iteration_scores = []
@@ -301,25 +302,27 @@ class AdvancedSimulationEngine:
             dependencies = deps_result.scalars().all()
 
             # Build adjacency graph
-            graph: Dict[str, List[Dict[str, Any]]] = {}
+            graph: dict[str, list[dict[str, Any]]] = {}
             for dep in dependencies:
                 source_id = str(dep.source_entity_id)
                 if source_id not in graph:
                     graph[source_id] = []
-                graph[source_id].append({
-                    "target_id": str(dep.target_entity_id),
-                    "strength": dep.strength or 0.5,
-                    "type": dep.type.value if dep.type else "unknown",
-                })
+                graph[source_id].append(
+                    {
+                        "target_id": str(dep.target_entity_id),
+                        "strength": dep.strength or 0.5,
+                        "type": dep.type.value if dep.type else "unknown",
+                    }
+                )
 
             # BFS to find cascade paths
             visited: set = set()
-            cascade_paths: List[List[str]] = []
-            affected: List[Dict[str, Any]] = []
+            cascade_paths: list[list[str]] = []
+            affected: list[dict[str, Any]] = []
 
             def find_cascades(
                 current_id: str,
-                path: List[str],
+                path: list[str],
                 depth: int,
                 cumulative_impact: float,
             ):
@@ -336,12 +339,14 @@ class AdvancedSimulationEngine:
 
                         if impact > 0.1:  # Only track significant impacts
                             cascade_paths.append(current_path + [target_id])
-                            affected.append({
-                                "entity_id": target_id,
-                                "path_length": depth + 1,
-                                "impact_factor": round(impact, 4),
-                                "dependency_type": edge["type"],
-                            })
+                            affected.append(
+                                {
+                                    "entity_id": target_id,
+                                    "path_length": depth + 1,
+                                    "impact_factor": round(impact, 4),
+                                    "dependency_type": edge["type"],
+                                }
+                            )
 
                         find_cascades(target_id, current_path, depth + 1, impact)
 
@@ -368,17 +373,13 @@ class AdvancedSimulationEngine:
                     "current_risk": trigger_entity.current_risk_score,
                 },
                 "total_affected": len(set(a["entity_id"] for a in affected)),
-                "max_cascade_depth": max(
-                    len(p) - 1 for p in cascade_paths
-                ) if cascade_paths else 0,
+                "max_cascade_depth": max(len(p) - 1 for p in cascade_paths) if cascade_paths else 0,
                 "impact_by_depth": {},
-                "high_impact_entities": [
-                    a for a in affected if a["impact_factor"] > 0.5
-                ],
+                "high_impact_entities": [a for a in affected if a["impact_factor"] > 0.5],
             }
 
             # Group by depth
-            depth_impacts: Dict[int, List[float]] = {}
+            depth_impacts: dict[int, list[float]] = {}
             for a in affected:
                 d = a["path_length"]
                 if d not in depth_impacts:
@@ -459,20 +460,14 @@ class AdvancedSimulationEngine:
                 "total_constraints": len(constraints),
                 "avg_risk_score": (
                     sum(e.current_risk_score or 0 for e in entities) / len(entities)
-                    if entities else 0
+                    if entities
+                    else 0
                 ),
-                "high_risk_count": sum(
-                    1 for e in entities
-                    if (e.current_risk_score or 0) >= 75
-                ),
+                "high_risk_count": sum(1 for e in entities if (e.current_risk_score or 0) >= 75),
                 "medium_risk_count": sum(
-                    1 for e in entities
-                    if 50 <= (e.current_risk_score or 0) < 75
+                    1 for e in entities if 50 <= (e.current_risk_score or 0) < 75
                 ),
-                "low_risk_count": sum(
-                    1 for e in entities
-                    if (e.current_risk_score or 0) < 50
-                ),
+                "low_risk_count": sum(1 for e in entities if (e.current_risk_score or 0) < 50),
             }
 
             # Apply scenario modifications (simulated)
@@ -500,27 +495,18 @@ class AdvancedSimulationEngine:
                 "total_entities": len(entities),
                 "total_constraints": len(constraints),
                 "avg_risk_score": (
-                    sum(modified_scores.values()) / len(modified_scores)
-                    if modified_scores else 0
+                    sum(modified_scores.values()) / len(modified_scores) if modified_scores else 0
                 ),
-                "high_risk_count": sum(
-                    1 for s in modified_scores.values() if s >= 75
-                ),
-                "medium_risk_count": sum(
-                    1 for s in modified_scores.values() if 50 <= s < 75
-                ),
-                "low_risk_count": sum(
-                    1 for s in modified_scores.values() if s < 50
-                ),
+                "high_risk_count": sum(1 for s in modified_scores.values() if s >= 75),
+                "medium_risk_count": sum(1 for s in modified_scores.values() if 50 <= s < 75),
+                "low_risk_count": sum(1 for s in modified_scores.values() if s < 50),
             }
 
             # Calculate deltas
             deltas = {}
             for key in current_state:
                 if isinstance(current_state[key], (int, float)):
-                    deltas[key] = round(
-                        projected_state[key] - current_state[key], 2
-                    )
+                    deltas[key] = round(projected_state[key] - current_state[key], 2)
 
             # Find most impacted entities
             impact_details = []
@@ -529,14 +515,16 @@ class AdvancedSimulationEngine:
                 projected = modified_scores.get(str(entity.id), original)
                 change = projected - original
                 if abs(change) > 1:  # Only significant changes
-                    impact_details.append({
-                        "entity_id": str(entity.id),
-                        "entity_name": entity.name,
-                        "original_score": round(original, 2),
-                        "projected_score": round(projected, 2),
-                        "change": round(change, 2),
-                        "direction": "increase" if change > 0 else "decrease",
-                    })
+                    impact_details.append(
+                        {
+                            "entity_id": str(entity.id),
+                            "entity_name": entity.name,
+                            "original_score": round(original, 2),
+                            "projected_score": round(projected, 2),
+                            "change": round(change, 2),
+                            "direction": "increase" if change > 0 else "decrease",
+                        }
+                    )
 
             # Sort by absolute change
             impact_details.sort(key=lambda x: abs(x["change"]), reverse=True)
@@ -556,10 +544,14 @@ class AdvancedSimulationEngine:
                 "entities_analyzed": len(entities),
                 "entities_impacted": len(impact_details),
                 "risk_change_pct": round(
-                    ((projected_state["avg_risk_score"] - current_state["avg_risk_score"])
-                     / current_state["avg_risk_score"] * 100)
-                    if current_state["avg_risk_score"] > 0 else 0,
-                    2
+                    (
+                        (projected_state["avg_risk_score"] - current_state["avg_risk_score"])
+                        / current_state["avg_risk_score"]
+                        * 100
+                    )
+                    if current_state["avg_risk_score"] > 0
+                    else 0,
+                    2,
                 ),
             }
 
@@ -578,7 +570,7 @@ class AdvancedSimulationEngine:
         self,
         db: AsyncSession,
         tenant_id: UUID,
-        stress_scenarios: Optional[List[str]] = None,
+        stress_scenarios: list[str] | None = None,
     ) -> SimulationResult:
         """
         Run stress test scenarios.
@@ -633,18 +625,20 @@ class AdvancedSimulationEngine:
                     # Apply stress based on entity type
                     multiplier = stress_config.get(
                         entity.type.value if entity.type else "default",
-                        stress_config.get("default", 1.2)
+                        stress_config.get("default", 1.2),
                     )
                     stressed = min(100, base_score * multiplier)
                     stressed_scores.append(stressed)
 
                     if stressed - base_score > 10:
-                        impacted.append({
-                            "entity_name": entity.name,
-                            "original": round(base_score, 1),
-                            "stressed": round(stressed, 1),
-                            "increase": round(stressed - base_score, 1),
-                        })
+                        impacted.append(
+                            {
+                                "entity_name": entity.name,
+                                "original": round(base_score, 1),
+                                "stressed": round(stressed, 1),
+                                "increase": round(stressed - base_score, 1),
+                            }
+                        )
 
                 scenario_results[scenario_name] = {
                     "description": stress_config.get("description", ""),
@@ -652,9 +646,9 @@ class AdvancedSimulationEngine:
                     "max_stressed_score": round(max(stressed_scores), 2),
                     "entities_at_critical": sum(1 for s in stressed_scores if s >= 90),
                     "entities_at_high_risk": sum(1 for s in stressed_scores if s >= 75),
-                    "most_impacted": sorted(
-                        impacted, key=lambda x: x["increase"], reverse=True
-                    )[:5],
+                    "most_impacted": sorted(impacted, key=lambda x: x["increase"], reverse=True)[
+                        :5
+                    ],
                 }
 
                 result.iterations = i + 1
@@ -681,7 +675,7 @@ class AdvancedSimulationEngine:
 
         return result
 
-    def _get_stress_config(self, scenario_name: str) -> Dict[str, Any]:
+    def _get_stress_config(self, scenario_name: str) -> dict[str, Any]:
         """Get stress configuration for a scenario."""
         configs = {
             "regulatory_crackdown": {
@@ -715,34 +709,28 @@ class AdvancedSimulationEngine:
         }
         return configs.get(scenario_name, {"default": 1.2})
 
-    def _calculate_resilience(
-        self, scenario_results: Dict[str, Dict]
-    ) -> Dict[str, Any]:
+    def _calculate_resilience(self, scenario_results: dict[str, dict]) -> dict[str, Any]:
         """Calculate overall resilience score from stress test results."""
-        critical_counts = [
-            r["entities_at_critical"] for r in scenario_results.values()
-        ]
-        high_risk_counts = [
-            r["entities_at_high_risk"] for r in scenario_results.values()
-        ]
+        critical_counts = [r["entities_at_critical"] for r in scenario_results.values()]
+        high_risk_counts = [r["entities_at_high_risk"] for r in scenario_results.values()]
 
         return {
             "score": round(
-                100 - (np.mean(critical_counts) * 10 + np.mean(high_risk_counts) * 2),
-                1
+                100 - (np.mean(critical_counts) * 10 + np.mean(high_risk_counts) * 2), 1
             ),
             "rating": (
-                "Strong" if np.mean(critical_counts) < 1
-                else "Moderate" if np.mean(critical_counts) < 5
+                "Strong"
+                if np.mean(critical_counts) < 1
+                else "Moderate"
+                if np.mean(critical_counts) < 5
                 else "Weak"
             ),
             "worst_scenario": max(
-                scenario_results.keys(),
-                key=lambda k: scenario_results[k]["avg_stressed_score"]
+                scenario_results.keys(), key=lambda k: scenario_results[k]["avg_stressed_score"]
             ),
         }
 
-    def _generate_recommendation(self, deltas: Dict[str, float]) -> str:
+    def _generate_recommendation(self, deltas: dict[str, float]) -> str:
         """Generate recommendation based on deltas."""
         risk_change = deltas.get("avg_risk_score", 0)
 
@@ -751,27 +739,26 @@ class AdvancedSimulationEngine:
         elif risk_change > 5:
             return "WARNING: Moderate risk increase expected. Monitor affected entities closely."
         elif risk_change < -5:
-            return "POSITIVE: This scenario reduces overall risk. Consider implementing these changes."
+            return (
+                "POSITIVE: This scenario reduces overall risk. Consider implementing these changes."
+            )
         else:
             return "NEUTRAL: Minimal impact on overall risk profile."
 
-    def get_simulation(self, simulation_id: str) -> Optional[SimulationResult]:
+    def get_simulation(self, simulation_id: str) -> SimulationResult | None:
         """Get simulation result by ID."""
         return self._simulations.get(simulation_id)
 
     def list_simulations(
         self,
         limit: int = 20,
-        simulation_type: Optional[SimulationType] = None,
-    ) -> List[Dict[str, Any]]:
+        simulation_type: SimulationType | None = None,
+    ) -> list[dict[str, Any]]:
         """List recent simulations."""
         simulations = list(self._simulations.values())
 
         if simulation_type:
-            simulations = [
-                s for s in simulations
-                if s.simulation_type == simulation_type
-            ]
+            simulations = [s for s in simulations if s.simulation_type == simulation_type]
 
         simulations.sort(key=lambda x: x.started_at, reverse=True)
         return [s.to_dict() for s in simulations[:limit]]

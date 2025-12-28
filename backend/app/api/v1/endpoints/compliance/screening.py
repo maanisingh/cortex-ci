@@ -2,23 +2,27 @@
 Screening API Endpoints
 Sanctions, PEP, and adverse media screening via OpenSanctions
 """
-from uuid import UUID, uuid4
-from typing import Optional, List
-from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_
-from pydantic import BaseModel, Field
-import httpx
 
-from app.core.database import get_db
+from datetime import UTC, datetime
+from uuid import UUID, uuid4
+
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.v1.deps import get_current_tenant_id, get_current_user
 from app.core.config import settings
-from app.api.v1.deps import get_current_user, get_current_tenant_id
+from app.core.database import get_db
 from app.models.compliance.screening import (
-    ScreeningResult, ScreeningStatus, ScreeningType,
-    ScreeningMatch, MatchDisposition, WatchlistSource
+    MatchDisposition,
+    ScreeningMatch,
+    ScreeningResult,
+    ScreeningStatus,
+    ScreeningType,
+    WatchlistSource,
 )
-from app.models.compliance.customer import Customer
 
 router = APIRouter()
 
@@ -27,15 +31,15 @@ router = APIRouter()
 # SCHEMAS
 # ============================================================================
 
+
 class ScreeningRequest(BaseModel):
     name: str = Field(..., description="Name to screen")
-    aliases: List[str] = Field(default=[], description="Alternative names")
-    date_of_birth: Optional[str] = Field(None, description="DOB in YYYY-MM-DD format")
-    country: Optional[str] = Field(None, max_length=3, description="ISO country code")
-    id_number: Optional[str] = Field(None, description="ID/passport number")
-    screening_types: List[str] = Field(
-        default=["SANCTIONS", "PEP"],
-        description="Types of screening to perform"
+    aliases: list[str] = Field(default=[], description="Alternative names")
+    date_of_birth: str | None = Field(None, description="DOB in YYYY-MM-DD format")
+    country: str | None = Field(None, max_length=3, description="ISO country code")
+    id_number: str | None = Field(None, description="ID/passport number")
+    screening_types: list[str] = Field(
+        default=["SANCTIONS", "PEP"], description="Types of screening to perform"
     )
 
 
@@ -44,10 +48,10 @@ class MatchResponse(BaseModel):
     source: str
     matched_name: str
     match_score: float
-    matched_type: Optional[str]
-    sanction_programs: List[str]
+    matched_type: str | None
+    sanction_programs: list[str]
     disposition: str
-    matched_data: Optional[dict]
+    matched_data: dict | None
 
     class Config:
         from_attributes = True
@@ -55,14 +59,14 @@ class MatchResponse(BaseModel):
 
 class ScreeningResponse(BaseModel):
     id: UUID
-    customer_id: Optional[UUID]
+    customer_id: UUID | None
     screening_type: str
     status: str
     search_name: str
     total_matches: int
     highest_score: float
     screened_at: datetime
-    matches: List[MatchResponse] = []
+    matches: list[MatchResponse] = []
 
     class Config:
         from_attributes = True
@@ -72,13 +76,14 @@ class ScreeningResponse(BaseModel):
 # ENDPOINTS
 # ============================================================================
 
+
 @router.post("/search", response_model=ScreeningResponse)
 async def perform_screening(
     request: ScreeningRequest,
-    customer_id: Optional[UUID] = Query(None, description="Link to customer"),
+    customer_id: UUID | None = Query(None, description="Link to customer"),
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     """
     Perform real-time screening against OpenSanctions.
@@ -89,7 +94,7 @@ async def perform_screening(
     highest_score = 0.0
 
     # Call OpenSanctions yente API
-    opensanctions_url = getattr(settings, 'OPENSANCTIONS_URL', 'http://opensanctions:8000')
+    opensanctions_url = getattr(settings, "OPENSANCTIONS_URL", "http://opensanctions:8000")
 
     try:
         async with httpx.AsyncClient(timeout=30) as client:
@@ -98,7 +103,7 @@ async def perform_screening(
                 "schema": "Person",
                 "properties": {
                     "name": [request.name] + request.aliases,
-                }
+                },
             }
             if request.country:
                 search_params["properties"]["country"] = [request.country]
@@ -106,8 +111,7 @@ async def perform_screening(
                 search_params["properties"]["birthDate"] = [request.date_of_birth]
 
             response = await client.post(
-                f"{opensanctions_url}/match/default",
-                json={"queries": {"q1": search_params}}
+                f"{opensanctions_url}/match/default", json={"queries": {"q1": search_params}}
             )
 
             if response.status_code == 200:
@@ -122,7 +126,9 @@ async def perform_screening(
                             tenant_id=tenant_id,
                             screening_result_id=screening_id,
                             source=WatchlistSource.OPENSANCTIONS,
-                            source_list=result.get("datasets", ["unknown"])[0] if result.get("datasets") else "unknown",
+                            source_list=result.get("datasets", ["unknown"])[0]
+                            if result.get("datasets")
+                            else "unknown",
                             matched_entity_id=result.get("id", ""),
                             matched_name=result.get("caption", ""),
                             matched_aliases=result.get("properties", {}).get("alias", []),
@@ -130,7 +136,7 @@ async def perform_screening(
                             match_score=score,
                             sanction_programs=result.get("datasets", []),
                             disposition=MatchDisposition.PENDING_REVIEW,
-                            matched_data=result
+                            matched_data=result,
                         )
                         matches.append(match)
                         if score > highest_score:
@@ -160,7 +166,7 @@ async def perform_screening(
         total_matches=len(matches),
         highest_score=highest_score,
         lists_checked=["OPENSANCTIONS", "OFAC_SDN", "EU_CONSOLIDATED", "UN_SANCTIONS"],
-        screened_at=datetime.now(timezone.utc),
+        screened_at=datetime.now(UTC),
     )
 
     db.add(screening_result)
@@ -187,16 +193,17 @@ async def perform_screening(
                 matched_type=m.matched_type,
                 sanction_programs=m.sanction_programs,
                 disposition=m.disposition,
-                matched_data=m.matched_data
-            ) for m in matches
-        ]
+                matched_data=m.matched_data,
+            )
+            for m in matches
+        ],
     )
 
 
-@router.get("/results", response_model=List[ScreeningResponse])
+@router.get("/results", response_model=list[ScreeningResponse])
 async def list_screening_results(
-    customer_id: Optional[UUID] = Query(None),
-    status: Optional[str] = Query(None),
+    customer_id: UUID | None = Query(None),
+    status: str | None = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
@@ -256,9 +263,10 @@ async def get_screening_result(
                 matched_type=m.matched_type,
                 sanction_programs=m.sanction_programs,
                 disposition=m.disposition,
-                matched_data=m.matched_data
-            ) for m in matches
-        ]
+                matched_data=m.matched_data,
+            )
+            for m in matches
+        ],
     )
 
 
@@ -266,10 +274,10 @@ async def get_screening_result(
 async def resolve_match(
     match_id: UUID,
     disposition: str = Query(..., description="TRUE_POSITIVE, FALSE_POSITIVE, or INCONCLUSIVE"),
-    reason: Optional[str] = Query(None, description="Disposition reason"),
+    reason: str | None = Query(None, description="Disposition reason"),
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     """Resolve a screening match."""
     result = await db.execute(
@@ -283,11 +291,13 @@ async def resolve_match(
 
     valid_dispositions = [d.value for d in MatchDisposition]
     if disposition not in valid_dispositions:
-        raise HTTPException(status_code=400, detail=f"Invalid disposition. Must be one of: {valid_dispositions}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid disposition. Must be one of: {valid_dispositions}"
+        )
 
     match.disposition = disposition
     match.disposition_reason = reason
-    match.disposition_at = datetime.now(timezone.utc)
+    match.disposition_at = datetime.now(UTC)
     # match.disposition_by = current_user.id
 
     await db.commit()
@@ -305,7 +315,7 @@ async def get_screening_queue(
         .where(
             and_(
                 ScreeningMatch.tenant_id == tenant_id,
-                ScreeningMatch.disposition == MatchDisposition.PENDING_REVIEW
+                ScreeningMatch.disposition == MatchDisposition.PENDING_REVIEW,
             )
         )
         .order_by(ScreeningMatch.match_score.desc())
@@ -322,7 +332,8 @@ async def get_screening_queue(
                 "matched_name": m.matched_name,
                 "match_score": m.match_score,
                 "source": m.source,
-                "sanction_programs": m.sanction_programs
-            } for m in matches
-        ]
+                "sanction_programs": m.sanction_programs,
+            }
+            for m in matches
+        ],
     }

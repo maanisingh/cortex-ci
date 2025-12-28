@@ -30,8 +30,8 @@ export const useThemeStore = create<ThemeState>()(
           applyTheme(state.isDarkMode);
         }
       },
-    }
-  )
+    },
+  ),
 );
 
 function applyTheme(isDark: boolean) {

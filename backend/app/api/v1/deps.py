@@ -1,15 +1,14 @@
-from typing import Optional, Annotated
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, status, Header, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends, Header, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.security import decode_token, validate_token_type, Role, TokenPayload
-from app.models import User, Tenant
-
+from app.core.security import Role, TokenPayload, decode_token, validate_token_type
+from app.models import Tenant, User
 
 security = HTTPBearer()
 
@@ -17,10 +16,8 @@ security = HTTPBearer()
 async def get_current_tenant(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    x_tenant_id: Optional[str] = Header(None),
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(
-        HTTPBearer(auto_error=False)
-    ),
+    x_tenant_id: str | None = Header(None),
+    credentials: HTTPAuthorizationCredentials | None = Depends(HTTPBearer(auto_error=False)),
 ) -> Tenant:
     """Get current tenant from header, token, or subdomain."""
     tenant_id = x_tenant_id
@@ -53,9 +50,7 @@ async def get_current_tenant(
         tenant_uuid = UUID(tenant_id)
     except ValueError:
         # Maybe it's a slug
-        result = await db.execute(
-            select(Tenant).where(Tenant.slug == tenant_id, Tenant.is_active)
-        )
+        result = await db.execute(select(Tenant).where(Tenant.slug == tenant_id, Tenant.is_active))
         tenant = result.scalar_one_or_none()
         if tenant:
             return tenant
@@ -64,9 +59,7 @@ async def get_current_tenant(
             detail="Invalid tenant ID format",
         )
 
-    result = await db.execute(
-        select(Tenant).where(Tenant.id == tenant_uuid, Tenant.is_active)
-    )
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_uuid, Tenant.is_active))
     tenant = result.scalar_one_or_none()
 
     if not tenant:
@@ -107,9 +100,7 @@ async def get_current_user(
     token: TokenPayload = Depends(get_token_payload),
 ) -> User:
     """Get current authenticated user."""
-    result = await db.execute(
-        select(User).where(User.id == UUID(token.sub), User.is_active)
-    )
+    result = await db.execute(select(User).where(User.id == UUID(token.sub), User.is_active))
     user = result.scalar_one_or_none()
 
     if not user:

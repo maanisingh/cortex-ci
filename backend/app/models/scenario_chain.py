@@ -3,25 +3,27 @@
 from __future__ import annotations
 
 from datetime import datetime
-from uuid import UUID, uuid4
-from typing import TYPE_CHECKING, Optional, List
-from enum import Enum
 from decimal import Decimal
+from enum import Enum
+from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
 
 from sqlalchemy import (
-    String,
-    Text,
+    Boolean,
     ForeignKey,
     Integer,
-    Enum as SQLEnum,
-    Boolean,
     Numeric,
+    String,
+    Text,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import (
+    Enum as SQLEnum,
+)
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.models.base import TimestampMixin, TenantMixin
+from app.models.base import TenantMixin, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.entity import Entity
@@ -43,17 +45,15 @@ class ScenarioChain(Base, TimestampMixin, TenantMixin):
 
     __tablename__ = "scenario_chains"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Basic info
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Trigger
     trigger_event: Mapped[str] = mapped_column(Text, nullable=False)
-    trigger_entity_id: Mapped[Optional[UUID]] = mapped_column(
+    trigger_entity_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("entities.id", ondelete="SET NULL"),
         nullable=True,
@@ -69,16 +69,14 @@ class ScenarioChain(Base, TimestampMixin, TenantMixin):
     )
 
     # Computed risk impact
-    total_risk_increase: Mapped[Decimal] = mapped_column(
-        Numeric(10, 2), default=Decimal("0.00")
-    )
+    total_risk_increase: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0.00"))
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    last_simulated_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    last_simulated_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
     # Relationships
-    effects: Mapped[List["ChainEffect"]] = relationship(
+    effects: Mapped[list[ChainEffect]] = relationship(
         "ChainEffect",
         back_populates="scenario_chain",
         cascade="all, delete-orphan",
@@ -93,9 +91,7 @@ class ChainEffect(Base, TimestampMixin):
 
     __tablename__ = "chain_effects"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Parent chain
     scenario_chain_id: Mapped[UUID] = mapped_column(
@@ -114,39 +110,33 @@ class ChainEffect(Base, TimestampMixin):
 
     # Effect details
     effect_description: Mapped[str] = mapped_column(Text, nullable=False)
-    severity: Mapped[EffectSeverity] = mapped_column(
-        SQLEnum(EffectSeverity), nullable=False
-    )
+    severity: Mapped[EffectSeverity] = mapped_column(SQLEnum(EffectSeverity), nullable=False)
 
     # Cascade positioning
     cascade_depth: Mapped[int] = mapped_column(Integer, default=1)
     time_delay_days: Mapped[int] = mapped_column(Integer, default=0)  # 0 = immediate
 
     # Impact metrics
-    risk_score_delta: Mapped[Decimal] = mapped_column(
-        Numeric(10, 2), default=Decimal("0.00")
-    )
+    risk_score_delta: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0.00"))
     probability: Mapped[Decimal] = mapped_column(
         Numeric(5, 2),
         default=Decimal("1.00"),  # 1.00 = 100%
     )
 
     # Source of this effect (what caused it)
-    caused_by_effect_id: Mapped[Optional[UUID]] = mapped_column(
+    caused_by_effect_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("chain_effects.id", ondelete="SET NULL"),
         nullable=True,
     )
 
     # Additional context
-    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
-    scenario_chain: Mapped["ScenarioChain"] = relationship(
-        "ScenarioChain", back_populates="effects"
-    )
-    entity: Mapped["Entity"] = relationship("Entity")
-    caused_by: Mapped[Optional["ChainEffect"]] = relationship(
+    scenario_chain: Mapped[ScenarioChain] = relationship("ScenarioChain", back_populates="effects")
+    entity: Mapped[Entity] = relationship("Entity")
+    caused_by: Mapped[ChainEffect | None] = relationship(
         "ChainEffect", remote_side=[id], foreign_keys=[caused_by_effect_id]
     )
 

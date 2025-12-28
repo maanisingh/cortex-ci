@@ -1,12 +1,14 @@
-from uuid import UUID, uuid4
-from typing import Optional, List
 from enum import Enum
-from sqlalchemy import String, Text, Enum as SQLEnum
+from uuid import UUID, uuid4
+
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import String, Text
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB, ARRAY
 
 from app.core.database import Base
-from app.models.base import TimestampMixin, TenantMixin
+from app.models.base import TenantMixin, TimestampMixin
 
 
 class EntityType(str, Enum):
@@ -33,36 +35,26 @@ class Entity(Base, TimestampMixin, TenantMixin):
 
     __tablename__ = "entities"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Core identity
-    type: Mapped[EntityType] = mapped_column(
-        SQLEnum(EntityType), nullable=False, index=True
-    )
+    type: Mapped[EntityType] = mapped_column(SQLEnum(EntityType), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(500), nullable=False, index=True)
-    aliases: Mapped[List[str]] = mapped_column(
-        ARRAY(String), default=list, nullable=False
-    )
+    aliases: Mapped[list[str]] = mapped_column(ARRAY(String), default=list, nullable=False)
 
     # Additional identifiers
-    external_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    registration_number: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True
-    )
-    tax_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    external_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    registration_number: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    tax_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Location
-    country_code: Mapped[Optional[str]] = mapped_column(
-        String(3), nullable=True, index=True
-    )
-    address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    country_code: Mapped[str | None] = mapped_column(String(3), nullable=True, index=True)
+    address: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Classification
-    category: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    subcategory: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    tags: Mapped[List[str]] = mapped_column(ARRAY(String), default=list, nullable=False)
+    category: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    subcategory: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    tags: Mapped[list[str]] = mapped_column(ARRAY(String), default=list, nullable=False)
 
     # Criticality (1-5, where 5 is most critical)
     criticality: Mapped[int] = mapped_column(default=3, nullable=False)
@@ -72,13 +64,11 @@ class Entity(Base, TimestampMixin, TenantMixin):
 
     # Status
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
-    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
     tenant = relationship("Tenant", back_populates="entities")
-    risk_scores = relationship(
-        "RiskScore", back_populates="entity", cascade="all, delete-orphan"
-    )
+    risk_scores = relationship("RiskScore", back_populates="entity", cascade="all, delete-orphan")
 
     # Dependencies (as source)
     outgoing_dependencies = relationship(
@@ -99,6 +89,6 @@ class Entity(Base, TimestampMixin, TenantMixin):
         return f"<Entity {self.type.value}:{self.name}>"
 
     @property
-    def all_names(self) -> List[str]:
+    def all_names(self) -> list[str]:
         """Return all names including aliases."""
         return [self.name] + (self.aliases or [])

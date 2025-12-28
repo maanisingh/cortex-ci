@@ -1,132 +1,153 @@
-from app.models.base import TimestampMixin, TenantMixin
-from app.models.tenant import Tenant
-from app.models.user import User
-from app.models.entity import Entity, EntityType
-from app.models.constraint import Constraint, ConstraintType, ConstraintSeverity
-from app.models.dependency import Dependency, DependencyLayer, RelationshipType
-from app.models.risk import RiskScore, RiskLevel
-from app.models.scenario import Scenario, ScenarioStatus, ScenarioType
-from app.models.audit import AuditLog, AuditAction
-
-# Phase 2 models
-from app.models.scenario_chain import ScenarioChain, ChainEffect, EffectSeverity
-from app.models.risk_justification import RiskJustification
-from app.models.historical import (
-    HistoricalSnapshot,
-    DecisionOutcome,
-    ConstraintChange,
-    TransitionReport,
-)
+from app.core.database import Base
 from app.models.ai_analysis import (
     AIAnalysis,
-    AIAnalysisType,
     AIAnalysisStatus,
+    AIAnalysisType,
     AnomalyDetection,
 )
+from app.models.audit import AuditAction, AuditLog
+from app.models.base import TenantMixin, TimestampMixin
 
 # Phase 3: Full Compliance Platform Models
 from app.models.compliance import (
-    # Frameworks
-    Framework,
-    FrameworkType,
+    AlertSeverity,
+    AlertStatus,
+    Assessment,
+    AssessmentResult,
+    AssessmentStatus,
+    AssignmentStatus,
+    # Audits
+    Audit,
+    AuditFinding,
+    AuditStatus,
+    AuditType,
+    BreachNotification,
+    # Cases
+    Case,
+    CaseNote,
+    CasePriority,
+    CaseStatus,
+    CaseTask,
+    CaseType,
+    ContractStatus,
     Control,
     ControlCategory,
     ControlMapping,
-    MappingRelationship,
-    Assessment,
-    AssessmentStatus,
-    AssessmentResult,
+    # Training
+    Course,
+    CourseStatus,
+    CourseType,
     # Customers
     Customer,
-    CustomerType,
-    CustomerStatus,
-    CustomerRiskRating,
     CustomerDocument,
-    DocumentType,
     CustomerReview,
+    CustomerRiskRating,
+    CustomerStatus,
+    CustomerType,
+    DocumentType,
+    # Evidence
+    Evidence,
+    EvidenceLink,
+    EvidenceReview,
+    EvidenceStatus,
+    EvidenceType,
+    ExceptionStatus,
+    FindingSeverity,
+    FindingStatus,
+    # Frameworks
+    Framework,
+    FrameworkType,
+    # Incidents
+    Incident,
+    IncidentCategory,
+    IncidentResponse,
+    IncidentSeverity,
+    IncidentStatus,
+    IncidentTimeline,
+    MappingRelationship,
+    MatchDisposition,
+    MonitoringRule,
+    NotificationStatus,
+    PhishingCampaign,
+    PhishingResult,
+    # Policies
+    Policy,
+    PolicyAcknowledgement,
+    PolicyCategory,
+    PolicyException,
+    PolicyStatus,
+    PolicyVersion,
+    QuestionnaireResponse,
+    RemediationPlan,
+    RemediationStatus,
+    ResponseAction,
     ReviewType,
+    RuleType,
+    SARReport,
+    SARStatus,
+    ScreeningMatch,
     # Screening
     ScreeningResult,
     ScreeningStatus,
     ScreeningType,
-    ScreeningMatch,
-    MatchDisposition,
-    WatchlistEntity,
-    WatchlistSource,
+    TaskStatus,
+    TrainingAssignment,
+    TrainingCompletion,
     # Transactions
     Transaction,
-    TransactionType,
-    TransactionStatus,
     TransactionAlert,
-    AlertSeverity,
-    AlertStatus,
-    MonitoringRule,
-    RuleType,
-    # Policies
-    Policy,
-    PolicyStatus,
-    PolicyCategory,
-    PolicyVersion,
-    PolicyAcknowledgement,
-    PolicyException,
-    ExceptionStatus,
-    # Evidence
-    Evidence,
-    EvidenceType,
-    EvidenceStatus,
-    EvidenceLink,
-    EvidenceReview,
-    # Audits
-    Audit,
-    AuditType,
-    AuditStatus,
-    AuditFinding,
-    FindingSeverity,
-    FindingStatus,
-    RemediationPlan,
-    RemediationStatus,
+    TransactionStatus,
+    TransactionType,
     # Vendors
     Vendor,
-    VendorTier,
-    VendorStatus,
     VendorAssessment,
-    VendorQuestionnaire,
-    QuestionnaireResponse,
     VendorContract,
-    ContractStatus,
-    # Incidents
-    Incident,
-    IncidentSeverity,
-    IncidentStatus,
-    IncidentCategory,
-    IncidentTimeline,
-    IncidentResponse,
-    ResponseAction,
-    BreachNotification,
-    NotificationStatus,
-    # Training
-    Course,
-    CourseType,
-    CourseStatus,
-    TrainingAssignment,
-    AssignmentStatus,
-    TrainingCompletion,
-    PhishingCampaign,
-    PhishingResult,
-    # Cases
-    Case,
-    CaseType,
-    CaseStatus,
-    CasePriority,
-    CaseNote,
-    CaseTask,
-    TaskStatus,
-    SARReport,
-    SARStatus,
+    VendorQuestionnaire,
+    VendorStatus,
+    VendorTier,
+    WatchlistEntity,
+    WatchlistSource,
+    # Russian Compliance
+    RuFrameworkType,
+    ProtectionLevel,
+    ISPDNCategory,
+    ThreatType,
+    KIICategory,
+    RuDocumentStatus,
+    RuDocumentType,
+    ResponsibleRole,
+    RuTaskPriority,
+    RuTaskStatus,
+    RuCompanyProfile,
+    RuResponsiblePerson,
+    RuISPDN,
+    RuComplianceDocument,
+    RuDocumentTemplate,
+    RuComplianceTask,
+    RuRequirement,
+    RuEmailTemplate,
 )
+from app.models.constraint import Constraint, ConstraintSeverity, ConstraintType
+from app.models.dependency import Dependency, DependencyLayer, RelationshipType
+from app.models.entity import Entity, EntityType
+from app.models.historical import (
+    ConstraintChange,
+    DecisionOutcome,
+    HistoricalSnapshot,
+    TransitionReport,
+)
+from app.models.risk import RiskLevel, RiskScore
+from app.models.risk_justification import RiskJustification
+from app.models.scenario import Scenario, ScenarioStatus, ScenarioType
+
+# Phase 2 models
+from app.models.scenario_chain import ChainEffect, EffectSeverity, ScenarioChain
+from app.models.tenant import Tenant
+from app.models.user import User
 
 __all__ = [
     # Base
+    "Base",
     "TimestampMixin",
     "TenantMixin",
     # Core models
@@ -260,4 +281,23 @@ __all__ = [
     "TaskStatus",
     "SARReport",
     "SARStatus",
+    # Phase 4: Russian Compliance
+    "RuFrameworkType",
+    "ProtectionLevel",
+    "ISPDNCategory",
+    "ThreatType",
+    "KIICategory",
+    "RuDocumentStatus",
+    "RuDocumentType",
+    "ResponsibleRole",
+    "RuTaskPriority",
+    "RuTaskStatus",
+    "RuCompanyProfile",
+    "RuResponsiblePerson",
+    "RuISPDN",
+    "RuComplianceDocument",
+    "RuDocumentTemplate",
+    "RuComplianceTask",
+    "RuRequirement",
+    "RuEmailTemplate",
 ]

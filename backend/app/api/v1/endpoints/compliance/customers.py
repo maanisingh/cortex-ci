@@ -2,19 +2,21 @@
 Customer/KYC API Endpoints
 AML/KYC customer management, onboarding, and risk assessment
 """
-from uuid import UUID, uuid4
-from typing import Optional, List
-from datetime import date, datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, Query, status, BackgroundTasks
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
-from pydantic import BaseModel, Field, EmailStr
 
+from datetime import UTC, date, datetime
+from uuid import UUID, uuid4
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+from pydantic import BaseModel, EmailStr, Field
+from sqlalchemy import and_, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.v1.deps import get_current_tenant_id, get_current_user
 from app.core.database import get_db
-from app.api.v1.deps import get_current_user, get_current_tenant_id
 from app.models.compliance.customer import (
-    Customer, CustomerType, CustomerStatus, CustomerRiskRating,
-    CustomerDocument, DocumentType, CustomerReview, ReviewType
+    Customer,
+    CustomerRiskRating,
+    CustomerStatus,
 )
 
 router = APIRouter()
@@ -24,87 +26,89 @@ router = APIRouter()
 # SCHEMAS
 # ============================================================================
 
+
 class CustomerCreate(BaseModel):
     customer_type: str = Field(..., description="INDIVIDUAL or CORPORATION, etc.")
-    external_id: Optional[str] = None
+    external_id: str | None = None
     # Individual fields
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    date_of_birth: Optional[date] = None
-    nationality: Optional[str] = Field(None, max_length=3)
+    first_name: str | None = None
+    last_name: str | None = None
+    date_of_birth: date | None = None
+    nationality: str | None = Field(None, max_length=3)
     # Organization fields
-    legal_name: Optional[str] = None
-    registration_number: Optional[str] = None
-    incorporation_country: Optional[str] = Field(None, max_length=3)
+    legal_name: str | None = None
+    registration_number: str | None = None
+    incorporation_country: str | None = Field(None, max_length=3)
     # Contact
-    email: Optional[EmailStr] = None
-    phone: Optional[str] = None
-    country: Optional[str] = Field(None, max_length=3)
+    email: EmailStr | None = None
+    phone: str | None = None
+    country: str | None = Field(None, max_length=3)
     # Risk
-    source_of_funds: Optional[str] = None
-    expected_activity: Optional[str] = None
+    source_of_funds: str | None = None
+    expected_activity: str | None = None
 
 
 class CustomerResponse(BaseModel):
     id: UUID
     customer_type: str
-    external_id: Optional[str]
+    external_id: str | None
     status: str
     risk_rating: str
     risk_score: float
-    first_name: Optional[str]
-    last_name: Optional[str]
-    legal_name: Optional[str]
-    email: Optional[str]
-    country: Optional[str]
+    first_name: str | None
+    last_name: str | None
+    legal_name: str | None
+    email: str | None
+    country: str | None
     is_pep: bool
     is_sanctioned: bool
     has_adverse_media: bool
     created_at: datetime
-    last_review_date: Optional[date]
-    next_review_date: Optional[date]
+    last_review_date: date | None
+    next_review_date: date | None
 
     class Config:
         from_attributes = True
 
 
 class CustomerDetailResponse(CustomerResponse):
-    date_of_birth: Optional[date]
-    nationality: Optional[str]
-    registration_number: Optional[str]
-    incorporation_country: Optional[str]
-    phone: Optional[str]
-    address_line1: Optional[str]
-    city: Optional[str]
-    source_of_funds: Optional[str]
-    source_of_wealth: Optional[str]
-    expected_activity: Optional[str]
-    beneficial_owners: Optional[dict]
-    pep_type: Optional[str]
-    pep_details: Optional[str]
-    sanction_details: Optional[str]
+    date_of_birth: date | None
+    nationality: str | None
+    registration_number: str | None
+    incorporation_country: str | None
+    phone: str | None
+    address_line1: str | None
+    city: str | None
+    source_of_funds: str | None
+    source_of_wealth: str | None
+    expected_activity: str | None
+    beneficial_owners: dict | None
+    pep_type: str | None
+    pep_details: str | None
+    sanction_details: str | None
 
 
 class RiskAssessmentResponse(BaseModel):
     customer_id: UUID
     current_rating: str
     risk_score: float
-    risk_factors: List[str]
-    recommendations: List[str]
+    risk_factors: list[str]
+    recommendations: list[str]
 
 
 # ============================================================================
 # ENDPOINTS
 # ============================================================================
 
-@router.get("/", response_model=List[CustomerResponse])
+
+@router.get("/", response_model=list[CustomerResponse])
 async def list_customers(
-    status: Optional[str] = Query(None, description="Filter by status"),
-    risk_rating: Optional[str] = Query(None, description="Filter by risk rating"),
-    customer_type: Optional[str] = Query(None, description="Filter by type"),
-    search: Optional[str] = Query(None, description="Search name/email"),
-    is_pep: Optional[bool] = Query(None, description="Filter PEPs"),
-    is_sanctioned: Optional[bool] = Query(None, description="Filter sanctioned"),
+    status: str | None = Query(None, description="Filter by status"),
+    risk_rating: str | None = Query(None, description="Filter by risk rating"),
+    customer_type: str | None = Query(None, description="Filter by type"),
+    search: str | None = Query(None, description="Search name/email"),
+    is_pep: bool | None = Query(None, description="Filter PEPs"),
+    is_sanctioned: bool | None = Query(None, description="Filter sanctioned"),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
@@ -129,13 +133,11 @@ async def list_customers(
                 Customer.first_name.ilike(f"%{search}%"),
                 Customer.last_name.ilike(f"%{search}%"),
                 Customer.legal_name.ilike(f"%{search}%"),
-                Customer.email.ilike(f"%{search}%")
+                Customer.email.ilike(f"%{search}%"),
             )
         )
 
-    result = await db.execute(
-        query.order_by(Customer.created_at.desc()).offset(skip).limit(limit)
-    )
+    result = await db.execute(query.order_by(Customer.created_at.desc()).offset(skip).limit(limit))
     return result.scalars().all()
 
 
@@ -145,7 +147,7 @@ async def create_customer(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     """Create a new customer and initiate KYC process."""
     # Calculate initial risk score based on factors
@@ -170,7 +172,11 @@ async def create_customer(
         risk_rating = CustomerRiskRating.LOW
 
     # Set review frequency based on risk
-    review_freq = 12 if risk_rating == CustomerRiskRating.LOW else (6 if risk_rating == CustomerRiskRating.MEDIUM else 3)
+    review_freq = (
+        12
+        if risk_rating == CustomerRiskRating.LOW
+        else (6 if risk_rating == CustomerRiskRating.MEDIUM else 3)
+    )
 
     db_customer = Customer(
         id=uuid4(),
@@ -216,9 +222,7 @@ async def get_customer(
 ):
     """Get customer details."""
     result = await db.execute(
-        select(Customer).where(
-            and_(Customer.id == customer_id, Customer.tenant_id == tenant_id)
-        )
+        select(Customer).where(and_(Customer.id == customer_id, Customer.tenant_id == tenant_id))
     )
     customer = result.scalar_one_or_none()
     if not customer:
@@ -230,16 +234,14 @@ async def get_customer(
 async def update_customer_status(
     customer_id: UUID,
     new_status: str = Query(..., description="New status"),
-    reason: Optional[str] = Query(None, description="Reason for change"),
+    reason: str | None = Query(None, description="Reason for change"),
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     """Update customer status."""
     result = await db.execute(
-        select(Customer).where(
-            and_(Customer.id == customer_id, Customer.tenant_id == tenant_id)
-        )
+        select(Customer).where(and_(Customer.id == customer_id, Customer.tenant_id == tenant_id))
     )
     customer = result.scalar_one_or_none()
     if not customer:
@@ -247,20 +249,22 @@ async def update_customer_status(
 
     valid_statuses = [s.value for s in CustomerStatus]
     if new_status not in valid_statuses:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}"
+        )
 
     old_status = customer.status
     customer.status = new_status
 
     if new_status == CustomerStatus.ACTIVE and not customer.onboarded_at:
-        customer.onboarded_at = datetime.now(timezone.utc)
+        customer.onboarded_at = datetime.now(UTC)
 
     await db.commit()
     return {
         "message": "Status updated",
         "customer_id": str(customer_id),
         "old_status": old_status,
-        "new_status": new_status
+        "new_status": new_status,
     }
 
 
@@ -272,9 +276,7 @@ async def assess_customer_risk(
 ):
     """Perform risk assessment on customer."""
     result = await db.execute(
-        select(Customer).where(
-            and_(Customer.id == customer_id, Customer.tenant_id == tenant_id)
-        )
+        select(Customer).where(and_(Customer.id == customer_id, Customer.tenant_id == tenant_id))
     )
     customer = result.scalar_one_or_none()
     if not customer:
@@ -307,7 +309,7 @@ async def assess_customer_risk(
         current_rating=customer.risk_rating,
         risk_score=customer.risk_score,
         risk_factors=risk_factors,
-        recommendations=recommendations if recommendations else ["Continue standard monitoring"]
+        recommendations=recommendations if recommendations else ["Continue standard monitoring"],
     )
 
 
@@ -317,13 +319,11 @@ async def screen_customer(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
-    current_user = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     """Trigger screening against sanctions/PEP lists."""
     result = await db.execute(
-        select(Customer).where(
-            and_(Customer.id == customer_id, Customer.tenant_id == tenant_id)
-        )
+        select(Customer).where(and_(Customer.id == customer_id, Customer.tenant_id == tenant_id))
     )
     customer = result.scalar_one_or_none()
     if not customer:
@@ -332,11 +332,7 @@ async def screen_customer(
     # Background task would call OpenSanctions yente API
     # background_tasks.add_task(perform_screening, customer_id, tenant_id)
 
-    return {
-        "message": "Screening initiated",
-        "customer_id": str(customer_id),
-        "status": "PENDING"
-    }
+    return {"message": "Screening initiated", "customer_id": str(customer_id), "status": "PENDING"}
 
 
 @router.get("/stats/overview")
@@ -346,9 +342,7 @@ async def get_customer_stats(
 ):
     """Get customer statistics overview."""
     # Total customers
-    total = await db.execute(
-        select(func.count(Customer.id)).where(Customer.tenant_id == tenant_id)
-    )
+    total = await db.execute(select(func.count(Customer.id)).where(Customer.tenant_id == tenant_id))
     total_count = total.scalar()
 
     # By status
@@ -367,12 +361,14 @@ async def get_customer_stats(
 
     # PEPs and sanctioned
     pep_count = await db.execute(
-        select(func.count(Customer.id))
-        .where(and_(Customer.tenant_id == tenant_id, Customer.is_pep == True))
+        select(func.count(Customer.id)).where(
+            and_(Customer.tenant_id == tenant_id, Customer.is_pep == True)
+        )
     )
     sanctioned_count = await db.execute(
-        select(func.count(Customer.id))
-        .where(and_(Customer.tenant_id == tenant_id, Customer.is_sanctioned == True))
+        select(func.count(Customer.id)).where(
+            and_(Customer.tenant_id == tenant_id, Customer.is_sanctioned == True)
+        )
     )
 
     return {
@@ -380,5 +376,5 @@ async def get_customer_stats(
         "by_status": {row[0]: row[1] for row in status_counts.fetchall()},
         "by_risk_rating": {row[0]: row[1] for row in risk_counts.fetchall()},
         "pep_count": pep_count.scalar(),
-        "sanctioned_count": sanctioned_count.scalar()
+        "sanctioned_count": sanctioned_count.scalar(),
     }

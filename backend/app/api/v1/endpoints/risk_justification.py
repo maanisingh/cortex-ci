@@ -1,23 +1,22 @@
 """Phase 2.3: Risk Justification Engine - Legal defensibility API."""
 
-from typing import Optional, List, Dict, Any
-from uuid import UUID
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
+from typing import Any
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
+from app.api.v1.deps import DB, CurrentTenant, CurrentUser, RequireWriter
 from app.models import (
-    RiskJustification,
-    Entity,
-    RiskScore,
-    AuditLog,
     AuditAction,
+    AuditLog,
+    Entity,
+    RiskJustification,
+    RiskScore,
 )
-from app.api.v1.deps import DB, CurrentUser, CurrentTenant, RequireWriter
-
 
 router = APIRouter()
 
@@ -33,17 +32,17 @@ class RiskFactorContribution(BaseModel):
 class RiskJustificationResponse(BaseModel):
     id: UUID
     entity_id: UUID
-    entity_name: Optional[str] = None
+    entity_name: str | None = None
     risk_score: float
     risk_level: str
-    primary_factors: List[Dict[str, Any]]
-    assumptions: List[str]
+    primary_factors: list[dict[str, Any]]
+    assumptions: list[str]
     confidence: float
-    uncertainty_factors: List[str]
-    source_citations: List[Dict[str, Any]]
+    uncertainty_factors: list[str]
+    source_citations: list[dict[str, Any]]
     analyst_can_override: bool
     was_overridden: bool
-    override_reason: Optional[str] = None
+    override_reason: str | None = None
     created_at: datetime
     version: int
 
@@ -60,8 +59,8 @@ class LegalExportResponse(BaseModel):
     entity_id: str
     risk_score: float
     level: str
-    justification: Dict[str, Any]
-    override: Optional[Dict[str, Any]] = None
+    justification: dict[str, Any]
+    override: dict[str, Any] | None = None
     export_timestamp: str
     export_format: str = "legal_defense"
 
@@ -72,7 +71,7 @@ async def get_risk_justification(
     db: DB,
     current_user: CurrentUser,
     tenant: CurrentTenant,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get detailed risk justification for an entity.
 
@@ -197,7 +196,7 @@ async def override_risk_score(
     db: DB,
     current_user: RequireWriter,
     tenant: CurrentTenant,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Override a risk score with analyst justification.
 
@@ -249,8 +248,7 @@ async def override_risk_score(
         + [
             {
                 "factor": "analyst_override",
-                "contribution": override_data.new_score
-                - float(current_just.risk_score),
+                "contribution": override_data.new_score - float(current_just.risk_score),
                 "source": "Analyst Override",
                 "evidence": override_data.reason,
             }
@@ -317,7 +315,7 @@ async def get_justification_history(
     db: DB,
     current_user: CurrentUser,
     tenant: CurrentTenant,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Get history of all justification versions for an entity."""
     result = await db.execute(
         select(RiskJustification)
@@ -346,7 +344,7 @@ async def get_justification_history(
 async def _generate_justification(
     db: DB,
     entity: Entity,
-    risk_score: Optional[RiskScore],
+    risk_score: RiskScore | None,
     tenant_id: UUID,
 ) -> RiskJustification:
     """Generate a justification for an entity's risk score."""
@@ -445,9 +443,7 @@ async def _generate_justification(
         sources.append(
             {
                 "source": entity.source,
-                "date": entity.created_at.strftime("%Y-%m-%d")
-                if entity.created_at
-                else None,
+                "date": entity.created_at.strftime("%Y-%m-%d") if entity.created_at else None,
                 "record_id": entity.external_id or str(entity.id),
             }
         )
@@ -474,7 +470,7 @@ async def _generate_justification(
 
 def _format_justification_response(
     justification: RiskJustification, entity: Entity
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Format justification for API response."""
     return {
         "entity_id": str(justification.entity_id),
@@ -489,9 +485,7 @@ def _format_justification_response(
         "analyst_can_override": justification.analyst_can_override,
         "was_overridden": justification.overridden_by is not None,
         "override_reason": justification.override_reason,
-        "created_at": justification.created_at.isoformat()
-        if justification.created_at
-        else None,
+        "created_at": justification.created_at.isoformat() if justification.created_at else None,
         "version": justification.version,
     }
 

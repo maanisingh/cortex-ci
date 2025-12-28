@@ -1,21 +1,19 @@
-from typing import Optional
+from datetime import UTC, datetime
 from uuid import UUID
-from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, status, Query, BackgroundTasks
-from sqlalchemy import select, func
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
+from sqlalchemy import func, select
 
-from app.models import Scenario, ScenarioStatus, ScenarioType, AuditLog, AuditAction
+from app.api.v1.deps import DB, CurrentTenant, CurrentUser, RequireWriter
+from app.models import AuditAction, AuditLog, Scenario, ScenarioStatus, ScenarioType
 from app.schemas.scenario import (
+    ScenarioArchiveRequest,
     ScenarioCreate,
-    ScenarioUpdate,
+    ScenarioListResponse,
     ScenarioResponse,
     ScenarioResult,
-    ScenarioListResponse,
-    ScenarioArchiveRequest,
+    ScenarioUpdate,
 )
-from app.api.v1.deps import DB, CurrentUser, CurrentTenant, RequireWriter
-
 
 router = APIRouter()
 
@@ -27,8 +25,8 @@ async def list_scenarios(
     tenant: CurrentTenant,
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
-    status: Optional[ScenarioStatus] = None,
-    type: Optional[ScenarioType] = None,
+    status: ScenarioStatus | None = None,
+    type: ScenarioType | None = None,
     include_archived: bool = False,
 ):
     """List scenarios with pagination and filtering."""
@@ -253,7 +251,7 @@ async def run_scenario(
 
     # Update status to running
     scenario.status = ScenarioStatus.RUNNING
-    scenario.started_at = datetime.now(timezone.utc)
+    scenario.started_at = datetime.now(UTC)
 
     # Audit log
     audit = AuditLog(
@@ -310,7 +308,7 @@ async def archive_scenario(
         )
 
     scenario.status = ScenarioStatus.ARCHIVED
-    scenario.archived_at = datetime.now(timezone.utc)
+    scenario.archived_at = datetime.now(UTC)
     scenario.outcome_notes = archive_data.outcome_notes
     scenario.lessons_learned = archive_data.lessons_learned
 

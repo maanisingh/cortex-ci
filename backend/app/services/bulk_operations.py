@@ -6,24 +6,25 @@ Handles batch import, update, and delete operations with progress tracking.
 import csv
 import io
 import json
-from datetime import datetime
-from typing import List, Dict, Any, Optional
-from uuid import UUID, uuid4
-from enum import Enum
 from dataclasses import dataclass, field
-import structlog
+from datetime import datetime
+from enum import Enum
+from typing import Any
+from uuid import UUID, uuid4
 
-from sqlalchemy import select, update, delete
+import structlog
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Entity, EntityType, AuditLog, AuditAction
-from app.core.websocket import ws_manager, Alert, AlertType, AlertPriority
+from app.core.websocket import Alert, AlertPriority, AlertType, ws_manager
+from app.models import AuditAction, AuditLog, Entity, EntityType
 
 logger = structlog.get_logger()
 
 
 class BulkOperationType(str, Enum):
     """Types of bulk operations."""
+
     IMPORT = "import"
     UPDATE = "update"
     DELETE = "delete"
@@ -32,6 +33,7 @@ class BulkOperationType(str, Enum):
 
 class BulkOperationStatus(str, Enum):
     """Status of bulk operations."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -42,6 +44,7 @@ class BulkOperationStatus(str, Enum):
 @dataclass
 class BulkOperationProgress:
     """Progress tracking for bulk operations."""
+
     operation_id: str
     operation_type: BulkOperationType
     status: BulkOperationStatus
@@ -49,10 +52,10 @@ class BulkOperationProgress:
     processed_items: int = 0
     successful_items: int = 0
     failed_items: int = 0
-    errors: List[Dict[str, Any]] = field(default_factory=list)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    result_file: Optional[str] = None
+    errors: list[dict[str, Any]] = field(default_factory=list)
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    result_file: str | None = None
 
     @property
     def progress_percentage(self) -> float:
@@ -60,7 +63,7 @@ class BulkOperationProgress:
             return 0
         return (self.processed_items / self.total_items) * 100
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "operation_id": self.operation_id,
             "operation_type": self.operation_type.value,
@@ -88,7 +91,7 @@ class BulkOperationsService:
     """
 
     def __init__(self):
-        self._operations: Dict[str, BulkOperationProgress] = {}
+        self._operations: dict[str, BulkOperationProgress] = {}
         self._batch_size = 100
 
     async def import_entities(
@@ -96,7 +99,7 @@ class BulkOperationsService:
         db: AsyncSession,
         tenant_id: UUID,
         user_id: UUID,
-        data: List[Dict[str, Any]],
+        data: list[dict[str, Any]],
         skip_duplicates: bool = True,
         update_existing: bool = False,
     ) -> BulkOperationProgress:
@@ -159,7 +162,9 @@ class BulkOperationsService:
                         entity = Entity(
                             tenant_id=tenant_id,
                             name=item["name"],
-                            type=EntityType(item["type"]) if isinstance(item["type"], str) else item["type"],
+                            type=EntityType(item["type"])
+                            if isinstance(item["type"], str)
+                            else item["type"],
                             country=item.get("country"),
                             description=item.get("description"),
                             aliases=item.get("aliases", []),
@@ -180,11 +185,13 @@ class BulkOperationsService:
                 except Exception as e:
                     progress.failed_items += 1
                     progress.processed_items += 1
-                    progress.errors.append({
-                        "row": i + 1,
-                        "item": item.get("name", "Unknown"),
-                        "error": str(e),
-                    })
+                    progress.errors.append(
+                        {
+                            "row": i + 1,
+                            "item": item.get("name", "Unknown"),
+                            "error": str(e),
+                        }
+                    )
 
             # Final commit
             await db.commit()
@@ -220,8 +227,8 @@ class BulkOperationsService:
         db: AsyncSession,
         tenant_id: UUID,
         user_id: UUID,
-        entity_ids: List[UUID],
-        updates: Dict[str, Any],
+        entity_ids: list[UUID],
+        updates: dict[str, Any],
     ) -> BulkOperationProgress:
         """
         Bulk update multiple entities with the same changes.
@@ -273,10 +280,12 @@ class BulkOperationsService:
                 except Exception as e:
                     progress.failed_items += 1
                     progress.processed_items += 1
-                    progress.errors.append({
-                        "entity_id": str(entity_id),
-                        "error": str(e),
-                    })
+                    progress.errors.append(
+                        {
+                            "entity_id": str(entity_id),
+                            "error": str(e),
+                        }
+                    )
 
                 # Commit in batches
                 if progress.processed_items % self._batch_size == 0:
@@ -314,7 +323,7 @@ class BulkOperationsService:
         db: AsyncSession,
         tenant_id: UUID,
         user_id: UUID,
-        entity_ids: List[UUID],
+        entity_ids: list[UUID],
         soft_delete: bool = True,
     ) -> BulkOperationProgress:
         """
@@ -389,7 +398,7 @@ class BulkOperationsService:
 
         return progress
 
-    async def parse_csv(self, csv_content: str) -> List[Dict[str, Any]]:
+    async def parse_csv(self, csv_content: str) -> list[dict[str, Any]]:
         """
         Parse CSV content into a list of dictionaries.
 
@@ -402,7 +411,7 @@ class BulkOperationsService:
         reader = csv.DictReader(io.StringIO(csv_content))
         return list(reader)
 
-    async def parse_json(self, json_content: str) -> List[Dict[str, Any]]:
+    async def parse_json(self, json_content: str) -> list[dict[str, Any]]:
         """
         Parse JSON content into a list of dictionaries.
 
@@ -420,15 +429,15 @@ class BulkOperationsService:
         else:
             raise ValueError("Invalid JSON format. Expected array or {items: [...]}}")
 
-    def get_operation_status(self, operation_id: str) -> Optional[BulkOperationProgress]:
+    def get_operation_status(self, operation_id: str) -> BulkOperationProgress | None:
         """Get the status of a bulk operation."""
         return self._operations.get(operation_id)
 
     def list_operations(
         self,
-        tenant_id: Optional[UUID] = None,
+        tenant_id: UUID | None = None,
         limit: int = 10,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """List recent bulk operations."""
         operations = list(self._operations.values())
         operations.sort(key=lambda x: x.started_at or datetime.min, reverse=True)
@@ -447,7 +456,11 @@ class BulkOperationsService:
     async def _broadcast_completion(self, tenant_id: UUID, progress: BulkOperationProgress):
         """Broadcast operation completion alert."""
         status_text = "completed" if progress.status == BulkOperationStatus.COMPLETED else "failed"
-        priority = AlertPriority.MEDIUM if progress.status == BulkOperationStatus.COMPLETED else AlertPriority.HIGH
+        priority = (
+            AlertPriority.MEDIUM
+            if progress.status == BulkOperationStatus.COMPLETED
+            else AlertPriority.HIGH
+        )
 
         alert = Alert(
             type=AlertType.BATCH_COMPLETE,

@@ -4,13 +4,13 @@ Implements real-time communication for alerts and notifications.
 """
 
 import asyncio
-from typing import Dict, Set, Optional, Any, List
-from datetime import datetime
-from uuid import UUID
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
-import structlog
+from typing import Any
+from uuid import UUID
 
+import structlog
 from fastapi import WebSocket
 from starlette.websockets import WebSocketState
 
@@ -19,6 +19,7 @@ logger = structlog.get_logger()
 
 class AlertType(str, Enum):
     """Types of real-time alerts."""
+
     RISK_CHANGE = "risk_change"
     CONSTRAINT_UPDATE = "constraint_update"
     ENTITY_MATCH = "entity_match"
@@ -31,6 +32,7 @@ class AlertType(str, Enum):
 
 class AlertPriority(str, Enum):
     """Alert priority levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -40,27 +42,29 @@ class AlertPriority(str, Enum):
 @dataclass
 class WebSocketConnection:
     """Represents a WebSocket connection."""
+
     websocket: WebSocket
     user_id: UUID
     tenant_id: UUID
-    subscriptions: Set[str] = field(default_factory=set)
+    subscriptions: set[str] = field(default_factory=set)
     connected_at: datetime = field(default_factory=datetime.utcnow)
 
 
 @dataclass
 class Alert:
     """Real-time alert message."""
+
     type: AlertType
     priority: AlertPriority
     title: str
     message: str
-    data: Optional[Dict[str, Any]] = None
-    tenant_id: Optional[UUID] = None
-    user_id: Optional[UUID] = None
-    entity_id: Optional[UUID] = None
+    data: dict[str, Any] | None = None
+    tenant_id: UUID | None = None
+    user_id: UUID | None = None
+    entity_id: UUID | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "type": self.type.value,
             "priority": self.priority.value,
@@ -80,14 +84,14 @@ class WebSocketManager:
 
     def __init__(self):
         # Active connections by user ID
-        self._connections: Dict[str, WebSocketConnection] = {}
+        self._connections: dict[str, WebSocketConnection] = {}
         # Tenant -> user IDs mapping
-        self._tenant_users: Dict[str, Set[str]] = {}
+        self._tenant_users: dict[str, set[str]] = {}
         # Alert history (for reconnection)
-        self._alert_history: List[Alert] = []
+        self._alert_history: list[Alert] = []
         self._max_history = 100
         # Background tasks
-        self._heartbeat_task: Optional[asyncio.Task] = None
+        self._heartbeat_task: asyncio.Task | None = None
 
     async def connect(
         self,
@@ -131,11 +135,14 @@ class WebSocketManager:
         )
 
         # Send connection confirmation
-        await self._send_to_connection(connection_id, {
-            "type": "connected",
-            "message": "WebSocket connection established",
-            "connection_id": connection_id,
-        })
+        await self._send_to_connection(
+            connection_id,
+            {
+                "type": "connected",
+                "message": "WebSocket connection established",
+                "connection_id": connection_id,
+            },
+        )
 
         # Send recent alerts
         await self._send_recent_alerts(connection_id, tenant_id)
@@ -177,10 +184,13 @@ class WebSocketManager:
         """
         if connection_id in self._connections:
             self._connections[connection_id].subscriptions.add(channel)
-            await self._send_to_connection(connection_id, {
-                "type": "subscribed",
-                "channel": channel,
-            })
+            await self._send_to_connection(
+                connection_id,
+                {
+                    "type": "subscribed",
+                    "channel": channel,
+                },
+            )
 
     async def unsubscribe(self, connection_id: str, channel: str):
         """
@@ -192,10 +202,13 @@ class WebSocketManager:
         """
         if connection_id in self._connections:
             self._connections[connection_id].subscriptions.discard(channel)
-            await self._send_to_connection(connection_id, {
-                "type": "unsubscribed",
-                "channel": channel,
-            })
+            await self._send_to_connection(
+                connection_id,
+                {
+                    "type": "unsubscribed",
+                    "channel": channel,
+                },
+            )
 
     async def broadcast_alert(self, alert: Alert):
         """
@@ -207,7 +220,7 @@ class WebSocketManager:
         # Store in history
         self._alert_history.append(alert)
         if len(self._alert_history) > self._max_history:
-            self._alert_history = self._alert_history[-self._max_history:]
+            self._alert_history = self._alert_history[-self._max_history :]
 
         message = {
             "type": "alert",
@@ -242,7 +255,7 @@ class WebSocketManager:
             recipients=sent_count,
         )
 
-    async def send_to_user(self, user_id: UUID, message: Dict[str, Any]):
+    async def send_to_user(self, user_id: UUID, message: dict[str, Any]):
         """
         Send a message to a specific user.
 
@@ -254,7 +267,7 @@ class WebSocketManager:
         if connection_id in self._connections:
             await self._send_to_connection(connection_id, message)
 
-    async def broadcast_to_tenant(self, tenant_id: UUID, message: Dict[str, Any]):
+    async def broadcast_to_tenant(self, tenant_id: UUID, message: dict[str, Any]):
         """
         Broadcast a message to all users in a tenant.
 
@@ -267,7 +280,7 @@ class WebSocketManager:
             for connection_id in self._tenant_users[tenant_key]:
                 await self._send_to_connection(connection_id, message)
 
-    async def broadcast_to_channel(self, channel: str, message: Dict[str, Any]):
+    async def broadcast_to_channel(self, channel: str, message: dict[str, Any]):
         """
         Broadcast a message to all subscribers of a channel.
 
@@ -279,7 +292,7 @@ class WebSocketManager:
             if channel in connection.subscriptions:
                 await self._send_to_connection(connection_id, message)
 
-    async def _send_to_connection(self, connection_id: str, message: Dict[str, Any]):
+    async def _send_to_connection(self, connection_id: str, message: dict[str, Any]):
         """Send a message to a specific connection."""
         if connection_id not in self._connections:
             return
@@ -299,15 +312,19 @@ class WebSocketManager:
     async def _send_recent_alerts(self, connection_id: str, tenant_id: UUID):
         """Send recent alerts to a newly connected client."""
         tenant_alerts = [
-            alert for alert in self._alert_history
+            alert
+            for alert in self._alert_history
             if alert.tenant_id == tenant_id or alert.tenant_id is None
         ][-10:]  # Last 10 alerts
 
         if tenant_alerts:
-            await self._send_to_connection(connection_id, {
-                "type": "recent_alerts",
-                "alerts": [alert.to_dict() for alert in tenant_alerts],
-            })
+            await self._send_to_connection(
+                connection_id,
+                {
+                    "type": "recent_alerts",
+                    "alerts": [alert.to_dict() for alert in tenant_alerts],
+                },
+            )
 
     def get_connection_count(self) -> int:
         """Get total number of active connections."""
@@ -320,6 +337,7 @@ class WebSocketManager:
 
     async def start_heartbeat(self, interval: int = 30):
         """Start heartbeat task to keep connections alive."""
+
         async def heartbeat():
             while True:
                 await asyncio.sleep(interval)
@@ -395,7 +413,7 @@ async def send_constraint_alert(
 async def send_system_alert(
     message: str,
     priority: AlertPriority = AlertPriority.MEDIUM,
-    tenant_id: Optional[UUID] = None,
+    tenant_id: UUID | None = None,
 ):
     """Send a system-wide alert."""
     alert = Alert(

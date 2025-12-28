@@ -1,24 +1,28 @@
 """Vendor Risk Management API Endpoints"""
-from uuid import UUID, uuid4
-from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
-from pydantic import BaseModel
 
+from datetime import UTC
+from uuid import UUID, uuid4
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.v1.deps import get_current_tenant_id
 from app.core.database import get_db
-from app.api.v1.deps import get_current_user, get_current_tenant_id
-from app.models.compliance.vendor import Vendor, VendorTier, VendorStatus, VendorAssessment
+from app.models.compliance.vendor import Vendor, VendorAssessment, VendorStatus
 
 router = APIRouter()
+
 
 class VendorCreate(BaseModel):
     legal_name: str
     tier: str
     category: str
-    country: Optional[str] = None
-    services_provided: List[str] = []
+    country: str | None = None
+    services_provided: list[str] = []
     has_data_access: bool = False
+
 
 class VendorResponse(BaseModel):
     id: UUID
@@ -33,11 +37,12 @@ class VendorResponse(BaseModel):
     class Config:
         from_attributes = True
 
-@router.get("/", response_model=List[VendorResponse])
+
+@router.get("/", response_model=list[VendorResponse])
 async def list_vendors(
-    tier: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
-    category: Optional[str] = Query(None),
+    tier: str | None = Query(None),
+    status: str | None = Query(None),
+    category: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
 ):
@@ -50,6 +55,7 @@ async def list_vendors(
         query = query.where(Vendor.category == category)
     result = await db.execute(query.order_by(Vendor.legal_name))
     return result.scalars().all()
+
 
 @router.post("/", response_model=VendorResponse, status_code=status.HTTP_201_CREATED)
 async def create_vendor(
@@ -76,6 +82,7 @@ async def create_vendor(
     await db.refresh(db_vendor)
     return db_vendor
 
+
 @router.get("/{vendor_id}", response_model=VendorResponse)
 async def get_vendor(
     vendor_id: UUID,
@@ -90,6 +97,7 @@ async def get_vendor(
         raise HTTPException(status_code=404, detail="Vendor not found")
     return vendor
 
+
 @router.post("/{vendor_id}/assess")
 async def create_vendor_assessment(
     vendor_id: UUID,
@@ -97,14 +105,15 @@ async def create_vendor_assessment(
     db: AsyncSession = Depends(get_db),
     tenant_id: UUID = Depends(get_current_tenant_id),
 ):
-    from datetime import datetime, timezone
+    from datetime import datetime
+
     assessment = VendorAssessment(
         id=uuid4(),
         tenant_id=tenant_id,
         vendor_id=vendor_id,
         assessment_type=assessment_type,
         status="IN_PROGRESS",
-        initiated_at=datetime.now(timezone.utc),
+        initiated_at=datetime.now(UTC),
     )
     db.add(assessment)
     await db.commit()

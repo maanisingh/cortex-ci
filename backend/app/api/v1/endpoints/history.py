@@ -1,27 +1,26 @@
 """Phase 2.4: Institutional Memory - Historical tracking API."""
 
-from typing import Optional, List, Dict, Any
-from uuid import UUID
+from datetime import date, datetime, timedelta
 from decimal import Decimal
-from datetime import datetime, date, timedelta
+from typing import Any
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import select, func, and_
+from sqlalchemy import and_, func, select
 
+from app.api.v1.deps import DB, CurrentTenant, CurrentUser, RequireWriter
 from app.models import (
-    HistoricalSnapshot,
-    DecisionOutcome,
-    ConstraintChange,
-    TransitionReport,
-    Entity,
-    RiskScore,
-    Constraint,
-    AuditLog,
     AuditAction,
+    AuditLog,
+    Constraint,
+    ConstraintChange,
+    DecisionOutcome,
+    Entity,
+    HistoricalSnapshot,
+    RiskScore,
+    TransitionReport,
 )
-from app.api.v1.deps import DB, CurrentUser, CurrentTenant, RequireWriter
-
 
 router = APIRouter()
 
@@ -32,13 +31,13 @@ class TimelinePoint(BaseModel):
     risk_score: float
     risk_level: str
     constraint_count: int
-    notes: Optional[str] = None
+    notes: str | None = None
 
 
 class EntityTimelineResponse(BaseModel):
     entity_id: str
     entity_name: str
-    timeline: List[TimelinePoint]
+    timeline: list[TimelinePoint]
     trend: str  # "increasing", "decreasing", "stable"
     first_seen: str
     last_updated: str
@@ -48,8 +47,8 @@ class DecisionOutcomeCreate(BaseModel):
     decision_date: date
     decision_summary: str
     decision_type: str
-    entities_involved: List[UUID] = []
-    context_snapshot: Dict[str, Any] = {}
+    entities_involved: list[UUID] = []
+    context_snapshot: dict[str, Any] = {}
 
 
 class DecisionOutcomeResponse(BaseModel):
@@ -57,11 +56,11 @@ class DecisionOutcomeResponse(BaseModel):
     decision_date: str
     decision_summary: str
     decision_type: str
-    entities_involved: List[str]
-    outcome_date: Optional[str] = None
-    outcome_summary: Optional[str] = None
-    outcome_success: Optional[bool] = None
-    lessons_learned: Optional[str] = None
+    entities_involved: list[str]
+    outcome_date: str | None = None
+    outcome_summary: str | None = None
+    outcome_success: bool | None = None
+    lessons_learned: str | None = None
     is_resolved: bool
     created_at: str
 
@@ -72,7 +71,7 @@ class DecisionOutcomeResponse(BaseModel):
 class ConstraintChangeResponse(BaseModel):
     id: UUID
     constraint_id: UUID
-    constraint_name: Optional[str] = None
+    constraint_name: str | None = None
     change_date: str
     change_type: str
     change_summary: str
@@ -174,9 +173,7 @@ async def get_entity_timeline(
         entity_name=entity.name,
         timeline=timeline,
         trend=trend,
-        first_seen=entity.created_at.isoformat()
-        if entity.created_at
-        else date.today().isoformat(),
+        first_seen=entity.created_at.isoformat() if entity.created_at else date.today().isoformat(),
         last_updated=entity.updated_at.isoformat()
         if entity.updated_at
         else date.today().isoformat(),
@@ -188,7 +185,7 @@ async def create_snapshot(
     db: DB,
     current_user: RequireWriter,
     tenant: CurrentTenant,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Create a snapshot of all entities' current risk state.
 
@@ -258,7 +255,7 @@ async def get_constraint_changes(
     current_user: CurrentUser,
     tenant: CurrentTenant,
     days: int = Query(30, ge=1, le=365),
-) -> List[ConstraintChangeResponse]:
+) -> list[ConstraintChangeResponse]:
     """Get recent constraint changes."""
     cutoff = date.today() - timedelta(days=days)
 
@@ -363,7 +360,7 @@ async def list_decisions(
     include_resolved: bool = False,
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """List decision outcomes."""
     query = select(DecisionOutcome).where(
         DecisionOutcome.tenant_id == tenant.id,
@@ -410,7 +407,7 @@ async def record_decision_outcome(
     tenant: CurrentTenant,
     outcome_summary: str = Query(..., min_length=10),
     outcome_success: bool = Query(...),
-    lessons_learned: Optional[str] = None,
+    lessons_learned: str | None = None,
 ) -> DecisionOutcomeResponse:
     """Record the outcome of a decision."""
     result = await db.execute(
@@ -439,9 +436,7 @@ async def record_decision_outcome(
         decision_summary=decision.decision_summary,
         decision_type=decision.decision_type,
         entities_involved=decision.entities_involved,
-        outcome_date=decision.outcome_date.isoformat()
-        if decision.outcome_date
-        else None,
+        outcome_date=decision.outcome_date.isoformat() if decision.outcome_date else None,
         outcome_summary=decision.outcome_summary,
         outcome_success=decision.outcome_success,
         lessons_learned=decision.lessons_learned,
@@ -458,12 +453,10 @@ async def generate_transition_report(
     db: DB,
     current_user: RequireWriter,
     tenant: CurrentTenant,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Generate a leadership transition report."""
     # Gather statistics for the period
-    stats = await _gather_period_statistics(
-        db, tenant.id, data.period_start, data.period_end
-    )
+    stats = await _gather_period_statistics(db, tenant.id, data.period_start, data.period_end)
 
     # Get high-risk entities
     high_risk_result = await db.execute(
@@ -550,7 +543,7 @@ async def _gather_period_statistics(
     tenant_id: UUID,
     start: date,
     end: date,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Gather statistics for a period."""
     # Count entities
     entity_count = await db.execute(

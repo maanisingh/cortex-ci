@@ -1,14 +1,14 @@
-from datetime import datetime, timezone
-from typing import List, Dict, Any
+from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID
-import structlog
 
-from sqlalchemy.ext.asyncio import AsyncSession
+import structlog
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
-    Entity,
     Dependency,
+    Entity,
     RiskScore,
     Scenario,
     ScenarioStatus,
@@ -26,12 +26,10 @@ class ScenarioSimulator:
         self.db = db
         self.tenant = tenant
 
-    async def run(self, scenario_id: UUID) -> Dict[str, Any]:
+    async def run(self, scenario_id: UUID) -> dict[str, Any]:
         """Run a scenario simulation."""
         # Get scenario
-        result = await self.db.execute(
-            select(Scenario).where(Scenario.id == scenario_id)
-        )
+        result = await self.db.execute(select(Scenario).where(Scenario.id == scenario_id))
         scenario = result.scalar_one_or_none()
 
         if not scenario:
@@ -62,7 +60,7 @@ class ScenarioSimulator:
             # Update scenario with results
             scenario.results = results
             scenario.status = ScenarioStatus.COMPLETED
-            scenario.completed_at = datetime.now(timezone.utc)
+            scenario.completed_at = datetime.now(UTC)
 
             await self.db.commit()
 
@@ -76,7 +74,7 @@ class ScenarioSimulator:
             await self.db.commit()
             raise
 
-    async def _capture_baseline(self, scenario: Scenario) -> Dict[str, Any]:
+    async def _capture_baseline(self, scenario: Scenario) -> dict[str, Any]:
         """Capture current state as baseline for comparison."""
         # Get current risk scores for affected entities
         affected_ids = [UUID(id) for id in scenario.affected_entity_ids]
@@ -111,12 +109,12 @@ class ScenarioSimulator:
                 }
 
         return {
-            "captured_at": datetime.now(timezone.utc).isoformat(),
+            "captured_at": datetime.now(UTC).isoformat(),
             "entity_count": len(affected_ids),
             "risk_scores": risk_scores,
         }
 
-    async def _simulate_entity_sanctioned(self, scenario: Scenario) -> Dict[str, Any]:
+    async def _simulate_entity_sanctioned(self, scenario: Scenario) -> dict[str, Any]:
         """Simulate what happens if specific entities get sanctioned."""
         params = scenario.parameters
         target_ids = [UUID(id) for id in params.get("target_entity_ids", [])]
@@ -180,9 +178,7 @@ class ScenarioSimulator:
 
         # Determine overall severity
         high_impact = sum(1 for i in impacted if i["severity"] == "HIGH")
-        severity = (
-            "CRITICAL" if high_impact > 3 else "HIGH" if high_impact > 0 else "MEDIUM"
-        )
+        severity = "CRITICAL" if high_impact > 3 else "HIGH" if high_impact > 0 else "MEDIUM"
 
         return {
             "summary": f"Sanctioning {len(target_ids)} entities would impact {len(impacted)} dependent entities",
@@ -192,7 +188,7 @@ class ScenarioSimulator:
             "recommendations": self._generate_recommendations(impacted, severity),
         }
 
-    async def _simulate_country_embargo(self, scenario: Scenario) -> Dict[str, Any]:
+    async def _simulate_country_embargo(self, scenario: Scenario) -> dict[str, Any]:
         """Simulate what happens if a country gets embargoed."""
         params = scenario.parameters
         country_code = params.get("country_code", "").upper()
@@ -265,9 +261,7 @@ class ScenarioSimulator:
             ],
         }
 
-    async def _simulate_supplier_unavailable(
-        self, scenario: Scenario
-    ) -> Dict[str, Any]:
+    async def _simulate_supplier_unavailable(self, scenario: Scenario) -> dict[str, Any]:
         """Simulate what happens if a supplier becomes unavailable."""
         params = scenario.parameters
         supplier_id = params.get("supplier_entity_id")
@@ -319,13 +313,7 @@ class ScenarioSimulator:
                 )
 
         critical_count = sum(1 for i in impacted if i["severity"] == "CRITICAL")
-        severity = (
-            "CRITICAL"
-            if critical_count > 0
-            else "HIGH"
-            if len(impacted) > 5
-            else "MEDIUM"
-        )
+        severity = "CRITICAL" if critical_count > 0 else "HIGH" if len(impacted) > 5 else "MEDIUM"
 
         return {
             "summary": f"Loss of supplier {supplier.name} would affect {len(impacted)} dependent entities",
@@ -339,7 +327,7 @@ class ScenarioSimulator:
             ],
         }
 
-    async def _simulate_custom(self, scenario: Scenario) -> Dict[str, Any]:
+    async def _simulate_custom(self, scenario: Scenario) -> dict[str, Any]:
         """Run a custom scenario based on parameters."""
         params = scenario.parameters
 
@@ -355,14 +343,12 @@ class ScenarioSimulator:
     async def _calculate_cascade(
         self,
         scenario: Scenario,
-        initial_results: Dict[str, Any],
+        initial_results: dict[str, Any],
         depth: int,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Calculate cascading effects over time."""
         cascade_effects = []
-        current_impacted = set(
-            i["entity_id"] for i in initial_results.get("impacted_entities", [])
-        )
+        current_impacted = set(i["entity_id"] for i in initial_results.get("impacted_entities", []))
 
         for level in range(1, depth):
             # Find secondary impacts
@@ -415,9 +401,9 @@ class ScenarioSimulator:
 
     def _generate_recommendations(
         self,
-        impacted: List[Dict[str, Any]],
+        impacted: list[dict[str, Any]],
         severity: str,
-    ) -> List[str]:
+    ) -> list[str]:
         """Generate recommendations based on impact analysis."""
         recommendations = []
 
@@ -429,14 +415,10 @@ class ScenarioSimulator:
             recommendations.append("Review financial exposure and payment alternatives")
 
         if any(i.get("dependency_layer") == "operational" for i in impacted):
-            recommendations.append(
-                "Identify alternative suppliers and logistics routes"
-            )
+            recommendations.append("Identify alternative suppliers and logistics routes")
 
         if any(i.get("criticality", 0) >= 4 for i in impacted):
-            recommendations.append(
-                "Prioritize mitigation for high-criticality dependencies"
-            )
+            recommendations.append("Prioritize mitigation for high-criticality dependencies")
 
         if not recommendations:
             recommendations.append("Continue monitoring situation")

@@ -91,7 +91,13 @@ export default function SecuritySettings() {
 
   // MFA Disable mutation
   const disableMFAMutation = useMutation({
-    mutationFn: async ({ password, code }: { password: string; code: string }) => {
+    mutationFn: async ({
+      password,
+      code,
+    }: {
+      password: string;
+      code: string;
+    }) => {
       const response = await authApi.mfa.disable(password, code);
       return response.data;
     },
@@ -105,7 +111,10 @@ export default function SecuritySettings() {
 
   // Password Change mutation
   const changePasswordMutation = useMutation({
-    mutationFn: async (data: { current_password: string; new_password: string }) => {
+    mutationFn: async (data: {
+      current_password: string;
+      new_password: string;
+    }) => {
       const response = await authApi.changePassword(data);
       return response.data;
     },
@@ -143,7 +152,10 @@ export default function SecuritySettings() {
 
   const handleDisableMFA = () => {
     if (disablePassword && disableCode.length === 6) {
-      disableMFAMutation.mutate({ password: disablePassword, code: disableCode });
+      disableMFAMutation.mutate({
+        password: disablePassword,
+        code: disableCode,
+      });
     }
   };
 
@@ -164,7 +176,8 @@ export default function SecuritySettings() {
           Security Settings
         </h1>
         <p className="mt-2 text-sm text-gray-700">
-          Manage your account security, two-factor authentication, and password settings
+          Manage your account security, two-factor authentication, and password
+          settings
         </p>
       </div>
 
@@ -220,8 +233,8 @@ export default function SecuritySettings() {
           Two-Factor Authentication (2FA)
         </h3>
         <p className="text-sm text-gray-600 mb-4">
-          Add an extra layer of security to your account by requiring a verification code
-          from your authenticator app when signing in.
+          Add an extra layer of security to your account by requiring a
+          verification code from your authenticator app when signing in.
         </p>
 
         {!mfaStatus?.mfa_enabled ? (
@@ -248,7 +261,9 @@ export default function SecuritySettings() {
             ) : (
               // MFA Setup Flow
               <div className="border rounded-lg p-6 bg-gray-50">
-                <h4 className="font-medium text-gray-900 mb-4">Setup Two-Factor Authentication</h4>
+                <h4 className="font-medium text-gray-900 mb-4">
+                  Setup Two-Factor Authentication
+                </h4>
 
                 <div className="space-y-6">
                   {/* Step 1: QR Code */}
@@ -258,9 +273,12 @@ export default function SecuritySettings() {
                         1
                       </div>
                       <div className="flex-1">
-                        <h5 className="font-medium text-gray-900">Scan QR Code</h5>
+                        <h5 className="font-medium text-gray-900">
+                          Scan QR Code
+                        </h5>
                         <p className="text-sm text-gray-600 mt-1">
-                          Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
+                          Scan this QR code with your authenticator app (Google
+                          Authenticator, Authy, etc.)
                         </p>
                         <div className="mt-4 flex items-start gap-6">
                           <div className="bg-white p-4 rounded-lg shadow-sm border">
@@ -290,9 +308,13 @@ export default function SecuritySettings() {
                         2
                       </div>
                       <div className="flex-1">
-                        <h5 className="font-medium text-gray-900">Save Backup Codes</h5>
+                        <h5 className="font-medium text-gray-900">
+                          Save Backup Codes
+                        </h5>
                         <p className="text-sm text-gray-600 mt-1">
-                          Save these backup codes in a safe place. You can use them to sign in if you lose access to your authenticator.
+                          Save these backup codes in a safe place. You can use
+                          them to sign in if you lose access to your
+                          authenticator.
                         </p>
                         <div className="mt-4">
                           <button
@@ -308,7 +330,9 @@ export default function SecuritySettings() {
                                   Your Backup Codes
                                 </span>
                                 <button
-                                  onClick={() => copyBackupCodes(mfaSetupData.backup_codes)}
+                                  onClick={() =>
+                                    copyBackupCodes(mfaSetupData.backup_codes)
+                                  }
                                   className="text-sm text-yellow-700 hover:text-yellow-900 flex items-center gap-1"
                                 >
                                   <ClipboardDocumentIcon className="h-4 w-4" />
@@ -326,7 +350,8 @@ export default function SecuritySettings() {
                                 ))}
                               </div>
                               <p className="mt-3 text-xs text-yellow-700">
-                                Each code can only be used once. Store them securely!
+                                Each code can only be used once. Store them
+                                securely!
                               </p>
                             </div>
                           )}
@@ -342,25 +367,37 @@ export default function SecuritySettings() {
                         3
                       </div>
                       <div className="flex-1">
-                        <h5 className="font-medium text-gray-900">Verify Setup</h5>
+                        <h5 className="font-medium text-gray-900">
+                          Verify Setup
+                        </h5>
                         <p className="text-sm text-gray-600 mt-1">
-                          Enter the 6-digit code from your authenticator app to complete setup.
+                          Enter the 6-digit code from your authenticator app to
+                          complete setup.
                         </p>
                         <div className="mt-4 flex items-center gap-4">
                           <input
                             type="text"
                             value={verificationCode}
-                            onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                            onChange={(e) =>
+                              setVerificationCode(
+                                e.target.value.replace(/\D/g, "").slice(0, 6),
+                              )
+                            }
                             placeholder="000000"
                             className="input w-32 text-center text-lg font-mono tracking-widest"
                             maxLength={6}
                           />
                           <button
                             onClick={handleEnableMFA}
-                            disabled={verificationCode.length !== 6 || enableMFAMutation.isPending}
+                            disabled={
+                              verificationCode.length !== 6 ||
+                              enableMFAMutation.isPending
+                            }
                             className="btn btn-primary"
                           >
-                            {enableMFAMutation.isPending ? "Verifying..." : "Enable 2FA"}
+                            {enableMFAMutation.isPending
+                              ? "Verifying..."
+                              : "Enable 2FA"}
                           </button>
                           <button
                             onClick={() => {
@@ -392,9 +429,14 @@ export default function SecuritySettings() {
               <div className="flex items-center gap-3">
                 <CheckCircleIcon className="h-6 w-6 text-green-600" />
                 <div>
-                  <p className="font-medium text-green-900">Two-Factor Authentication is Enabled</p>
+                  <p className="font-medium text-green-900">
+                    Two-Factor Authentication is Enabled
+                  </p>
                   <p className="text-sm text-green-700">
-                    Enabled on {mfaStatus.mfa_verified_at ? new Date(mfaStatus.mfa_verified_at).toLocaleDateString() : "N/A"}
+                    Enabled on{" "}
+                    {mfaStatus.mfa_verified_at
+                      ? new Date(mfaStatus.mfa_verified_at).toLocaleDateString()
+                      : "N/A"}
                   </p>
                 </div>
               </div>
@@ -419,13 +461,18 @@ export default function SecuritySettings() {
             {/* Disable MFA Modal */}
             {showDisableMFA && (
               <div className="border border-red-200 bg-red-50 rounded-lg p-4 mt-4">
-                <h4 className="font-medium text-red-900 mb-3">Disable Two-Factor Authentication</h4>
+                <h4 className="font-medium text-red-900 mb-3">
+                  Disable Two-Factor Authentication
+                </h4>
                 <p className="text-sm text-red-700 mb-4">
-                  This will remove the extra security layer from your account. Are you sure?
+                  This will remove the extra security layer from your account.
+                  Are you sure?
                 </p>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Password</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Password
+                    </label>
                     <input
                       type="password"
                       value={disablePassword}
@@ -441,7 +488,11 @@ export default function SecuritySettings() {
                     <input
                       type="text"
                       value={disableCode}
-                      onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      onChange={(e) =>
+                        setDisableCode(
+                          e.target.value.replace(/\D/g, "").slice(0, 6),
+                        )
+                      }
                       className="input mt-1 w-32 text-center font-mono"
                       placeholder="000000"
                       maxLength={6}
@@ -450,10 +501,16 @@ export default function SecuritySettings() {
                   <div className="flex gap-3">
                     <button
                       onClick={handleDisableMFA}
-                      disabled={!disablePassword || disableCode.length !== 6 || disableMFAMutation.isPending}
+                      disabled={
+                        !disablePassword ||
+                        disableCode.length !== 6 ||
+                        disableMFAMutation.isPending
+                      }
                       className="btn btn-danger"
                     >
-                      {disableMFAMutation.isPending ? "Disabling..." : "Confirm Disable"}
+                      {disableMFAMutation.isPending
+                        ? "Disabling..."
+                        : "Confirm Disable"}
                     </button>
                     <button
                       onClick={() => {
@@ -473,9 +530,12 @@ export default function SecuritySettings() {
             {/* Regenerate Backup Codes Modal */}
             {showRegenerateBackup && (
               <div className="border border-yellow-200 bg-yellow-50 rounded-lg p-4 mt-4">
-                <h4 className="font-medium text-yellow-900 mb-3">Regenerate Backup Codes</h4>
+                <h4 className="font-medium text-yellow-900 mb-3">
+                  Regenerate Backup Codes
+                </h4>
                 <p className="text-sm text-yellow-700 mb-4">
-                  This will invalidate all existing backup codes. Enter your current 2FA code to continue.
+                  This will invalidate all existing backup codes. Enter your
+                  current 2FA code to continue.
                 </p>
                 {newBackupCodes.length === 0 ? (
                   <div className="space-y-3">
@@ -486,7 +546,11 @@ export default function SecuritySettings() {
                       <input
                         type="text"
                         value={regenerateCode}
-                        onChange={(e) => setRegenerateCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        onChange={(e) =>
+                          setRegenerateCode(
+                            e.target.value.replace(/\D/g, "").slice(0, 6),
+                          )
+                        }
                         className="input mt-1 w-32 text-center font-mono"
                         placeholder="000000"
                         maxLength={6}
@@ -494,11 +558,18 @@ export default function SecuritySettings() {
                     </div>
                     <div className="flex gap-3">
                       <button
-                        onClick={() => regenerateBackupMutation.mutate(regenerateCode)}
-                        disabled={regenerateCode.length !== 6 || regenerateBackupMutation.isPending}
+                        onClick={() =>
+                          regenerateBackupMutation.mutate(regenerateCode)
+                        }
+                        disabled={
+                          regenerateCode.length !== 6 ||
+                          regenerateBackupMutation.isPending
+                        }
                         className="btn btn-primary"
                       >
-                        {regenerateBackupMutation.isPending ? "Generating..." : "Generate New Codes"}
+                        {regenerateBackupMutation.isPending
+                          ? "Generating..."
+                          : "Generate New Codes"}
                       </button>
                       <button
                         onClick={() => {
@@ -562,7 +633,8 @@ export default function SecuritySettings() {
           Password
         </h3>
         <p className="text-sm text-gray-600 mb-4">
-          Change your password regularly to keep your account secure. Use a strong, unique password.
+          Change your password regularly to keep your account secure. Use a
+          strong, unique password.
         </p>
 
         {!showPasswordChange ? (
@@ -576,7 +648,9 @@ export default function SecuritySettings() {
           <div className="border rounded-lg p-4 bg-gray-50">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Current Password</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Current Password
+                </label>
                 <div className="relative mt-1">
                   <input
                     type={showPasswords ? "text" : "password"}
@@ -599,7 +673,9 @@ export default function SecuritySettings() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">New Password</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  New Password
+                </label>
                 <input
                   type={showPasswords ? "text" : "password"}
                   value={newPassword}
@@ -609,7 +685,9 @@ export default function SecuritySettings() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  Confirm New Password
+                </label>
                 <input
                   type={showPasswords ? "text" : "password"}
                   value={confirmPassword}
@@ -618,7 +696,9 @@ export default function SecuritySettings() {
                   placeholder="Confirm new password"
                 />
                 {confirmPassword && newPassword !== confirmPassword && (
-                  <p className="mt-1 text-sm text-red-600">Passwords do not match</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    Passwords do not match
+                  </p>
                 )}
               </div>
               <div className="flex gap-3">
@@ -632,7 +712,9 @@ export default function SecuritySettings() {
                   }
                   className="btn btn-primary"
                 >
-                  {changePasswordMutation.isPending ? "Changing..." : "Change Password"}
+                  {changePasswordMutation.isPending
+                    ? "Changing..."
+                    : "Change Password"}
                 </button>
                 <button
                   onClick={() => {
@@ -652,7 +734,9 @@ export default function SecuritySettings() {
                 </p>
               )}
               {changePasswordMutation.isSuccess && (
-                <p className="text-sm text-green-600">Password changed successfully!</p>
+                <p className="text-sm text-green-600">
+                  Password changed successfully!
+                </p>
               )}
             </div>
           </div>
@@ -661,19 +745,28 @@ export default function SecuritySettings() {
 
       {/* Security Tips */}
       <div className="card bg-blue-50 border-blue-200">
-        <h3 className="text-lg font-medium text-blue-900 mb-4">Security Tips</h3>
+        <h3 className="text-lg font-medium text-blue-900 mb-4">
+          Security Tips
+        </h3>
         <ul className="space-y-2 text-sm text-blue-800">
           <li className="flex items-start gap-2">
             <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <span>Enable two-factor authentication for enhanced account security</span>
+            <span>
+              Enable two-factor authentication for enhanced account security
+            </span>
           </li>
           <li className="flex items-start gap-2">
             <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <span>Use a unique, strong password with at least 12 characters</span>
+            <span>
+              Use a unique, strong password with at least 12 characters
+            </span>
           </li>
           <li className="flex items-start gap-2">
             <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <span>Store your backup codes in a secure location (e.g., password manager)</span>
+            <span>
+              Store your backup codes in a secure location (e.g., password
+              manager)
+            </span>
           </li>
           <li className="flex items-start gap-2">
             <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />

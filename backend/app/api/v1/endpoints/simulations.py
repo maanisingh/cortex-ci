@@ -3,20 +3,20 @@ Simulation API Endpoints (Phase 5.1)
 Advanced simulation and analysis endpoints.
 """
 
-from typing import Optional, List
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
 from app.api.v1.deps import get_current_user
+from app.core.database import get_db
 from app.models import User
 from app.services.advanced_simulation import (
-    simulation_engine,
-    SimulationType,
     MonteCarloConfig,
+    SimulationType,
     WhatIfScenario,
+    simulation_engine,
 )
 
 router = APIRouter()
@@ -24,36 +24,35 @@ router = APIRouter()
 
 class MonteCarloRequest(BaseModel):
     """Request for Monte Carlo simulation."""
-    entity_ids: Optional[List[UUID]] = Field(
-        None, description="Specific entities to simulate"
-    )
+
+    entity_ids: list[UUID] | None = Field(None, description="Specific entities to simulate")
     iterations: int = Field(1000, ge=100, le=10000)
     confidence_level: float = Field(0.95, ge=0.8, le=0.99)
     risk_volatility: float = Field(0.15, ge=0.01, le=0.5)
-    seed: Optional[int] = None
+    seed: int | None = None
 
 
 class CascadeRequest(BaseModel):
     """Request for cascade analysis."""
+
     trigger_entity_id: UUID
     max_depth: int = Field(5, ge=1, le=10)
 
 
 class WhatIfRequest(BaseModel):
     """Request for what-if analysis."""
+
     name: str = Field(..., min_length=1, max_length=100)
     description: str = Field("", max_length=500)
-    constraint_changes: List[dict] = Field(default_factory=list)
-    entity_changes: List[dict] = Field(default_factory=list)
+    constraint_changes: list[dict] = Field(default_factory=list)
+    entity_changes: list[dict] = Field(default_factory=list)
     global_modifiers: dict = Field(default_factory=dict)
 
 
 class StressTestRequest(BaseModel):
     """Request for stress test."""
-    scenarios: Optional[List[str]] = Field(
-        None,
-        description="Stress scenarios to run"
-    )
+
+    scenarios: list[str] | None = Field(None, description="Stress scenarios to run")
 
 
 @router.post("/monte-carlo")
@@ -189,7 +188,7 @@ async def get_simulation(
 @router.get("/")
 async def list_simulations(
     limit: int = 20,
-    simulation_type: Optional[SimulationType] = None,
+    simulation_type: SimulationType | None = None,
     current_user: User = Depends(get_current_user),
 ):
     """List recent simulations."""

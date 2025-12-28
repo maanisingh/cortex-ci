@@ -4,8 +4,10 @@ import { Link } from "react-router-dom";
 import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { constraintsApi } from "../services/api";
 import ConstraintForm from "../components/forms/ConstraintForm";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function Constraints() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editConstraint, setEditConstraint] = useState<any>(null);
@@ -50,10 +52,9 @@ export default function Constraints() {
     <div>
       <div className="sm:flex sm:items-center mb-6">
         <div className="sm:flex-auto">
-          <h1 className="text-2xl font-bold text-gray-900">Constraints</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            Policies, regulations, and compliance requirements affecting your
-            organization
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("controls")}</h1>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+            {t("controlsDescription")}
           </p>
         </div>
         <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
@@ -66,7 +67,7 @@ export default function Constraints() {
             }}
           >
             <PlusIcon className="h-5 w-5 mr-2" />
-            Add Constraint
+            {t("addControl")}
           </button>
         </div>
       </div>
@@ -84,26 +85,26 @@ export default function Constraints() {
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-4 mb-6">
         <div className="card">
           <dt className="text-sm font-medium text-gray-500">
-            Total Constraints
+            {t("totalControls")}
           </dt>
           <dd className="mt-1 text-3xl font-semibold text-gray-900">
             {summary?.total || 0}
           </dd>
         </div>
         <div className="card">
-          <dt className="text-sm font-medium text-gray-500">Mandatory</dt>
+          <dt className="text-sm font-medium text-gray-500">{t("mandatory")}</dt>
           <dd className="mt-1 text-3xl font-semibold text-gray-900">
             {summary?.mandatory || 0}
           </dd>
         </div>
         <div className="card border-l-4 border-orange-400">
-          <dt className="text-sm font-medium text-gray-500">Expiring Soon</dt>
+          <dt className="text-sm font-medium text-gray-500">{t("expiringSoon")}</dt>
           <dd className="mt-1 text-3xl font-semibold text-orange-600">
             {summary?.expiring_soon || 0}
           </dd>
         </div>
         <div className="card">
-          <dt className="text-sm font-medium text-gray-500">Active</dt>
+          <dt className="text-sm font-medium text-gray-500">{t("active")}</dt>
           <dd className="mt-1 text-3xl font-semibold text-green-600">
             {summary?.active || 0}
           </dd>
@@ -118,7 +119,7 @@ export default function Constraints() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search constraints..."
+            placeholder={t("searchControls")}
             className="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
           />
         </div>
@@ -130,12 +131,12 @@ export default function Constraints() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="table-header">Name</th>
-                <th className="table-header">Type</th>
-                <th className="table-header">Severity</th>
-                <th className="table-header">Effective</th>
-                <th className="table-header">Expires</th>
-                <th className="table-header">Actions</th>
+                <th className="table-header">{t("name")}</th>
+                <th className="table-header">{t("type")}</th>
+                <th className="table-header">{t("severity")}</th>
+                <th className="table-header">{t("effective")}</th>
+                <th className="table-header">{t("expires")}</th>
+                <th className="table-header">{t("actions")}</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -145,7 +146,7 @@ export default function Constraints() {
                     colSpan={6}
                     className="px-6 py-4 text-center text-gray-500"
                   >
-                    Loading...
+                    {t("loading")}
                   </td>
                 </tr>
               ) : data?.items?.length === 0 ? (
@@ -154,8 +155,7 @@ export default function Constraints() {
                     colSpan={6}
                     className="px-6 py-4 text-center text-gray-500"
                   >
-                    No constraints found. Add your first constraint to get
-                    started.
+                    {t("noControlsFound")}
                   </td>
                 </tr>
               ) : (
@@ -176,7 +176,7 @@ export default function Constraints() {
                       </Link>
                       {constraint.reference_code && (
                         <div className="text-xs text-gray-500">
-                          Ref: {constraint.reference_code}
+                          {t("ref")}: {constraint.reference_code}
                         </div>
                       )}
                     </td>
@@ -210,14 +210,14 @@ export default function Constraints() {
                     <td className="table-cell text-gray-500">
                       {constraint.expiry_date
                         ? new Date(constraint.expiry_date).toLocaleDateString()
-                        : "No expiry"}
+                        : t("noExpiry")}
                     </td>
                     <td className="table-cell">
                       <Link
                         to={`/constraints/${constraint.id}`}
                         className="text-primary-600 hover:text-primary-900 text-sm"
                       >
-                        View Details
+                        {t("viewDetails")}
                       </Link>
                     </td>
                   </tr>

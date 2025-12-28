@@ -3,20 +3,25 @@
 Real-time and batch transaction monitoring for AML compliance.
 Evaluates transactions against configurable rules and generates alerts.
 """
+
 import logging
-from typing import Optional, List, Dict, Any
-from datetime import datetime, timezone, timedelta
-from uuid import UUID, uuid4
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import Any
+from uuid import UUID, uuid4
+
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
 
 from app.models.compliance.transaction import (
-    Transaction, TransactionType, TransactionStatus,
-    TransactionAlert, AlertStatus, AlertPriority,
-    MonitoringRule, RuleType
+    AlertPriority,
+    AlertStatus,
+    MonitoringRule,
+    RuleType,
+    Transaction,
+    TransactionAlert,
+    TransactionStatus,
 )
-from app.models.compliance.customer import Customer
 
 logger = logging.getLogger(__name__)
 
@@ -25,26 +30,20 @@ class TransactionMonitoringService:
     """Service for monitoring transactions and generating AML alerts"""
 
     def __init__(self):
-        self.rules_cache: Dict[UUID, List[MonitoringRule]] = {}
+        self.rules_cache: dict[UUID, list[MonitoringRule]] = {}
         self.cache_ttl = 300  # 5 minutes
 
     async def load_rules(
-        self,
-        db: AsyncSession,
-        tenant_id: UUID,
-        force_refresh: bool = False
-    ) -> List[MonitoringRule]:
+        self, db: AsyncSession, tenant_id: UUID, force_refresh: bool = False
+    ) -> list[MonitoringRule]:
         """Load active monitoring rules for tenant"""
         if not force_refresh and tenant_id in self.rules_cache:
             return self.rules_cache[tenant_id]
 
         result = await db.execute(
-            select(MonitoringRule).where(
-                and_(
-                    MonitoringRule.tenant_id == tenant_id,
-                    MonitoringRule.is_active == True
-                )
-            ).order_by(MonitoringRule.priority)
+            select(MonitoringRule)
+            .where(and_(MonitoringRule.tenant_id == tenant_id, MonitoringRule.is_active == True))
+            .order_by(MonitoringRule.priority)
         )
         rules = result.scalars().all()
         self.rules_cache[tenant_id] = list(rules)
@@ -55,7 +54,7 @@ class TransactionMonitoringService:
         db: AsyncSession,
         tenant_id: UUID,
         transaction: Transaction,
-    ) -> List[TransactionAlert]:
+    ) -> list[TransactionAlert]:
         """
         Evaluate a single transaction against all active rules.
 
@@ -65,13 +64,9 @@ class TransactionMonitoringService:
         alerts = []
 
         for rule in rules:
-            triggered, details = await self._evaluate_rule(
-                db, tenant_id, transaction, rule
-            )
+            triggered, details = await self._evaluate_rule(db, tenant_id, transaction, rule)
             if triggered:
-                alert = await self._create_alert(
-                    db, tenant_id, transaction, rule, details
-                )
+                alert = await self._create_alert(db, tenant_id, transaction, rule, details)
                 alerts.append(alert)
 
         return alerts
@@ -82,7 +77,7 @@ class TransactionMonitoringService:
         tenant_id: UUID,
         transaction: Transaction,
         rule: MonitoringRule,
-    ) -> tuple[bool, Dict[str, Any]]:
+    ) -> tuple[bool, dict[str, Any]]:
         """Evaluate a single rule against a transaction"""
         config = rule.rule_config or {}
         details = {"rule_name": rule.name, "rule_type": rule.rule_type}
@@ -92,22 +87,16 @@ class TransactionMonitoringService:
                 return await self._check_threshold(transaction, config, details)
 
             elif rule.rule_type == RuleType.VELOCITY:
-                return await self._check_velocity(
-                    db, tenant_id, transaction, config, details
-                )
+                return await self._check_velocity(db, tenant_id, transaction, config, details)
 
             elif rule.rule_type == RuleType.GEOGRAPHIC:
                 return await self._check_geographic(transaction, config, details)
 
             elif rule.rule_type == RuleType.PATTERN:
-                return await self._check_pattern(
-                    db, tenant_id, transaction, config, details
-                )
+                return await self._check_pattern(db, tenant_id, transaction, config, details)
 
             elif rule.rule_type == RuleType.STRUCTURING:
-                return await self._check_structuring(
-                    db, tenant_id, transaction, config, details
-                )
+                return await self._check_structuring(db, tenant_id, transaction, config, details)
 
             elif rule.rule_type == RuleType.DORMANT:
                 return await self._check_dormant_account(
@@ -115,9 +104,7 @@ class TransactionMonitoringService:
                 )
 
             elif rule.rule_type == RuleType.BEHAVIORAL:
-                return await self._check_behavioral(
-                    db, tenant_id, transaction, config, details
-                )
+                return await self._check_behavioral(db, tenant_id, transaction, config, details)
 
         except Exception as e:
             logger.error(f"Rule evaluation failed: {rule.name} - {e}")
@@ -126,11 +113,8 @@ class TransactionMonitoringService:
         return False, details
 
     async def _check_threshold(
-        self,
-        transaction: Transaction,
-        config: Dict[str, Any],
-        details: Dict[str, Any]
-    ) -> tuple[bool, Dict[str, Any]]:
+        self, transaction: Transaction, config: dict[str, Any], details: dict[str, Any]
+    ) -> tuple[bool, dict[str, Any]]:
         """Check if transaction exceeds threshold"""
         threshold = Decimal(str(config.get("threshold", 10000)))
         currency = config.get("currency")
@@ -151,15 +135,15 @@ class TransactionMonitoringService:
         db: AsyncSession,
         tenant_id: UUID,
         transaction: Transaction,
-        config: Dict[str, Any],
-        details: Dict[str, Any]
-    ) -> tuple[bool, Dict[str, Any]]:
+        config: dict[str, Any],
+        details: dict[str, Any],
+    ) -> tuple[bool, dict[str, Any]]:
         """Check transaction velocity (count/amount over time)"""
         time_window_hours = config.get("time_window_hours", 24)
         max_count = config.get("max_count")
         max_amount = Decimal(str(config.get("max_amount", 0))) if config.get("max_amount") else None
 
-        start_time = datetime.now(timezone.utc) - timedelta(hours=time_window_hours)
+        start_time = datetime.now(UTC) - timedelta(hours=time_window_hours)
 
         # Get recent transactions for same customer
         query = select(Transaction).where(
@@ -167,7 +151,7 @@ class TransactionMonitoringService:
                 Transaction.tenant_id == tenant_id,
                 Transaction.customer_id == transaction.customer_id,
                 Transaction.transaction_date >= start_time,
-                Transaction.id != transaction.id
+                Transaction.id != transaction.id,
             )
         )
         result = await db.execute(query)
@@ -191,11 +175,8 @@ class TransactionMonitoringService:
         return False, details
 
     async def _check_geographic(
-        self,
-        transaction: Transaction,
-        config: Dict[str, Any],
-        details: Dict[str, Any]
-    ) -> tuple[bool, Dict[str, Any]]:
+        self, transaction: Transaction, config: dict[str, Any], details: dict[str, Any]
+    ) -> tuple[bool, dict[str, Any]]:
         """Check for high-risk geographic indicators"""
         high_risk_countries = config.get("high_risk_countries", [])
 
@@ -220,16 +201,16 @@ class TransactionMonitoringService:
         db: AsyncSession,
         tenant_id: UUID,
         transaction: Transaction,
-        config: Dict[str, Any],
-        details: Dict[str, Any]
-    ) -> tuple[bool, Dict[str, Any]]:
+        config: dict[str, Any],
+        details: dict[str, Any],
+    ) -> tuple[bool, dict[str, Any]]:
         """Detect potential structuring (smurfing) patterns"""
         reporting_threshold = Decimal(str(config.get("reporting_threshold", 10000)))
         time_window_hours = config.get("time_window_hours", 24)
         min_transactions = config.get("min_transactions", 3)
         proximity_percent = config.get("proximity_percent", 20)  # % below threshold
 
-        start_time = datetime.now(timezone.utc) - timedelta(hours=time_window_hours)
+        start_time = datetime.now(UTC) - timedelta(hours=time_window_hours)
         lower_bound = reporting_threshold * Decimal(str((100 - proximity_percent) / 100))
 
         # Find transactions just below threshold
@@ -239,7 +220,7 @@ class TransactionMonitoringService:
                 Transaction.customer_id == transaction.customer_id,
                 Transaction.transaction_date >= start_time,
                 Transaction.amount >= lower_bound,
-                Transaction.amount < reporting_threshold
+                Transaction.amount < reporting_threshold,
             )
         )
         result = await db.execute(query)
@@ -261,9 +242,9 @@ class TransactionMonitoringService:
         db: AsyncSession,
         tenant_id: UUID,
         transaction: Transaction,
-        config: Dict[str, Any],
-        details: Dict[str, Any]
-    ) -> tuple[bool, Dict[str, Any]]:
+        config: dict[str, Any],
+        details: dict[str, Any],
+    ) -> tuple[bool, dict[str, Any]]:
         """Detect activity on dormant accounts"""
         dormant_days = config.get("dormant_days", 180)
         min_amount = Decimal(str(config.get("min_amount", 1000)))
@@ -271,7 +252,7 @@ class TransactionMonitoringService:
         if transaction.amount < min_amount:
             return False, details
 
-        cutoff = datetime.now(timezone.utc) - timedelta(days=dormant_days)
+        cutoff = datetime.now(UTC) - timedelta(days=dormant_days)
 
         # Check for recent activity
         query = select(func.count(Transaction.id)).where(
@@ -280,7 +261,7 @@ class TransactionMonitoringService:
                 Transaction.customer_id == transaction.customer_id,
                 Transaction.transaction_date >= cutoff,
                 Transaction.transaction_date < transaction.transaction_date,
-                Transaction.id != transaction.id
+                Transaction.id != transaction.id,
             )
         )
         result = await db.execute(query)
@@ -299,9 +280,9 @@ class TransactionMonitoringService:
         db: AsyncSession,
         tenant_id: UUID,
         transaction: Transaction,
-        config: Dict[str, Any],
-        details: Dict[str, Any]
-    ) -> tuple[bool, Dict[str, Any]]:
+        config: dict[str, Any],
+        details: dict[str, Any],
+    ) -> tuple[bool, dict[str, Any]]:
         """Check for suspicious transaction patterns"""
         pattern_type = config.get("pattern_type", "round_amount")
 
@@ -330,7 +311,7 @@ class TransactionMonitoringService:
                     Transaction.transaction_date >= start_time,
                     Transaction.transaction_date <= transaction.transaction_date,
                     Transaction.id != transaction.id,
-                    Transaction.transaction_type != transaction.transaction_type
+                    Transaction.transaction_type != transaction.transaction_type,
                 )
             )
             result = await db.execute(query)
@@ -351,25 +332,22 @@ class TransactionMonitoringService:
         db: AsyncSession,
         tenant_id: UUID,
         transaction: Transaction,
-        config: Dict[str, Any],
-        details: Dict[str, Any]
-    ) -> tuple[bool, Dict[str, Any]]:
+        config: dict[str, Any],
+        details: dict[str, Any],
+    ) -> tuple[bool, dict[str, Any]]:
         """Detect behavioral anomalies"""
         # Calculate customer's historical average
         lookback_days = config.get("lookback_days", 90)
         deviation_multiplier = config.get("deviation_multiplier", 3)
 
-        start_time = datetime.now(timezone.utc) - timedelta(days=lookback_days)
+        start_time = datetime.now(UTC) - timedelta(days=lookback_days)
 
-        query = select(
-            func.avg(Transaction.amount),
-            func.stddev(Transaction.amount)
-        ).where(
+        query = select(func.avg(Transaction.amount), func.stddev(Transaction.amount)).where(
             and_(
                 Transaction.tenant_id == tenant_id,
                 Transaction.customer_id == transaction.customer_id,
                 Transaction.transaction_date >= start_time,
-                Transaction.id != transaction.id
+                Transaction.id != transaction.id,
             )
         )
         result = await db.execute(query)
@@ -397,7 +375,7 @@ class TransactionMonitoringService:
         tenant_id: UUID,
         transaction: Transaction,
         rule: MonitoringRule,
-        details: Dict[str, Any]
+        details: dict[str, Any],
     ) -> TransactionAlert:
         """Create an alert for a triggered rule"""
         # Determine priority based on rule severity and amount
@@ -421,7 +399,7 @@ class TransactionMonitoringService:
             status=AlertStatus.NEW,
             title=f"{rule.name} triggered",
             description=f"Transaction {transaction.transaction_ref} triggered rule: {rule.name}",
-            triggered_at=datetime.now(timezone.utc),
+            triggered_at=datetime.now(UTC),
             transaction_amount=transaction.amount,
             rule_details=details,
         )
@@ -442,72 +420,57 @@ class TransactionMonitoringService:
         return alert
 
     async def process_transaction_batch(
-        self,
-        db: AsyncSession,
-        tenant_id: UUID,
-        transaction_ids: List[UUID]
-    ) -> Dict[str, Any]:
+        self, db: AsyncSession, tenant_id: UUID, transaction_ids: list[UUID]
+    ) -> dict[str, Any]:
         """Process a batch of transactions for monitoring"""
-        results = {
-            "processed": 0,
-            "alerts_generated": 0,
-            "errors": 0,
-            "alerts": []
-        }
+        results = {"processed": 0, "alerts_generated": 0, "errors": 0, "alerts": []}
 
         for txn_id in transaction_ids:
             try:
-                txn_result = await db.execute(
-                    select(Transaction).where(Transaction.id == txn_id)
-                )
+                txn_result = await db.execute(select(Transaction).where(Transaction.id == txn_id))
                 transaction = txn_result.scalar_one_or_none()
 
                 if transaction:
                     alerts = await self.evaluate_transaction(db, tenant_id, transaction)
                     results["processed"] += 1
                     results["alerts_generated"] += len(alerts)
-                    results["alerts"].extend([
-                        {"transaction_id": str(txn_id), "alert_id": str(a.id)}
-                        for a in alerts
-                    ])
+                    results["alerts"].extend(
+                        [{"transaction_id": str(txn_id), "alert_id": str(a.id)} for a in alerts]
+                    )
             except Exception as e:
                 results["errors"] += 1
                 logger.error(f"Error processing transaction {txn_id}: {e}")
 
         return results
 
-    async def get_alert_summary(
-        self,
-        db: AsyncSession,
-        tenant_id: UUID
-    ) -> Dict[str, Any]:
+    async def get_alert_summary(self, db: AsyncSession, tenant_id: UUID) -> dict[str, Any]:
         """Get summary of current alerts"""
         # Count by status
-        status_query = select(
-            TransactionAlert.status,
-            func.count(TransactionAlert.id)
-        ).where(
-            TransactionAlert.tenant_id == tenant_id
-        ).group_by(TransactionAlert.status)
+        status_query = (
+            select(TransactionAlert.status, func.count(TransactionAlert.id))
+            .where(TransactionAlert.tenant_id == tenant_id)
+            .group_by(TransactionAlert.status)
+        )
 
         status_result = await db.execute(status_query)
 
         # Count by priority
-        priority_query = select(
-            TransactionAlert.priority,
-            func.count(TransactionAlert.id)
-        ).where(
-            and_(
-                TransactionAlert.tenant_id == tenant_id,
-                TransactionAlert.status.in_([AlertStatus.NEW, AlertStatus.UNDER_REVIEW])
+        priority_query = (
+            select(TransactionAlert.priority, func.count(TransactionAlert.id))
+            .where(
+                and_(
+                    TransactionAlert.tenant_id == tenant_id,
+                    TransactionAlert.status.in_([AlertStatus.NEW, AlertStatus.UNDER_REVIEW]),
+                )
             )
-        ).group_by(TransactionAlert.priority)
+            .group_by(TransactionAlert.priority)
+        )
 
         priority_result = await db.execute(priority_query)
 
         return {
             "by_status": {row[0]: row[1] for row in status_result},
-            "open_by_priority": {row[0]: row[1] for row in priority_result}
+            "open_by_priority": {row[0]: row[1] for row in priority_result},
         }
 
 

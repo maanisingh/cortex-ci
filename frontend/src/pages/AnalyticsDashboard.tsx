@@ -112,7 +112,12 @@ export default function AnalyticsDashboard() {
   // Calculate trend direction
   const latestScore = riskTrends?.[0]?.average_score || 0;
   const previousScore = riskTrends?.[riskTrends.length - 1]?.average_score || 0;
-  const trendDirection = latestScore > previousScore ? "up" : latestScore < previousScore ? "down" : "stable";
+  const trendDirection =
+    latestScore > previousScore
+      ? "up"
+      : latestScore < previousScore
+        ? "down"
+        : "stable";
   const trendChange = Math.abs(latestScore - previousScore).toFixed(1);
 
   return (
@@ -133,7 +138,9 @@ export default function AnalyticsDashboard() {
         <div className="card bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-blue-600">Total Entities</p>
+              <p className="text-sm font-medium text-blue-600">
+                Total Entities
+              </p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
                 {entityStats?.total?.toLocaleString() || 0}
               </p>
@@ -151,7 +158,9 @@ export default function AnalyticsDashboard() {
         <div className="card bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-purple-600">Active Constraints</p>
+              <p className="text-sm font-medium text-purple-600">
+                Active Constraints
+              </p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
                 {constraintSummary?.total_active?.toLocaleString() || 0}
               </p>
@@ -169,7 +178,9 @@ export default function AnalyticsDashboard() {
         <div className="card bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-amber-600">Average Risk Score</p>
+              <p className="text-sm font-medium text-amber-600">
+                Average Risk Score
+              </p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
                 {(riskSummary?.average_score || 0).toFixed(1)}
               </p>
@@ -191,8 +202,8 @@ export default function AnalyticsDashboard() {
                 trendDirection === "up"
                   ? "text-red-600"
                   : trendDirection === "down"
-                  ? "text-green-600"
-                  : "text-gray-500"
+                    ? "text-green-600"
+                    : "text-gray-500"
               }`}
             >
               {trendChange} pts over 30 days
@@ -204,7 +215,9 @@ export default function AnalyticsDashboard() {
         <div className="card bg-gradient-to-br from-red-50 to-rose-50 border-red-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-red-600">High Risk Entities</p>
+              <p className="text-sm font-medium text-red-600">
+                High Risk Entities
+              </p>
               <p className="text-3xl font-bold text-gray-900 mt-1">
                 {riskSummary?.high_risk_count?.toLocaleString() || 0}
               </p>
@@ -274,7 +287,9 @@ export default function AnalyticsDashboard() {
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <CheckCircleIcon className="h-5 w-5 text-green-500" />
-                <span className="text-sm text-gray-700">Compliant Entities</span>
+                <span className="text-sm text-gray-700">
+                  Compliant Entities
+                </span>
               </div>
               <span className="text-lg font-semibold text-gray-900">
                 {(riskSummary?.low_risk_count || 0).toLocaleString()}
@@ -292,7 +307,9 @@ export default function AnalyticsDashboard() {
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <ClockIcon className="h-5 w-5 text-blue-500" />
-                <span className="text-sm text-gray-700">Pending Verification</span>
+                <span className="text-sm text-gray-700">
+                  Pending Verification
+                </span>
               </div>
               <span className="text-lg font-semibold text-gray-900">
                 {constraintSummary?.pending_review || 0}
@@ -335,12 +352,13 @@ export default function AnalyticsDashboard() {
                 >
                   <div
                     className={`w-full rounded-t transition-all hover:opacity-80 ${getBarColor(
-                      trend.average_score
+                      trend.average_score,
                     )}`}
                     style={{ height: `${Math.max(height, 5)}%` }}
                   />
                   <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                    {new Date(trend.date).toLocaleDateString()}: {trend.average_score.toFixed(1)}
+                    {new Date(trend.date).toLocaleDateString()}:{" "}
+                    {trend.average_score.toFixed(1)}
                   </div>
                 </div>
               );
@@ -366,22 +384,26 @@ export default function AnalyticsDashboard() {
           </h2>
           {constraintSummary?.by_type ? (
             <div className="space-y-3">
-              {Object.entries(constraintSummary.by_type).map(([type, count]) => (
-                <div
-                  key={type}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <span className="text-sm font-medium text-gray-700 capitalize">
-                    {type.replace("_", " ")}
-                  </span>
-                  <span className="text-lg font-semibold text-indigo-600">
-                    {(count as number).toLocaleString()}
-                  </span>
-                </div>
-              ))}
+              {Object.entries(constraintSummary.by_type).map(
+                ([type, count]) => (
+                  <div
+                    key={type}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <span className="text-sm font-medium text-gray-700 capitalize">
+                      {type.replace("_", " ")}
+                    </span>
+                    <span className="text-lg font-semibold text-indigo-600">
+                      {(count as number).toLocaleString()}
+                    </span>
+                  </div>
+                ),
+              )}
             </div>
           ) : (
-            <p className="text-gray-500 text-center py-8">No constraint data available</p>
+            <p className="text-gray-500 text-center py-8">
+              No constraint data available
+            </p>
           )}
         </div>
 
@@ -407,7 +429,9 @@ export default function AnalyticsDashboard() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-center py-8">No entity data available</p>
+            <p className="text-gray-500 text-center py-8">
+              No entity data available
+            </p>
           )}
         </div>
       </div>

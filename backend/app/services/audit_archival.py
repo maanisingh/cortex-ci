@@ -6,15 +6,15 @@ Implements audit log archival, retention, and export functionality.
 import gzip
 import json
 from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any
-from uuid import UUID
 from pathlib import Path
-import structlog
+from typing import Any
+from uuid import UUID
 
-from sqlalchemy import select, delete, func, and_
+import structlog
+from sqlalchemy import and_, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.audit import AuditLog, AuditAction
+from app.models.audit import AuditAction, AuditLog
 
 logger = structlog.get_logger()
 
@@ -27,7 +27,7 @@ class AuditArchivalService:
 
     def __init__(
         self,
-        archive_path: Optional[str] = None,
+        archive_path: str | None = None,
         retention_days: int = 90,
         archive_after_days: int = 30,
     ):
@@ -38,9 +38,9 @@ class AuditArchivalService:
     async def archive_old_logs(
         self,
         db: AsyncSession,
-        tenant_id: Optional[UUID] = None,
+        tenant_id: UUID | None = None,
         force: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Archive audit logs older than archive_after_days.
 
@@ -66,7 +66,7 @@ class AuditArchivalService:
             return {"archived": 0, "message": "No logs to archive"}
 
         # Group by date for daily archives
-        daily_logs: Dict[str, List[Dict]] = {}
+        daily_logs: dict[str, list[dict]] = {}
         for log in logs:
             date_key = log.created_at.strftime("%Y-%m-%d")
             if date_key not in daily_logs:
@@ -90,9 +90,7 @@ class AuditArchivalService:
             archive_files.append(str(archive_file))
 
         # Delete archived logs from database
-        delete_stmt = delete(AuditLog).where(
-            AuditLog.id.in_([log.id for log in logs])
-        )
+        delete_stmt = delete(AuditLog).where(AuditLog.id.in_([log.id for log in logs]))
         await db.execute(delete_stmt)
         await db.commit()
 
@@ -112,7 +110,7 @@ class AuditArchivalService:
             },
         }
 
-    async def cleanup_old_archives(self) -> Dict[str, Any]:
+    async def cleanup_old_archives(self) -> dict[str, Any]:
         """
         Delete archive files older than retention_days.
 
@@ -147,12 +145,12 @@ class AuditArchivalService:
         self,
         db: AsyncSession,
         tenant_id: UUID,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-        actions: Optional[List[str]] = None,
-        user_id: Optional[UUID] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        actions: list[str] | None = None,
+        user_id: UUID | None = None,
         format: str = "json",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Export audit logs for compliance or analysis.
 
@@ -203,7 +201,7 @@ class AuditArchivalService:
         db: AsyncSession,
         tenant_id: UUID,
         days: int = 30,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get audit log statistics.
 
@@ -228,15 +226,19 @@ class AuditArchivalService:
         total_count = total_result.scalar()
 
         # Count by action
-        action_query = select(
-            AuditLog.action,
-            func.count(AuditLog.id).label("count"),
-        ).where(
-            and_(
-                AuditLog.tenant_id == tenant_id,
-                AuditLog.created_at >= cutoff,
+        action_query = (
+            select(
+                AuditLog.action,
+                func.count(AuditLog.id).label("count"),
             )
-        ).group_by(AuditLog.action)
+            .where(
+                and_(
+                    AuditLog.tenant_id == tenant_id,
+                    AuditLog.created_at >= cutoff,
+                )
+            )
+            .group_by(AuditLog.action)
+        )
 
         action_result = await db.execute(action_query)
         by_action = {row.action.value: row.count for row in action_result}
@@ -253,16 +255,22 @@ class AuditArchivalService:
         failed_count = failed_result.scalar()
 
         # Top users
-        user_query = select(
-            AuditLog.user_email,
-            func.count(AuditLog.id).label("count"),
-        ).where(
-            and_(
-                AuditLog.tenant_id == tenant_id,
-                AuditLog.created_at >= cutoff,
-                AuditLog.user_email.isnot(None),
+        user_query = (
+            select(
+                AuditLog.user_email,
+                func.count(AuditLog.id).label("count"),
             )
-        ).group_by(AuditLog.user_email).order_by(func.count(AuditLog.id).desc()).limit(10)
+            .where(
+                and_(
+                    AuditLog.tenant_id == tenant_id,
+                    AuditLog.created_at >= cutoff,
+                    AuditLog.user_email.isnot(None),
+                )
+            )
+            .group_by(AuditLog.user_email)
+            .order_by(func.count(AuditLog.id).desc())
+            .limit(10)
+        )
 
         user_result = await db.execute(user_query)
         top_users = [{"email": row.user_email, "count": row.count} for row in user_result]
@@ -280,10 +288,10 @@ class AuditArchivalService:
         self,
         db: AsyncSession,
         tenant_id: UUID,
-        query_text: Optional[str] = None,
+        query_text: str | None = None,
         page: int = 1,
         page_size: int = 50,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Search audit logs with full-text search.
 
@@ -302,9 +310,9 @@ class AuditArchivalService:
         if query_text:
             search_pattern = f"%{query_text}%"
             base_query = base_query.where(
-                (AuditLog.description.ilike(search_pattern)) |
-                (AuditLog.user_email.ilike(search_pattern)) |
-                (AuditLog.resource_name.ilike(search_pattern))
+                (AuditLog.description.ilike(search_pattern))
+                | (AuditLog.user_email.ilike(search_pattern))
+                | (AuditLog.resource_name.ilike(search_pattern))
             )
 
         # Count total
@@ -326,7 +334,7 @@ class AuditArchivalService:
             "results": [self._serialize_log(log) for log in logs],
         }
 
-    def _serialize_log(self, log: AuditLog) -> Dict[str, Any]:
+    def _serialize_log(self, log: AuditLog) -> dict[str, Any]:
         """Serialize audit log for export."""
         return {
             "id": str(log.id),
@@ -346,7 +354,7 @@ class AuditArchivalService:
             "changes": log.changes,
         }
 
-    def _to_csv(self, logs: List[Dict]) -> Dict[str, Any]:
+    def _to_csv(self, logs: list[dict]) -> dict[str, Any]:
         """Convert logs to CSV format."""
         if not logs:
             return {"format": "csv", "count": 0, "data": ""}

@@ -1,11 +1,11 @@
-from typing import List, Dict, Any
+from typing import Any
 from uuid import UUID
+
 import structlog
-
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Entity, Constraint, Dependency, RiskScore, Tenant
+from app.models import Constraint, Dependency, Entity, RiskScore, Tenant
 
 logger = structlog.get_logger()
 
@@ -33,7 +33,7 @@ class RiskEngine:
 
     async def calculate_for_entities(
         self,
-        entity_ids: List[UUID],
+        entity_ids: list[UUID],
         force: bool = False,
     ) -> int:
         """Calculate risk for specific entities."""
@@ -243,7 +243,7 @@ class RiskEngine:
         indirect: float,
         country: float,
         dependency: float,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Build detailed factors for justification."""
         factors = {
             "primary_factors": [],

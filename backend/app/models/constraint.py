@@ -1,13 +1,15 @@
 from datetime import date
-from uuid import UUID, uuid4
-from typing import Optional, List
 from enum import Enum
-from sqlalchemy import String, Text, Date, Enum as SQLEnum, Boolean, ForeignKey
+from uuid import UUID, uuid4
+
+from sqlalchemy import Boolean, Date, ForeignKey, String, Text
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB, ARRAY
 
 from app.core.database import Base
-from app.models.base import TimestampMixin, TenantMixin
+from app.models.base import TenantMixin, TimestampMixin
 
 
 class ConstraintType(str, Enum):
@@ -70,13 +72,11 @@ class Constraint(Base, TimestampMixin, TenantMixin):
 
     __tablename__ = "constraints"
 
-    id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
 
     # Constraint details
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     type: Mapped[ConstraintType] = mapped_column(
         SQLEnum(ConstraintType), nullable=False, index=True
     )
@@ -85,25 +85,25 @@ class Constraint(Base, TimestampMixin, TenantMixin):
     )
 
     # Reference information
-    reference_code: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    source_document: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    external_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    reference_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    source_document: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    external_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Applicability
-    applies_to_entity_types: Mapped[List[str]] = mapped_column(
+    applies_to_entity_types: Mapped[list[str]] = mapped_column(
         ARRAY(String), default=list, nullable=False
     )
-    applies_to_countries: Mapped[List[str]] = mapped_column(
+    applies_to_countries: Mapped[list[str]] = mapped_column(
         ARRAY(String), default=list, nullable=False
     )
-    applies_to_categories: Mapped[List[str]] = mapped_column(
+    applies_to_categories: Mapped[list[str]] = mapped_column(
         ARRAY(String), default=list, nullable=False
     )
 
     # Dates
-    effective_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    expiry_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    review_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    effective_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    expiry_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    review_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     # Risk impact
     risk_weight: Mapped[float] = mapped_column(default=1.0, nullable=False)
@@ -124,11 +124,11 @@ class Constraint(Base, TimestampMixin, TenantMixin):
     is_mandatory: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     # Custom data
-    tags: Mapped[List[str]] = mapped_column(ARRAY(String), default=list, nullable=False)
+    tags: Mapped[list[str]] = mapped_column(ARRAY(String), default=list, nullable=False)
     custom_data: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
 
     # Created by
-    created_by: Mapped[Optional[UUID]] = mapped_column(
+    created_by: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,

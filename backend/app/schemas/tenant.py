@@ -1,6 +1,7 @@
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any
 from uuid import UUID
+
 from pydantic import BaseModel, Field
 
 
@@ -8,15 +9,15 @@ class TenantBase(BaseModel):
     """Base tenant schema."""
 
     name: str = Field(..., min_length=2, max_length=255)
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class TenantCreate(TenantBase):
     """Tenant creation schema."""
 
     slug: str = Field(..., min_length=2, max_length=100, pattern=r"^[a-z0-9-]+$")
-    settings: Dict[str, Any] = {}
-    risk_weights: Dict[str, float] = {
+    settings: dict[str, Any] = {}
+    risk_weights: dict[str, float] = {
         "direct_match": 0.4,
         "indirect_match": 0.25,
         "country_risk": 0.2,
@@ -27,11 +28,11 @@ class TenantCreate(TenantBase):
 class TenantUpdate(BaseModel):
     """Tenant update schema."""
 
-    name: Optional[str] = Field(None, min_length=2, max_length=255)
-    description: Optional[str] = None
-    settings: Optional[Dict[str, Any]] = None
-    risk_weights: Optional[Dict[str, float]] = None
-    is_active: Optional[bool] = None
+    name: str | None = Field(None, min_length=2, max_length=255)
+    description: str | None = None
+    settings: dict[str, Any] | None = None
+    risk_weights: dict[str, float] | None = None
+    is_active: bool | None = None
 
 
 class TenantResponse(TenantBase):
@@ -40,8 +41,8 @@ class TenantResponse(TenantBase):
     id: UUID
     slug: str
     is_active: bool
-    settings: Dict[str, Any]
-    risk_weights: Dict[str, float]
+    settings: dict[str, Any]
+    risk_weights: dict[str, float]
     created_at: datetime
     updated_at: datetime
 
