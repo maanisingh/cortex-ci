@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "../contexts/LanguageContext";
 import {
   DocumentTextIcon,
   PlusIcon,
@@ -114,6 +115,7 @@ const CATEGORIES = [
 ];
 
 export default function Policies() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -180,10 +182,10 @@ export default function Policies() {
         <div className="sm:flex-auto">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
             <DocumentTextIcon className="h-8 w-8 mr-3 text-purple-600" />
-            Policy Management
+            {t("policyManagement")}
           </h1>
           <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-            Create, manage, and track organizational policies throughout their lifecycle.
+            {t("policyManagementDesc")}
           </p>
         </div>
         <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
@@ -195,7 +197,7 @@ export default function Policies() {
             className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500"
           >
             <PlusIcon className="h-5 w-5 mr-2" />
-            New Policy
+            {t("newPolicy")}
           </button>
         </div>
       </div>
@@ -203,19 +205,19 @@ export default function Policies() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
         <div className="card bg-white dark:bg-dark-800">
-          <dt className="text-sm text-gray-500">Total Policies</dt>
+          <dt className="text-sm text-gray-500">{t("totalPolicies")}</dt>
           <dd className="text-2xl font-bold text-gray-900 dark:text-gray-100">{summary?.total || 0}</dd>
         </div>
         <div className="card bg-white dark:bg-dark-800 border-l-4 border-orange-500">
-          <dt className="text-sm text-gray-500">Pending Review</dt>
+          <dt className="text-sm text-gray-500">{t("pendingReview")}</dt>
           <dd className="text-2xl font-bold text-orange-600">{summary?.pending_review || 0}</dd>
         </div>
         <div className="card bg-white dark:bg-dark-800 border-l-4 border-green-500">
-          <dt className="text-sm text-gray-500">Published</dt>
+          <dt className="text-sm text-gray-500">{t("published")}</dt>
           <dd className="text-2xl font-bold text-green-600">{summary?.by_status?.PUBLISHED || 0}</dd>
         </div>
         <div className="card bg-white dark:bg-dark-800">
-          <dt className="text-sm text-gray-500">Require Acknowledgement</dt>
+          <dt className="text-sm text-gray-500">{t("requireAcknowledgement")}</dt>
           <dd className="text-2xl font-bold text-gray-900 dark:text-gray-100">{summary?.requires_acknowledgement || 0}</dd>
         </div>
       </div>

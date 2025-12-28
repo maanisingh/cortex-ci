@@ -24,8 +24,10 @@ export const LANGUAGES = {
 
 export type LanguageCode = keyof typeof LANGUAGES;
 
-// Translation strings
-type TranslationStrings = Partial<{
+// Translation strings - using Record for flexibility
+type TranslationStrings = {
+  [key: string]: string;
+} & Partial<{
   // Navigation - Main
   grcDashboard: string;
   dashboard: string;
@@ -96,6 +98,56 @@ type TranslationStrings = Partial<{
   loading: string;
   error: string;
   success: string;
+  type: string;
+  country: string;
+  criticality: string;
+  created: string;
+  actions: string;
+  noRiskObjectsFound: string;
+  viewDetails: string;
+  previous: string;
+  next: string;
+  showingPage: string;
+  of: string;
+  total: string;
+  name: string;
+  status: string;
+  title: string;
+  category: string;
+  owner: string;
+  filters: string;
+
+  // Login Page
+  loginSubtitle: string;
+  signInToAccount: string;
+  organization: string;
+  organizationSlug: string;
+  emailAddress: string;
+  password: string;
+  enterPassword: string;
+  signingIn: string;
+  useDemoAccount: string;
+  demoCredentials: string;
+  governmentGrade: string;
+
+  // Risk Page
+  riskRegisterDescription: string;
+  addRisk: string;
+  totalRisks: string;
+  exceedsAppetite: string;
+  overdueReviews: string;
+  avgRiskScore: string;
+  searchRisks: string;
+  allCategories: string;
+  allStatuses: string;
+  clearAllFilters: string;
+  riskId: string;
+  riskMatrix: string;
+  inherentLevel: string;
+  residualLevel: string;
+  treatment: string;
+  loadingRisks: string;
+  noRisksFound: string;
 
   // Compliance Dashboard
   complianceScore: string;
@@ -239,6 +291,198 @@ type TranslationStrings = Partial<{
 
   // Languages
   selectLanguage: string;
+
+  // Page Titles & Descriptions
+  policyManagement: string;
+  policyManagementDesc: string;
+  vendorManagement: string;
+  vendorManagementDesc: string;
+  evidenceManagement: string;
+  evidenceManagementDesc: string;
+  findingsManagement: string;
+  findingsManagementDesc: string;
+  incidentManagement: string;
+  incidentManagementDesc: string;
+  auditManagementPage: string;
+  auditManagementPageDesc: string;
+  scenarioManagement: string;
+  scenarioManagementDesc: string;
+  dependencyManagement: string;
+  dependencyManagementDesc: string;
+  historyAnalysis: string;
+  historyAnalysisDesc: string;
+  aiAnalysis: string;
+  aiAnalysisDesc: string;
+  monitoringPage: string;
+  monitoringPageDesc: string;
+  settingsPage: string;
+  settingsPageDesc: string;
+  profilePage: string;
+  profilePageDesc: string;
+  securitySettingsPage: string;
+  securitySettingsPageDesc: string;
+  simulationsPage: string;
+  simulationsPageDesc: string;
+  analyticsPage: string;
+  analyticsPageDesc: string;
+  bulkOperationsPage: string;
+  bulkOperationsPageDesc: string;
+  userManagementPage: string;
+  userManagementPageDesc: string;
+  complianceTasksPage: string;
+  complianceTasksPageDesc: string;
+  russianCompliancePage: string;
+  russianCompliancePageDesc: string;
+  scenarioChainsPage: string;
+  scenarioChainsPageDesc: string;
+  riskJustificationPage: string;
+  riskJustificationPageDesc: string;
+  crossLayerPage: string;
+  crossLayerPageDesc: string;
+  dependencyLayersPage: string;
+  dependencyLayersPageDesc: string;
+
+  // Common UI Elements
+  newItem: string;
+  addNew: string;
+  viewAll: string;
+  details: string;
+  description: string;
+  noDataFound: string;
+  noResultsFound: string;
+  tryAgain: string;
+  refresh: string;
+  back: string;
+  close: string;
+  confirm: string;
+  submit: string;
+  update: string;
+  remove: string;
+  export: string;
+  import: string;
+  download: string;
+  upload: string;
+  select: string;
+  selected: string;
+  all: string;
+  none: string;
+  yes: string;
+  no: string;
+  on: string;
+  off: string;
+  enabled: string;
+  disabled: string;
+  pending: string;
+  approved: string;
+  rejected: string;
+  draft: string;
+  published: string;
+  archived: string;
+  date: string;
+  time: string;
+  dateRange: string;
+  from: string;
+  to: string;
+  today: string;
+  yesterday: string;
+  thisWeek: string;
+  thisMonth: string;
+  lastMonth: string;
+  thisYear: string;
+  custom: string;
+
+  // Table Headers
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  lastModified: string;
+  assignedTo: string;
+  priority: string;
+  dueDate: string;
+  startDate: string;
+  endDate: string;
+  progress: string;
+  comments: string;
+  attachments: string;
+  tags: string;
+  version: string;
+
+  // Policy Page
+  newPolicy: string;
+  totalPolicies: string;
+  pendingReview: string;
+  requireAcknowledgement: string;
+  policyNumber: string;
+  policyTitle: string;
+  policyCategory: string;
+  policyStatus: string;
+  policyDepartment: string;
+  reviewDate: string;
+  noPoliciesFound: string;
+  publish: string;
+
+  // Vendor Page
+  newVendor: string;
+  totalVendors: string;
+  activeVendors: string;
+  highRiskVendors: string;
+  vendorName: string;
+  vendorType: string;
+  vendorStatus: string;
+  vendorRisk: string;
+  contactPerson: string;
+  lastAssessment: string;
+  noVendorsFound: string;
+
+  // Evidence Page
+  newEvidence: string;
+  totalEvidence: string;
+  linkedControls: string;
+  expiringEvidence: string;
+  evidenceName: string;
+  evidenceType: string;
+  evidenceStatus: string;
+  linkedTo: string;
+  expiryDate: string;
+  noEvidenceFound: string;
+
+  // Findings Page
+  newFinding: string;
+  totalFindings: string;
+  openFindings: string;
+  overdueFindings: string;
+  findingTitle: string;
+  findingSeverity: string;
+  findingStatus: string;
+  findingOwner: string;
+  remediation: string;
+  noFindingsFound: string;
+
+  // Incidents Page
+  newIncident: string;
+  totalIncidents: string;
+  openIncidents: string;
+  resolvedIncidents: string;
+  incidentTitle: string;
+  incidentSeverity: string;
+  incidentStatus: string;
+  incidentType: string;
+  reportedBy: string;
+  reportedAt: string;
+  noIncidentsFound: string;
+
+  // Audit Page
+  newAudit: string;
+  totalAudits: string;
+  plannedAudits: string;
+  completedAudits: string;
+  auditName: string;
+  auditType: string;
+  auditStatus: string;
+  auditScope: string;
+  auditor: string;
+  noAuditsFound: string;
 }>;
 
 const translations: Record<LanguageCode, TranslationStrings> = {
@@ -487,6 +731,189 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     support: "Support",
     footerCopyright: "Integrated Governance, Risk & Compliance Platform.",
     selectLanguage: "Select Language",
+    // Page Titles & Descriptions
+    policyManagement: "Policy Management",
+    policyManagementDesc: "Create, manage, and track organizational policies throughout their lifecycle.",
+    vendorManagement: "Vendor Management",
+    vendorManagementDesc: "Assess vendor risks, manage questionnaires, and track certifications.",
+    evidenceManagement: "Evidence Library",
+    evidenceManagementDesc: "Centralized evidence collection with automatic linking to controls.",
+    findingsManagement: "Findings Management",
+    findingsManagementDesc: "Track and manage audit findings and remediation activities.",
+    incidentManagement: "Incident Management",
+    incidentManagementDesc: "Report, track, and resolve security incidents.",
+    auditManagementPage: "Audit Management",
+    auditManagementPageDesc: "Plan and execute audits, track findings and remediation.",
+    scenarioManagement: "Scenario Management",
+    scenarioManagementDesc: "Create and analyze risk scenarios.",
+    dependencyManagement: "Dependency Management",
+    dependencyManagementDesc: "Map and track dependencies between entities.",
+    historyAnalysis: "Historical Analysis",
+    historyAnalysisDesc: "Analyze historical trends and patterns.",
+    aiAnalysis: "AI Analysis",
+    aiAnalysisDesc: "AI-powered insights and recommendations.",
+    monitoringPage: "Monitoring",
+    monitoringPageDesc: "Real-time monitoring and alerts.",
+    settingsPage: "Settings",
+    settingsPageDesc: "Configure system settings and preferences.",
+    profilePage: "Profile",
+    profilePageDesc: "Manage your profile and account settings.",
+    securitySettingsPage: "Security Settings",
+    securitySettingsPageDesc: "Configure security and authentication settings.",
+    simulationsPage: "Simulations",
+    simulationsPageDesc: "Run Monte Carlo simulations and risk modeling.",
+    analyticsPage: "Analytics & Reports",
+    analyticsPageDesc: "View analytics dashboards and generate reports.",
+    bulkOperationsPage: "Bulk Operations",
+    bulkOperationsPageDesc: "Perform bulk data operations and imports.",
+    userManagementPage: "User Management",
+    userManagementPageDesc: "Manage users, roles, and permissions.",
+    complianceTasksPage: "Compliance Tasks",
+    complianceTasksPageDesc: "Track and manage compliance tasks.",
+    russianCompliancePage: "Russian Compliance",
+    russianCompliancePageDesc: "Manage Russian regulatory compliance requirements.",
+    scenarioChainsPage: "Scenario Chains",
+    scenarioChainsPageDesc: "Analyze linked scenarios and cascade effects.",
+    riskJustificationPage: "Risk Justification",
+    riskJustificationPageDesc: "Document and justify risk acceptance decisions.",
+    crossLayerPage: "Cross-Layer Analysis",
+    crossLayerPageDesc: "Analyze risks across organizational layers.",
+    dependencyLayersPage: "Dependency Layers",
+    dependencyLayersPageDesc: "View and manage dependency layer mappings.",
+    // Common UI Elements
+    newItem: "New",
+    addNew: "Add New",
+    viewAll: "View All",
+    details: "Details",
+    description: "Description",
+    noDataFound: "No data found",
+    noResultsFound: "No results found",
+    tryAgain: "Try Again",
+    refresh: "Refresh",
+    back: "Back",
+    close: "Close",
+    confirm: "Confirm",
+    submit: "Submit",
+    update: "Update",
+    remove: "Remove",
+    export: "Export",
+    import: "Import",
+    download: "Download",
+    upload: "Upload",
+    select: "Select",
+    selected: "Selected",
+    all: "All",
+    none: "None",
+    yes: "Yes",
+    no: "No",
+    on: "On",
+    off: "Off",
+    enabled: "Enabled",
+    disabled: "Disabled",
+    pending: "Pending",
+    approved: "Approved",
+    rejected: "Rejected",
+    draft: "Draft",
+    published: "Published",
+    archived: "Archived",
+    date: "Date",
+    time: "Time",
+    dateRange: "Date Range",
+    from: "From",
+    to: "To",
+    today: "Today",
+    yesterday: "Yesterday",
+    thisWeek: "This Week",
+    thisMonth: "This Month",
+    lastMonth: "Last Month",
+    thisYear: "This Year",
+    custom: "Custom",
+    // Table Headers
+    id: "ID",
+    createdAt: "Created At",
+    updatedAt: "Updated At",
+    createdBy: "Created By",
+    lastModified: "Last Modified",
+    assignedTo: "Assigned To",
+    priority: "Priority",
+    dueDate: "Due Date",
+    startDate: "Start Date",
+    endDate: "End Date",
+    progress: "Progress",
+    comments: "Comments",
+    attachments: "Attachments",
+    tags: "Tags",
+    version: "Version",
+    // Policy Page
+    newPolicy: "New Policy",
+    totalPolicies: "Total Policies",
+    pendingReview: "Pending Review",
+    requireAcknowledgement: "Require Acknowledgement",
+    policyNumber: "Policy Number",
+    policyTitle: "Policy Title",
+    policyCategory: "Category",
+    policyStatus: "Status",
+    policyDepartment: "Department",
+    reviewDate: "Review Date",
+    noPoliciesFound: "No policies found",
+    publish: "Publish",
+    // Vendor Page
+    newVendor: "New Vendor",
+    totalVendors: "Total Vendors",
+    activeVendors: "Active Vendors",
+    highRiskVendors: "High Risk Vendors",
+    vendorName: "Vendor Name",
+    vendorType: "Vendor Type",
+    vendorStatus: "Status",
+    vendorRisk: "Risk Level",
+    contactPerson: "Contact Person",
+    lastAssessment: "Last Assessment",
+    noVendorsFound: "No vendors found",
+    // Evidence Page
+    newEvidence: "New Evidence",
+    totalEvidence: "Total Evidence",
+    linkedControls: "Linked Controls",
+    expiringEvidence: "Expiring Evidence",
+    evidenceName: "Evidence Name",
+    evidenceType: "Evidence Type",
+    evidenceStatus: "Status",
+    linkedTo: "Linked To",
+    expiryDate: "Expiry Date",
+    noEvidenceFound: "No evidence found",
+    // Findings Page
+    newFinding: "New Finding",
+    totalFindings: "Total Findings",
+    openFindings: "Open Findings",
+    overdueFindings: "Overdue Findings",
+    findingTitle: "Finding Title",
+    findingSeverity: "Severity",
+    findingStatus: "Status",
+    findingOwner: "Owner",
+    remediation: "Remediation",
+    noFindingsFound: "No findings found",
+    // Incidents Page
+    newIncident: "New Incident",
+    totalIncidents: "Total Incidents",
+    openIncidents: "Open Incidents",
+    resolvedIncidents: "Resolved Incidents",
+    incidentTitle: "Incident Title",
+    incidentSeverity: "Severity",
+    incidentStatus: "Status",
+    incidentType: "Type",
+    reportedBy: "Reported By",
+    reportedAt: "Reported At",
+    noIncidentsFound: "No incidents found",
+    // Audit Page
+    newAudit: "New Audit",
+    totalAudits: "Total Audits",
+    plannedAudits: "Planned Audits",
+    completedAudits: "Completed Audits",
+    auditName: "Audit Name",
+    auditType: "Audit Type",
+    auditStatus: "Status",
+    auditScope: "Scope",
+    auditor: "Auditor",
+    noAuditsFound: "No audits found",
   },
   ru: {
     grcDashboard: "Панель GRC",
@@ -733,6 +1160,189 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     support: "Поддержка",
     footerCopyright: "Интегрированная платформа управления, рисков и соответствия.",
     selectLanguage: "Выбрать язык",
+    // Page Titles & Descriptions
+    policyManagement: "Управление политиками",
+    policyManagementDesc: "Создание, управление и отслеживание организационных политик на всех этапах жизненного цикла.",
+    vendorManagement: "Управление поставщиками",
+    vendorManagementDesc: "Оценка рисков поставщиков, управление анкетами и отслеживание сертификатов.",
+    evidenceManagement: "Библиотека доказательств",
+    evidenceManagementDesc: "Централизованный сбор доказательств с автоматической привязкой к контролям.",
+    findingsManagement: "Управление выявленными проблемами",
+    findingsManagementDesc: "Отслеживание и управление результатами аудита и мероприятиями по исправлению.",
+    incidentManagement: "Управление инцидентами",
+    incidentManagementDesc: "Регистрация, отслеживание и разрешение инцидентов безопасности.",
+    auditManagementPage: "Управление аудитом",
+    auditManagementPageDesc: "Планирование и проведение аудитов, отслеживание выявленных проблем.",
+    scenarioManagement: "Управление сценариями",
+    scenarioManagementDesc: "Создание и анализ сценариев рисков.",
+    dependencyManagement: "Управление зависимостями",
+    dependencyManagementDesc: "Картирование и отслеживание зависимостей между сущностями.",
+    historyAnalysis: "Исторический анализ",
+    historyAnalysisDesc: "Анализ исторических тенденций и закономерностей.",
+    aiAnalysis: "AI-анализ",
+    aiAnalysisDesc: "Аналитика и рекомендации на основе ИИ.",
+    monitoringPage: "Мониторинг",
+    monitoringPageDesc: "Мониторинг и оповещения в реальном времени.",
+    settingsPage: "Настройки",
+    settingsPageDesc: "Настройка параметров системы.",
+    profilePage: "Профиль",
+    profilePageDesc: "Управление профилем и настройками аккаунта.",
+    securitySettingsPage: "Настройки безопасности",
+    securitySettingsPageDesc: "Настройка параметров безопасности и аутентификации.",
+    simulationsPage: "Симуляции",
+    simulationsPageDesc: "Запуск симуляций Монте-Карло и моделирование рисков.",
+    analyticsPage: "Аналитика и отчёты",
+    analyticsPageDesc: "Просмотр аналитических панелей и формирование отчётов.",
+    bulkOperationsPage: "Массовые операции",
+    bulkOperationsPageDesc: "Выполнение массовых операций с данными.",
+    userManagementPage: "Управление пользователями",
+    userManagementPageDesc: "Управление пользователями, ролями и разрешениями.",
+    complianceTasksPage: "Задачи соответствия",
+    complianceTasksPageDesc: "Отслеживание и управление задачами соответствия.",
+    russianCompliancePage: "Российское соответствие",
+    russianCompliancePageDesc: "Управление требованиями российского законодательства.",
+    scenarioChainsPage: "Цепочки сценариев",
+    scenarioChainsPageDesc: "Анализ связанных сценариев и каскадных эффектов.",
+    riskJustificationPage: "Обоснование рисков",
+    riskJustificationPageDesc: "Документирование и обоснование решений о принятии рисков.",
+    crossLayerPage: "Межуровневый анализ",
+    crossLayerPageDesc: "Анализ рисков по организационным уровням.",
+    dependencyLayersPage: "Слои зависимостей",
+    dependencyLayersPageDesc: "Просмотр и управление картой слоёв зависимостей.",
+    // Common UI Elements
+    newItem: "Новый",
+    addNew: "Добавить",
+    viewAll: "Показать все",
+    details: "Подробности",
+    description: "Описание",
+    noDataFound: "Данные не найдены",
+    noResultsFound: "Результаты не найдены",
+    tryAgain: "Попробовать снова",
+    refresh: "Обновить",
+    back: "Назад",
+    close: "Закрыть",
+    confirm: "Подтвердить",
+    submit: "Отправить",
+    update: "Обновить",
+    remove: "Удалить",
+    export: "Экспорт",
+    import: "Импорт",
+    download: "Скачать",
+    upload: "Загрузить",
+    select: "Выбрать",
+    selected: "Выбрано",
+    all: "Все",
+    none: "Нет",
+    yes: "Да",
+    no: "Нет",
+    on: "Вкл",
+    off: "Выкл",
+    enabled: "Включено",
+    disabled: "Отключено",
+    pending: "Ожидает",
+    approved: "Одобрено",
+    rejected: "Отклонено",
+    draft: "Черновик",
+    published: "Опубликовано",
+    archived: "В архиве",
+    date: "Дата",
+    time: "Время",
+    dateRange: "Период",
+    from: "От",
+    to: "До",
+    today: "Сегодня",
+    yesterday: "Вчера",
+    thisWeek: "Эта неделя",
+    thisMonth: "Этот месяц",
+    lastMonth: "Прошлый месяц",
+    thisYear: "Этот год",
+    custom: "Настраиваемый",
+    // Table Headers
+    id: "ID",
+    createdAt: "Создан",
+    updatedAt: "Обновлён",
+    createdBy: "Создал",
+    lastModified: "Изменён",
+    assignedTo: "Назначен",
+    priority: "Приоритет",
+    dueDate: "Срок",
+    startDate: "Начало",
+    endDate: "Окончание",
+    progress: "Прогресс",
+    comments: "Комментарии",
+    attachments: "Вложения",
+    tags: "Теги",
+    version: "Версия",
+    // Policy Page
+    newPolicy: "Новая политика",
+    totalPolicies: "Всего политик",
+    pendingReview: "Ожидают проверки",
+    requireAcknowledgement: "Требует подтверждения",
+    policyNumber: "Номер политики",
+    policyTitle: "Название политики",
+    policyCategory: "Категория",
+    policyStatus: "Статус",
+    policyDepartment: "Отдел",
+    reviewDate: "Дата проверки",
+    noPoliciesFound: "Политики не найдены",
+    publish: "Опубликовать",
+    // Vendor Page
+    newVendor: "Новый поставщик",
+    totalVendors: "Всего поставщиков",
+    activeVendors: "Активные поставщики",
+    highRiskVendors: "Высокий риск",
+    vendorName: "Название поставщика",
+    vendorType: "Тип поставщика",
+    vendorStatus: "Статус",
+    vendorRisk: "Уровень риска",
+    contactPerson: "Контактное лицо",
+    lastAssessment: "Последняя оценка",
+    noVendorsFound: "Поставщики не найдены",
+    // Evidence Page
+    newEvidence: "Новое доказательство",
+    totalEvidence: "Всего доказательств",
+    linkedControls: "Связанные контроли",
+    expiringEvidence: "Истекающие",
+    evidenceName: "Название",
+    evidenceType: "Тип доказательства",
+    evidenceStatus: "Статус",
+    linkedTo: "Привязано к",
+    expiryDate: "Срок действия",
+    noEvidenceFound: "Доказательства не найдены",
+    // Findings Page
+    newFinding: "Новая проблема",
+    totalFindings: "Всего проблем",
+    openFindings: "Открытые",
+    overdueFindings: "Просроченные",
+    findingTitle: "Название",
+    findingSeverity: "Серьёзность",
+    findingStatus: "Статус",
+    findingOwner: "Владелец",
+    remediation: "Исправление",
+    noFindingsFound: "Проблемы не найдены",
+    // Incidents Page
+    newIncident: "Новый инцидент",
+    totalIncidents: "Всего инцидентов",
+    openIncidents: "Открытые",
+    resolvedIncidents: "Решённые",
+    incidentTitle: "Название инцидента",
+    incidentSeverity: "Серьёзность",
+    incidentStatus: "Статус",
+    incidentType: "Тип",
+    reportedBy: "Сообщил",
+    reportedAt: "Дата сообщения",
+    noIncidentsFound: "Инциденты не найдены",
+    // Audit Page
+    newAudit: "Новый аудит",
+    totalAudits: "Всего аудитов",
+    plannedAudits: "Запланировано",
+    completedAudits: "Завершено",
+    auditName: "Название аудита",
+    auditType: "Тип аудита",
+    auditStatus: "Статус",
+    auditScope: "Охват",
+    auditor: "Аудитор",
+    noAuditsFound: "Аудиты не найдены",
   },
   tt: {
     grcDashboard: "GRC панеле",
