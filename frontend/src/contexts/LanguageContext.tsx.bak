@@ -617,8 +617,9 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     owner: "Owner",
     loadingRisks: "Loading risks...",
     noRisksFound: "No risks found. Add your first risk to get started.",
+    edit: "Edit",
     getStarted: "Get Started",
-    activeControls: "Active Controls",
+        activeControls: "Active Controls",
     criticalRisks: "Critical Risks",
     critical: "Critical",
     high: "High",
@@ -1045,8 +1046,9 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     owner: "Владелец",
     loadingRisks: "Загрузка рисков...",
     noRisksFound: "Риски не найдены. Добавьте первый риск для начала.",
+    edit: "Редактировать",
     getStarted: "Начать",
-    activeControls: "Активные контроли",
+        activeControls: "Активные контроли",
     criticalRisks: "Критические риски",
     critical: "Критический",
     high: "Высокий",
@@ -1473,8 +1475,9 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     owner: "Хуҗа",
     loadingRisks: "Рисклар йөкләнә...",
     noRisksFound: "Рисклар табылмады. Башлау өчен беренче рискны өстәгез.",
+    edit: "Үзгәртү",
     getStarted: "Башлау",
-    activeControls: "Актив контрольләр",
+        activeControls: "Актив контрольләр",
     criticalRisks: "Критик рисклар",
     critical: "Критик",
     high: "Югары",
@@ -1718,8 +1721,9 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     owner: "Хужа",
     loadingRisks: "Рисктар йөкләнә...",
     noRisksFound: "Рисктар табылманы. Башлау өсөн беренсе рискты өҫтәгеҙ.",
+    edit: "Үҙгәртеү",
     getStarted: "Башлау",
-    activeControls: "Актив контрольдар",
+        activeControls: "Актив контрольдар",
     criticalRisks: "Критик рисктар",
     critical: "Критик",
     high: "Юғары",
@@ -1886,8 +1890,9 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     owner: "Хожа",
     loadingRisks: "Хетараш чуйоккху...",
     noRisksFound: "Хетараш ца карийна. Цхьаболу дуьйцуш.",
+    edit: "Хийца",
     getStarted: "Долале",
-    activeControls: "Актив тергамаш",
+        activeControls: "Актив тергамаш",
     criticalRisks: "Критикан рискаш",
     critical: "Критик",
     high: "Лакха",
@@ -2054,8 +2059,9 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     owner: "Хуçа",
     loadingRisks: "Рисксем йĕркеленеççĕ...",
     noRisksFound: "Рисксем тупăнмарĕç. Пуçласшăн пĕрремĕш риск хушăр.",
+    edit: "Тӳрлет",
     getStarted: "Пуçла",
-    activeControls: "Актив тĕрĕслевсем",
+        activeControls: "Актив тĕрĕслевсем",
     criticalRisks: "Критик рисксем",
     critical: "Критик",
     high: "Çÿлти",
@@ -2222,8 +2228,9 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     owner: "Иесі",
     loadingRisks: "Тәуекелдер жүктелуде...",
     noRisksFound: "Тәуекелдер табылмады. Бастау үшін алғашқы тәуекелді қосыңыз.",
+    edit: "Өңдеу",
     getStarted: "Бастау",
-    activeControls: "Белсенді бақылаулар",
+        activeControls: "Белсенді бақылаулар",
     criticalRisks: "Сыни тәуекелдер",
     critical: "Сыни",
     high: "Жоғары",
@@ -2467,8 +2474,9 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     owner: "Ээси",
     loadingRisks: "Тобокелдиктер жүктөлүүдө...",
     noRisksFound: "Тобокелдиктер табылган жок. Баштоо үчүн биринчи тобокелдикти кошуңуз.",
+    edit: "Өзгөртүү",
     getStarted: "Баштоо",
-    activeControls: "Активдүү көзөмөлдөр",
+        activeControls: "Активдүү көзөмөлдөр",
     criticalRisks: "Критикалык тобокелдер",
     critical: "Критикалык",
     high: "Жогорку",
@@ -2635,8 +2643,9 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     owner: "Egasi",
     loadingRisks: "Xavflar yuklanmoqda...",
     noRisksFound: "Xavflar topilmadi. Boshlash uchun birinchi xavfni qo'shing.",
+    edit: "Tahrirlash",
     getStarted: "Boshlash",
-    activeControls: "Faol nazoratlar",
+        activeControls: "Faol nazoratlar",
     criticalRisks: "Kritik xavflar",
     critical: "Kritik",
     high: "Yuqori",
@@ -2880,8 +2889,9 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     owner: "Սեփականատեր",
     loadingRisks: "Ռիսկերը բեռնվում են...",
     noRisksFound: "Ռիսկեր չեն գտնվեл։ Ավեлացրեք առաջինը։",
+    edit: "Խմբագրեл",
     getStarted: "Սկսել",
-    activeControls: "Վերահսկողություններ",
+        activeControls: "Վերահսկողություններ",
     criticalRisks: "Կրիտիկական ռիսկեր",
     critical: "Կրիտիկական",
     high: "Բարձր",
@@ -3125,8 +3135,9 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     owner: "მესაკუთრე",
     loadingRisks: "რისკები იტვირთება...",
     noRisksFound: "რისკები ვერ მოიძებნა. დასაწყებად დაამატეთ პირველი.",
+    edit: "რედაქტირება",
     getStarted: "დაწყება",
-    activeControls: "აქტიური კონტროლები",
+        activeControls: "აქტიური კონტროლები",
     criticalRisks: "კრიტიკული რისკები",
     critical: "კრიტიკული",
     high: "მაღალი",
@@ -3370,8 +3381,9 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     owner: "Sahib",
     loadingRisks: "Risklar yuklanir...",
     noRisksFound: "Risklar tapilmadi. Bashlamaq ucun birinci riski alava edin.",
+    edit: "Redakta et",
     getStarted: "Başla",
-    activeControls: "Aktiv nəzarətlər",
+        activeControls: "Aktiv nəzarətlər",
     criticalRisks: "Kritik risklər",
     critical: "Kritik",
     high: "Yüksək",
@@ -3489,7 +3501,7 @@ const translations: Record<LanguageCode, TranslationStrings> = {
 interface LanguageContextType {
   language: LanguageCode;
   setLanguage: (lang: LanguageCode) => void;
-  t: (key: string) => string;
+  t: (key: keyof TranslationStrings) => string;
   languages: typeof LANGUAGES;
 }
 
@@ -3520,7 +3532,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setLanguageState(lang);
   };
 
-  const t = (key: string): string => {
+  const t = (key: keyof TranslationStrings): string => {
     return translations[language][key] || translations.en[key] || key;
   };
 
