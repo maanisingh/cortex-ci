@@ -4,14 +4,14 @@ from uuid import uuid4
 from datetime import datetime, timezone
 
 from sqlalchemy import select
-from app.core.database import async_session_maker
+from app.core.database import AsyncSessionLocal
 from app.core.security import hash_password
 from app.models import User, Tenant
 
 
 async def seed_demo():
     """Create demo tenant and user if not exists."""
-    async with async_session_maker() as db:
+    async with AsyncSessionLocal() as db:
         # Check if default tenant exists
         result = await db.execute(
             select(Tenant).where(Tenant.slug == "default")
