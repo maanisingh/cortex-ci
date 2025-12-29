@@ -776,10 +776,31 @@ PROPERTY_TAX_DECLARATION_COVER_TEMPLATE = """
 class TaxTemplateService:
     """Service for generating tax and regulatory documents."""
 
+    # Note: UTII (ENVD) was abolished in Russia as of January 1, 2021
+    UTII_DEPRECATED_TEMPLATE = """
+ВНИМАНИЕ: ЕДИНЫЙ НАЛОГ НА ВМЕНЁННЫЙ ДОХОД (ЕНВД) ОТМЕНЁН
+
+С 1 января 2021 года специальный налоговый режим ЕНВД (Единый налог на
+вменённый доход) отменён на всей территории Российской Федерации.
+
+Организациям и индивидуальным предпринимателям, ранее применявшим ЕНВД,
+необходимо перейти на иной режим налогообложения:
+- ОСНО (общая система налогообложения)
+- УСН (упрощённая система налогообложения)
+- ПСН (патентная система налогообложения) - для ИП
+- ЕСХН (единый сельскохозяйственный налог)
+- НПД (налог на профессиональный доход) - для самозанятых
+
+Для перехода на УСН используйте шаблон «Уведомление о переходе на УСН».
+
+Основание: Федеральный закон от 29.06.2012 № 97-ФЗ (в ред. от 02.06.2016)
+"""
+
     TEMPLATES = {
         TaxDocType.TAX_REGISTRATION: TAX_REGISTRATION_TEMPLATE,
         TaxDocType.TAX_DEREGISTRATION: TAX_DEREGISTRATION_TEMPLATE,
         TaxDocType.USN_APPLICATION: USN_APPLICATION_TEMPLATE,
+        TaxDocType.UTII_APPLICATION: UTII_DEPRECATED_TEMPLATE,
         TaxDocType.TAX_PAYMENT_ORDER: TAX_PAYMENT_ORDER_TEMPLATE,
         TaxDocType.VAT_DECLARATION: VAT_DECLARATION_COVER_TEMPLATE,
         TaxDocType.PROFIT_TAX_DECLARATION: PROFIT_TAX_DECLARATION_COVER_TEMPLATE,
@@ -797,6 +818,7 @@ class TaxTemplateService:
         TaxDocType.TAX_REGISTRATION: "Заявление о постановке на налоговый учёт",
         TaxDocType.TAX_DEREGISTRATION: "Заявление о снятии с налогового учёта",
         TaxDocType.USN_APPLICATION: "Уведомление о переходе на УСН",
+        TaxDocType.UTII_APPLICATION: "Заявление о применении ЕНВД (отменён с 2021)",
         TaxDocType.TAX_PAYMENT_ORDER: "Платёжное поручение на уплату налогов",
         TaxDocType.VAT_DECLARATION: "Декларация по НДС (титульный лист)",
         TaxDocType.PROFIT_TAX_DECLARATION: "Декларация по налогу на прибыль",

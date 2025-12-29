@@ -980,9 +980,20 @@ class HRTemplateService:
         if not template:
             raise ValueError(f"Template not found: {doc_type}")
 
-        from jinja2 import Template
+        from jinja2 import Environment
+
+        def format_date(value):
+            """Format date for Russian documents."""
+            if not value:
+                return "____.____.______"
+            if isinstance(value, str):
+                return value
+            return value.strftime("%d.%m.%Y") if hasattr(value, 'strftime') else str(value)
+
+        env = Environment()
+        env.filters['format_date'] = format_date
         content = template.get("template_content", "")
-        tpl = Template(content)
+        tpl = env.from_string(content)
         return tpl.render(**data)
 
     @staticmethod
