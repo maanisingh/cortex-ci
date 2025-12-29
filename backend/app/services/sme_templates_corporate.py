@@ -851,3 +851,54 @@ def list_templates_by_subcategory(subcategory: str) -> List[Dict[str, Any]]:
         t for t in CORPORATE_TEMPLATES.values()
         if t.get("subcategory") == subcategory
     ]
+
+
+from enum import Enum
+
+
+class CorporateDocType(str, Enum):
+    """Corporate document types."""
+    CHARTER_OOO = "charter_ooo"
+    FORMATION_DECISION_SOLE = "formation_decision_sole"
+    FORMATION_DECISION_MULTIPLE = "formation_decision_multiple"
+    FOUNDERS_AGREEMENT = "founders_agreement"
+    CAPITAL_INCREASE_DECISION = "capital_increase_decision"
+    SHARE_SALE_AGREEMENT = "share_sale_agreement"
+    SHAREHOLDER_MEETING_MINUTES = "shareholder_meeting_minutes"
+    DIVIDEND_RESOLUTION = "dividend_resolution"
+    DIRECTOR_APPOINTMENT_ORDER = "director_appointment_order"
+    POWER_OF_ATTORNEY = "power_of_attorney"
+    CHARTER_AMENDMENTS = "charter_amendments"
+    SUBSIDIARY_FORMATION = "subsidiary_formation"
+    BRANCH_REGULATIONS = "branch_regulations"
+    REORGANIZATION_DECISION = "reorganization_decision"
+    VOLUNTARY_LIQUIDATION = "voluntary_liquidation"
+
+
+class CorporateTemplateService:
+    """Service for corporate document templates."""
+
+    @staticmethod
+    def list_templates() -> List[Dict[str, Any]]:
+        """List all corporate templates."""
+        return [
+            {"type": tid, "name": t["name"], "category": "corporate"}
+            for tid, t in CORPORATE_TEMPLATES.items()
+        ]
+
+    @staticmethod
+    def get_template(doc_type: CorporateDocType) -> Dict[str, Any]:
+        """Get template by document type."""
+        return CORPORATE_TEMPLATES.get(doc_type.value)
+
+    @staticmethod
+    def generate(doc_type: CorporateDocType, data: Dict[str, Any]) -> str:
+        """Generate document from template."""
+        template = CORPORATE_TEMPLATES.get(doc_type.value)
+        if not template:
+            raise ValueError(f"Template not found: {doc_type}")
+
+        from jinja2 import Template
+        content = template.get("template_content", "")
+        tpl = Template(content)
+        return tpl.render(**data)

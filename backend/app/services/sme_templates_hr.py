@@ -941,3 +941,46 @@ def get_hr_templates() -> Dict[str, Any]:
 def get_template(template_id: str) -> Dict[str, Any]:
     """Get a specific template by ID."""
     return HR_TEMPLATES.get(template_id)
+
+
+from enum import Enum
+
+
+class HRDocType(str, Enum):
+    """HR document types."""
+    EMPLOYMENT_CONTRACT = "employment_contract"
+    DISMISSAL_ORDER = "dismissal_order"
+    VACATION_ORDER = "vacation_order"
+    INTERNAL_LABOR_RULES = "internal_labor_rules"
+    JOB_DESCRIPTION = "job_description"
+    NDA_EMPLOYEE = "nda_employee"
+    CONTRACTOR_AGREEMENT = "contractor_agreement"
+
+
+class HRTemplateService:
+    """Service for HR document templates."""
+
+    @staticmethod
+    def list_templates() -> List[Dict[str, Any]]:
+        """List all HR templates."""
+        return [
+            {"type": tid, "name": t["name"], "category": "hr"}
+            for tid, t in HR_TEMPLATES.items()
+        ]
+
+    @staticmethod
+    def get_template(doc_type: HRDocType) -> Dict[str, Any]:
+        """Get template by document type."""
+        return HR_TEMPLATES.get(doc_type.value)
+
+    @staticmethod
+    def generate(doc_type: HRDocType, data: Dict[str, Any]) -> str:
+        """Generate document from template."""
+        template = HR_TEMPLATES.get(doc_type.value)
+        if not template:
+            raise ValueError(f"Template not found: {doc_type}")
+
+        from jinja2 import Template
+        content = template.get("template_content", "")
+        tpl = Template(content)
+        return tpl.render(**data)
