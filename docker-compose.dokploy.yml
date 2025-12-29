@@ -199,7 +199,12 @@ services:
       - cortex-network
       - dokploy-network
     restart: unless-stopped
-    # Traefik labels managed by Dokploy domain configuration
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cortex-backend.rule=Host(`cortex-api.maanisingh.com`)"
+      - "traefik.http.routers.cortex-backend.entrypoints=websecure"
+      - "traefik.http.routers.cortex-backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.cortex-backend.loadbalancer.server.port=8000"
 
   # Frontend - Single unified UI for all compliance features
   frontend:
@@ -216,7 +221,12 @@ services:
       - cortex-network
       - dokploy-network
     restart: unless-stopped
-    # Traefik labels managed by Dokploy domain configuration
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cortex-frontend.rule=Host(`cortex.maanisingh.com`)"
+      - "traefik.http.routers.cortex-frontend.entrypoints=websecure"
+      - "traefik.http.routers.cortex-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.cortex-frontend.loadbalancer.server.port=80"
 
 volumes:
   postgres_data:
