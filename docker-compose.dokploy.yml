@@ -190,6 +190,10 @@ services:
       - DOCUSEAL_URL=http://docuseal:3000
       - PAPERLESS_URL=http://paperless:8000
       - ELASTICSEARCH_URL=http://elasticsearch:9200
+      # AI Document Generation
+      - AI_PROVIDER=${AI_PROVIDER:-huggingface}
+      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
+      - HUGGINGFACE_MODEL=${HUGGINGFACE_MODEL:-IlyaGusev/saiga_mistral_7b_lora}
     depends_on:
       db:
         condition: service_healthy

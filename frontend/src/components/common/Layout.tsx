@@ -4,46 +4,17 @@ import { Dialog, Transition } from "@headlessui/react";
 import {
   Bars3Icon,
   HomeIcon,
-  BuildingOfficeIcon,
-  ShieldExclamationIcon,
-  LinkIcon,
-  ExclamationTriangleIcon,
-  BeakerIcon,
   ClipboardDocumentListIcon,
   Cog6ToothIcon,
   UsersIcon,
   UserCircleIcon,
-  // Phase 2 icons
-  ArrowsRightLeftIcon,
-  ScaleIcon,
-  ClockIcon,
   SparklesIcon,
-  ChartBarSquareIcon,
-  // Phase 2.1 icons
-  Square3Stack3DIcon,
-  ViewColumnsIcon,
-  // Phase 3 icons
   ShieldCheckIcon,
-  // Phase 4 icons
-  ArrowsUpDownIcon,
-  ChartBarIcon,
-  // Phase 5 icons
-  CpuChipIcon,
-  // Compliance icons
   DocumentCheckIcon,
-  // GRC icons
-  DocumentTextIcon,
-  MagnifyingGlassCircleIcon,
-  ExclamationCircleIcon,
-  TruckIcon,
   FolderOpenIcon,
-  ListBulletIcon,
-  // Calendar icons
   CalendarDaysIcon,
   ClipboardDocumentCheckIcon,
-  // Template icons
   RectangleStackIcon,
-  // SME Business icons
   LightBulbIcon,
   BriefcaseIcon,
 } from "@heroicons/react/24/outline";
@@ -61,89 +32,41 @@ import {
 } from "../../hooks/useKeyboardShortcuts";
 import { useLanguage } from "../../contexts/LanguageContext";
 
-// Core Navigation - GRC Overview
+// Core Navigation - Dashboard
 const coreNavigation = [
   { name: "grcDashboard", href: "/dashboard", icon: HomeIcon },
 ];
 
-// Governance Module - included in compliance section
-
-// Risk Management Module
-const riskNavigation = [
-  { name: "riskRegister", href: "/risks", icon: ExclamationTriangleIcon },
-  { name: "riskObjects", href: "/entities", icon: BuildingOfficeIcon },
-  { name: "riskRelationships", href: "/dependencies", icon: LinkIcon },
-  { name: "riskScenarios", href: "/scenarios", icon: BeakerIcon },
-  { name: "riskLayers", href: "/dependency-layers", icon: Square3Stack3DIcon },
-  {
-    name: "crossLayerAnalysis",
-    href: "/cross-layer-analysis",
-    icon: ViewColumnsIcon,
-  },
-  {
-    name: "scenarioChains",
-    href: "/scenario-chains",
-    icon: ArrowsRightLeftIcon,
-  },
-  { name: "riskJustification", href: "/risk-justification", icon: ScaleIcon },
-  { name: "simulations", href: "/simulations", icon: CpuChipIcon },
+// SME Business Templates - Main Feature
+const smeNavigation = [
+  { name: "companyLifecycle", href: "/company-lifecycle", icon: LightBulbIcon },
+  { name: "smeTemplates", href: "/sme-templates", icon: BriefcaseIcon },
+  { name: "russianCompliance", href: "/russian-compliance", icon: ShieldCheckIcon },
 ];
 
-// Compliance Module
+// Documents & Compliance
 const complianceNavigation = [
-  {
-    name: "complianceDashboard",
-    href: "/compliance",
-    icon: DocumentCheckIcon,
-  },
-  { name: "controlsNav", href: "/constraints", icon: ShieldExclamationIcon },
-  { name: "policies", href: "/policies", icon: DocumentTextIcon },
   { name: "documentLibrary", href: "/documents", icon: FolderOpenIcon },
   { name: "templateCatalog", href: "/templates", icon: RectangleStackIcon },
-  { name: "russianCompliance", href: "/russian-compliance", icon: ShieldCheckIcon },
   { name: "complianceTasks", href: "/compliance-tasks", icon: ClipboardDocumentCheckIcon },
   { name: "complianceCalendar", href: "/compliance-calendar", icon: CalendarDaysIcon },
 ];
 
-// SME Business Templates
-const smeNavigation = [
-  { name: "companyLifecycle", href: "/company-lifecycle", icon: LightBulbIcon },
-  { name: "smeTemplates", href: "/sme-templates", icon: BriefcaseIcon },
-];
-
-// Audit & Issue Management
-const auditNavigation = [
-  { name: "auditPlanning", href: "/audits", icon: MagnifyingGlassCircleIcon },
+// Advanced Tools (collapsed by default for power users)
+const advancedNavigation = [
   { name: "gapAnalysis", href: "/gap-analysis", icon: DocumentCheckIcon },
-  { name: "findings", href: "/findings", icon: ListBulletIcon },
-  { name: "incidents", href: "/incidents", icon: ExclamationCircleIcon },
   { name: "activityLog", href: "/audit", icon: ClipboardDocumentListIcon },
-];
-
-// Third Party Risk & Evidence
-const vendorNavigation = [
-  { name: "vendorRegister", href: "/vendors", icon: TruckIcon },
-  { name: "evidenceLibrary", href: "/evidence", icon: FolderOpenIcon },
-];
-
-// Intelligence & Analytics
-const intelligenceNavigation = [
-  { name: "historicalAnalysis", href: "/history", icon: ClockIcon },
   { name: "aiInsights", href: "/ai-analysis", icon: SparklesIcon },
-  { name: "monitoring", href: "/monitoring", icon: ChartBarSquareIcon },
 ];
 
 // Admin
 const adminNavigation = [
   { name: "userManagement", href: "/admin/users", icon: UsersIcon },
-  { name: "analyticsReports", href: "/analytics", icon: ChartBarIcon },
-  { name: "bulkOperations", href: "/bulk-operations", icon: ArrowsUpDownIcon },
   { name: "settings", href: "/settings", icon: Cog6ToothIcon },
 ];
 
 const userNavigation = [
   { name: "profile", href: "/profile", icon: UserCircleIcon },
-  { name: "security", href: "/security", icon: ShieldCheckIcon },
 ];
 
 function classNames(...classes: string[]) {
@@ -227,13 +150,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                           ))}
                         </ul>
                       </li>
-                      {/* Risk Management */}
+                      {/* SME Business */}
                       <li>
                         <div className="text-xs font-semibold leading-6 text-primary-400 uppercase">
-                          {t("riskManagement")}
+                          {t("smeBusiness")}
                         </div>
                         <ul role="list" className="-mx-2 mt-2 space-y-1">
-                          {riskNavigation.slice(0, 4).map((item) => (
+                          {smeNavigation.map((item) => (
                             <li key={item.name}>
                               <Link
                                 to={item.href}
@@ -374,65 +297,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </ul>
               </li>
 
-              {/* Risk Management */}
-              <li>
-                <div className="text-xs font-semibold leading-6 text-primary-400 uppercase">
-                  {t("riskManagement")}
-                </div>
-                <ul role="list" className="-mx-2 mt-2 space-y-1">
-                  {riskNavigation.map((item) => (
-                    <li key={item.name}>
-                      <Link
-                        to={item.href}
-                        className={classNames(
-                          location.pathname === item.href ||
-                            location.pathname.startsWith(item.href + "/")
-                            ? "bg-primary-800 text-white"
-                            : "text-primary-200 hover:text-white hover:bg-primary-800",
-                          "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold",
-                        )}
-                      >
-                        <item.icon
-                          className="h-6 w-6 shrink-0"
-                          aria-hidden="true"
-                        />
-                        {t(item.name as any)}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-
-              {/* Compliance */}
-              <li>
-                <div className="text-xs font-semibold leading-6 text-primary-400 uppercase">
-                  {t("complianceSection")}
-                </div>
-                <ul role="list" className="-mx-2 mt-2 space-y-1">
-                  {complianceNavigation.map((item) => (
-                    <li key={item.name}>
-                      <Link
-                        to={item.href}
-                        className={classNames(
-                          location.pathname === item.href ||
-                            location.pathname.startsWith(item.href + "/")
-                            ? "bg-primary-800 text-white"
-                            : "text-primary-200 hover:text-white hover:bg-primary-800",
-                          "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold",
-                        )}
-                      >
-                        <item.icon
-                          className="h-6 w-6 shrink-0"
-                          aria-hidden="true"
-                        />
-                        {t(item.name as any)}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-
-              {/* SME Business */}
+              {/* SME Business - Main Feature */}
               <li>
                 <div className="text-xs font-semibold leading-6 text-primary-400 uppercase">
                   {t("smeBusiness")}
@@ -461,13 +326,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </ul>
               </li>
 
-              {/* Audit */}
+              {/* Documents & Compliance */}
               <li>
                 <div className="text-xs font-semibold leading-6 text-primary-400 uppercase">
-                  {t("audit")}
+                  {t("complianceSection")}
                 </div>
                 <ul role="list" className="-mx-2 mt-2 space-y-1">
-                  {auditNavigation.map((item) => (
+                  {complianceNavigation.map((item) => (
                     <li key={item.name}>
                       <Link
                         to={item.href}
@@ -490,42 +355,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </ul>
               </li>
 
-              {/* Third Party & Evidence */}
+              {/* Advanced Tools */}
               <li>
                 <div className="text-xs font-semibold leading-6 text-primary-400 uppercase">
-                  {t("thirdParty")}
+                  {t("advancedTools")}
                 </div>
                 <ul role="list" className="-mx-2 mt-2 space-y-1">
-                  {vendorNavigation.map((item) => (
-                    <li key={item.name}>
-                      <Link
-                        to={item.href}
-                        className={classNames(
-                          location.pathname === item.href ||
-                            location.pathname.startsWith(item.href + "/")
-                            ? "bg-primary-800 text-white"
-                            : "text-primary-200 hover:text-white hover:bg-primary-800",
-                          "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold",
-                        )}
-                      >
-                        <item.icon
-                          className="h-6 w-6 shrink-0"
-                          aria-hidden="true"
-                        />
-                        {t(item.name as any)}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-
-              {/* Intelligence */}
-              <li>
-                <div className="text-xs font-semibold leading-6 text-primary-400 uppercase">
-                  {t("intelligence")}
-                </div>
-                <ul role="list" className="-mx-2 mt-2 space-y-1">
-                  {intelligenceNavigation.map((item) => (
+                  {advancedNavigation.map((item) => (
                     <li key={item.name}>
                       <Link
                         to={item.href}

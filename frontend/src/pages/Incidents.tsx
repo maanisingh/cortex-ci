@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ExclamationCircleIcon,
   PlusIcon,
@@ -9,6 +10,22 @@ import {
   ArrowPathIcon,
   FireIcon,
 } from "@heroicons/react/24/outline";
+import { incidentsApi } from "../services/api";
+
+interface Incident {
+  id: string;
+  incident_ref: string;
+  title: string;
+  description: string;
+  category: string;
+  severity: "critical" | "high" | "medium" | "low";
+  status: "new" | "investigating" | "contained" | "eradicated" | "recovered" | "closed";
+  detected_at: string;
+  assigned_to: string | null;
+  affected_systems: string[];
+  is_breach: boolean;
+  affected_records_count: number;
+}
 
 const SEVERITY_CONFIG = {
   critical: {
@@ -62,80 +79,6 @@ const STATUS_CONFIG = {
   },
 };
 
-// Mock incidents data
-const mockIncidents = [
-  {
-    id: "INC-2024-001",
-    title: "Suspected phishing campaign targeting employees",
-    description:
-      "Multiple employees reported receiving suspicious emails attempting to harvest credentials.",
-    type: "Phishing",
-    severity: "high" as const,
-    status: "contained" as const,
-    detectedAt: "2024-11-20T09:30:00Z",
-    commander: "Sarah Wilson",
-    affectedSystems: ["Email Gateway", "User Workstations"],
-    dataBreach: false,
-    recordsAffected: 0,
-  },
-  {
-    id: "INC-2024-002",
-    title: "Unauthorized access attempt on production database",
-    description:
-      "IDS detected multiple failed authentication attempts from an unknown IP address.",
-    type: "Unauthorized Access",
-    severity: "critical" as const,
-    status: "investigating" as const,
-    detectedAt: "2024-11-22T14:15:00Z",
-    commander: "Mike Johnson",
-    affectedSystems: ["Production Database", "Application Server"],
-    dataBreach: false,
-    recordsAffected: 0,
-  },
-  {
-    id: "INC-2024-003",
-    title: "Ransomware infection on development workstation",
-    description:
-      "Ransomware detected on a developer's workstation. Machine isolated immediately.",
-    type: "Malware",
-    severity: "high" as const,
-    status: "eradicated" as const,
-    detectedAt: "2024-11-18T16:45:00Z",
-    commander: "Tom Brown",
-    affectedSystems: ["DEV-WS-042"],
-    dataBreach: false,
-    recordsAffected: 0,
-  },
-  {
-    id: "INC-2024-004",
-    title: "DDoS attack on public web services",
-    description:
-      "Volumetric DDoS attack causing service degradation on public-facing applications.",
-    type: "Denial of Service",
-    severity: "medium" as const,
-    status: "closed" as const,
-    detectedAt: "2024-11-10T08:00:00Z",
-    commander: "Jane Doe",
-    affectedSystems: ["Web Servers", "Load Balancer"],
-    dataBreach: false,
-    recordsAffected: 0,
-  },
-  {
-    id: "INC-2024-005",
-    title: "Accidental data exposure in cloud storage",
-    description:
-      "S3 bucket misconfiguration exposed customer data for approximately 2 hours.",
-    type: "Data Exposure",
-    severity: "critical" as const,
-    status: "recovered" as const,
-    detectedAt: "2024-11-05T11:20:00Z",
-    commander: "Sarah Wilson",
-    affectedSystems: ["AWS S3", "Customer Portal"],
-    dataBreach: true,
-    recordsAffected: 1250,
-  },
-];
-
 function getTimeAgo(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
@@ -151,16 +94,40 @@ function getTimeAgo(dateString: string): string {
 export default function Incidents() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
-  const filteredIncidents = mockIncidents.filter((incident) => {
+  const { data: incidentsData, isLoading, error } = useQuery({
+    queryKey: ["incidents"],
+    queryFn: () => incidentsApi.list(),
+  });
+
+  const incidents: Incident[] = incidentsData?.data || [];
+
+  const filteredIncidents = incidents.filter((incident) => {
     return !statusFilter || incident.status === statusFilter;
   });
 
-  const activeIncidents = mockIncidents.filter(
+  const activeIncidents = incidents.filter(
     (i) => !["closed", "recovered"].includes(i.status),
   );
   const criticalActive = activeIncidents.filter(
     (i) => i.severity === "critical",
   ).length;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+        <span className="ml-3 text-gray-600">Loading incidents...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p className="text-red-800">Error loading incidents. Please try again.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -222,10 +189,7 @@ export default function Incidents() {
             <div>
               <p className="text-sm text-gray-500">Investigating</p>
               <p className="text-2xl font-bold text-amber-600">
-                {
-                  mockIncidents.filter((i) => i.status === "investigating")
-                    .length
-                }
+                {incidents.filter((i) => i.status === "investigating").length}
               </p>
             </div>
             <div className="p-3 bg-amber-100 rounded-lg">
@@ -238,7 +202,7 @@ export default function Incidents() {
             <div>
               <p className="text-sm text-gray-500">Contained</p>
               <p className="text-2xl font-bold text-blue-600">
-                {mockIncidents.filter((i) => i.status === "contained").length}
+                {incidents.filter((i) => i.status === "contained").length}
               </p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -251,11 +215,9 @@ export default function Incidents() {
             <div>
               <p className="text-sm text-gray-500">Resolved This Month</p>
               <p className="text-2xl font-bold text-green-600">
-                {
-                  mockIncidents.filter(
-                    (i) => i.status === "closed" || i.status === "recovered",
-                  ).length
-                }
+                {incidents.filter(
+                  (i) => i.status === "closed" || i.status === "recovered",
+                ).length}
               </p>
             </div>
             <div className="p-3 bg-green-100 rounded-lg">
@@ -295,8 +257,8 @@ export default function Incidents() {
       {/* Incidents List */}
       <div className="space-y-4">
         {filteredIncidents.map((incident) => {
-          const severityConfig = SEVERITY_CONFIG[incident.severity];
-          const statusConfig = STATUS_CONFIG[incident.status];
+          const severityConfig = SEVERITY_CONFIG[incident.severity] || SEVERITY_CONFIG.medium;
+          const statusConfig = STATUS_CONFIG[incident.status] || STATUS_CONFIG.new;
           const StatusIcon = statusConfig.icon;
 
           return (
@@ -309,7 +271,7 @@ export default function Incidents() {
                   <div className="flex-1">
                     <div className="flex items-center space-x-3">
                       <span className="text-sm font-mono text-gray-500">
-                        {incident.id}
+                        {incident.incident_ref}
                       </span>
                       <span
                         className={`px-2 py-0.5 rounded text-xs font-medium ${severityConfig.color}`}
@@ -322,7 +284,7 @@ export default function Incidents() {
                         <StatusIcon className="h-3 w-3 mr-1" />
                         {statusConfig.label}
                       </span>
-                      {incident.dataBreach && (
+                      {incident.is_breach && (
                         <span className="px-2 py-0.5 bg-red-600 text-white rounded text-xs font-medium">
                           Data Breach
                         </span>
@@ -337,27 +299,29 @@ export default function Incidents() {
                     <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500">
                       <span className="flex items-center">
                         <ClockIcon className="h-4 w-4 mr-1" />
-                        Detected: {getTimeAgo(incident.detectedAt)}
+                        Detected: {incident.detected_at ? getTimeAgo(incident.detected_at) : "Unknown"}
                       </span>
-                      <span>Type: {incident.type}</span>
-                      <span>Commander: {incident.commander}</span>
-                      {incident.recordsAffected > 0 && (
+                      <span>Category: {incident.category || "Unknown"}</span>
+                      <span>Ref: {incident.incident_ref || "Unassigned"}</span>
+                      {incident.affected_records_count > 0 && (
                         <span className="text-red-600">
-                          {incident.recordsAffected.toLocaleString()} records
+                          {incident.affected_records_count.toLocaleString()} records
                           affected
                         </span>
                       )}
                     </div>
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      {incident.affectedSystems.map((system) => (
-                        <span
-                          key={system}
-                          className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded"
-                        >
-                          {system}
-                        </span>
-                      ))}
-                    </div>
+                    {incident.affected_systems && incident.affected_systems.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        {incident.affected_systems.map((system) => (
+                          <span
+                            key={system}
+                            className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded"
+                          >
+                            {system}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -374,16 +338,18 @@ export default function Incidents() {
         })}
       </div>
 
-      {filteredIncidents.length === 0 && (
+      {filteredIncidents.length === 0 && !isLoading && (
         <div className="text-center py-12 bg-white rounded-lg shadow-sm">
           <CheckCircleIcon className="mx-auto h-12 w-12 text-green-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">
             No incidents found
           </h3>
           <p className="mt-1 text-sm text-gray-500">
-            {statusFilter
-              ? "No incidents match your filter."
-              : "No active incidents. Great job!"}
+            {incidents.length === 0
+              ? "No incidents recorded. Great job keeping things secure!"
+              : statusFilter
+                ? "No incidents match your filter."
+                : "No active incidents."}
           </p>
         </div>
       )}

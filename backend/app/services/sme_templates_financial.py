@@ -109,6 +109,46 @@ INVOICE_TEMPLATE = """
 
 
 # =============================================================================
+# Template 1a: Payment Order (Платёжное поручение)
+# =============================================================================
+
+PAYMENT_ORDER_TEMPLATE = """
+                           ПЛАТЁЖНОЕ ПОРУЧЕНИЕ № {payment_number}
+                                  {payment_date}
+
+ Сумма       │ {amount_words}
+ прописью    │
+─────────────┼──────────────────────────────────────────────────────────────────
+ИНН {payer_inn}     │ Сумма │ {amount}
+КПП {payer_kpp}     │       │
+─────────────┼───────┼──────────────────────────────────────────────────────────
+Плательщик   │ Сч. № │ {payer_account}
+{payer_name} │       │
+─────────────┼───────┴──────────────────────────────────────────────────────────
+Банк плательщика                              │ БИК   │ {payer_bik}
+{payer_bank}                                  │ Сч. № │ {payer_corr_account}
+──────────────────────────────────────────────┼───────┼─────────────────────────
+Банк получателя                               │ БИК   │ {payee_bik}
+{payee_bank}                                  │ Сч. № │ {payee_corr_account}
+──────────────────────────────────────────────┼───────┼─────────────────────────
+ИНН {payee_inn}     │ Сч. № │ {payee_account}
+КПП {payee_kpp}     │       │
+─────────────┼───────┴──────────────────────────────────────────────────────────
+Получатель   │ Вид оп. │ {operation_type} │ Очер.плат. │ {priority}
+{payee_name} │ Код     │ {code}            │            │
+─────────────┴─────────┴──────────────────┴────────────┴────────────────────────
+Назначение платежа: {purpose}
+{vat_info}
+────────────────────────────────────────────────────────────────────────────────
+Подписи                                       М.П.
+
+______________________ / {signer_1} /
+
+______________________ / {signer_2} /
+"""
+
+
+# =============================================================================
 # Template 2: Act of Completed Works (Акт выполненных работ)
 # =============================================================================
 
@@ -932,6 +972,7 @@ class FinancialTemplateService:
 
     TEMPLATES = {
         FinancialDocType.INVOICE: INVOICE_TEMPLATE,
+        FinancialDocType.PAYMENT_ORDER: PAYMENT_ORDER_TEMPLATE,
         FinancialDocType.ACT_COMPLETED_WORKS: ACT_COMPLETED_WORKS_TEMPLATE,
         FinancialDocType.TORG_12: TORG_12_TEMPLATE,
         FinancialDocType.INVOICE_FACTURA: INVOICE_FACTURA_TEMPLATE,
@@ -952,6 +993,7 @@ class FinancialTemplateService:
 
     TEMPLATE_NAMES = {
         FinancialDocType.INVOICE: "Счёт на оплату",
+        FinancialDocType.PAYMENT_ORDER: "Платёжное поручение",
         FinancialDocType.ACT_COMPLETED_WORKS: "Акт выполненных работ",
         FinancialDocType.TORG_12: "Товарная накладная ТОРГ-12",
         FinancialDocType.INVOICE_FACTURA: "Счёт-фактура",

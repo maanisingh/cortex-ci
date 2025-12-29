@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -98,6 +99,35 @@ const CATEGORY_ICONS: Record<string, { icon: React.ElementType; color: string; b
 const SMETemplates: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialTemplate = searchParams.get('template');
+  const { language } = useLanguage();
+
+  // Bilingual translations
+  const t = {
+    title: language === 'ru' ? 'Шаблоны документов для бизнеса' : 'Business Document Templates',
+    subtitle: language === 'ru' ? '+ шаблонов для всех этапов развития компании' : '+ templates for all company lifecycle stages',
+    found: language === 'ru' ? 'Найдено' : 'Found',
+    searchPlaceholder: language === 'ru' ? 'Поиск шаблонов...' : 'Search templates...',
+    categories: language === 'ru' ? 'Категории' : 'Categories',
+    all: language === 'ru' ? 'Все' : 'All',
+    allTemplates: language === 'ru' ? 'Все шаблоны' : 'All templates',
+    loadingCategories: language === 'ru' ? 'Загрузка категорий...' : 'Loading categories...',
+    loadingTemplates: language === 'ru' ? 'Загрузка шаблонов...' : 'Loading templates...',
+    noTemplates: language === 'ru' ? 'Шаблоны не найдены' : 'No templates found',
+    tryDifferent: language === 'ru' ? 'Попробуйте изменить критерии поиска' : 'Try different search criteria',
+    category: language === 'ru' ? 'Категория' : 'Category',
+    description: language === 'ru' ? 'Описание' : 'Description',
+    noDescription: language === 'ru' ? 'Нет описания' : 'No description',
+    regulatoryRefs: language === 'ru' ? 'Нормативные ссылки' : 'Regulatory references',
+    tags: language === 'ru' ? 'Теги' : 'Tags',
+    generatedDoc: language === 'ru' ? 'Сгенерированный документ' : 'Generated document',
+    downloadDoc: language === 'ru' ? 'Скачать документ' : 'Download document',
+    back: language === 'ru' ? 'Назад' : 'Back',
+    createDoc: language === 'ru' ? 'Создать документ' : 'Create document',
+    generating: language === 'ru' ? 'Генерация...' : 'Generating...',
+    downloadTemplate: language === 'ru' ? 'Скачать шаблон' : 'Download template',
+    share: language === 'ru' ? 'Поделиться' : 'Share',
+    archive: language === 'ru' ? 'В архив' : 'Archive',
+  };
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -193,15 +223,15 @@ const SMETemplates: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Шаблоны документов для бизнеса
+                {t.title}
               </h1>
               <p className="mt-1 text-sm text-gray-500">
-                {totalTemplates}+ шаблонов для всех этапов развития компании
+                {totalTemplates}{t.subtitle}
               </p>
             </div>
             <div className="mt-4 sm:mt-0 flex items-center space-x-3">
               <span className="text-sm text-gray-500">
-                Найдено: {filteredTemplates.length}
+                {t.found}: {filteredTemplates.length}
               </span>
             </div>
           </div>
@@ -212,7 +242,7 @@ const SMETemplates: React.FC = () => {
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Поиск шаблонов..."
+                placeholder={t.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -225,7 +255,7 @@ const SMETemplates: React.FC = () => {
               }`}
             >
               <FunnelIcon className="h-5 w-5 mr-2" />
-              Категории
+              {t.categories}
             </button>
           </div>
         </div>
@@ -236,7 +266,7 @@ const SMETemplates: React.FC = () => {
         <div className="bg-white border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             {categoriesLoading ? (
-              <div className="text-center text-gray-500">Загрузка категорий...</div>
+              <div className="text-center text-gray-500">{t.loadingCategories}</div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
                 <button
@@ -247,7 +277,7 @@ const SMETemplates: React.FC = () => {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  Все ({totalTemplates})
+                  {t.all} ({totalTemplates})
                 </button>
                 {categories.map((category) => {
                   const info = getCategoryInfo(category.id);
@@ -282,7 +312,7 @@ const SMETemplates: React.FC = () => {
           <div className="lg:col-span-1 hidden lg:block">
             <div className="bg-white rounded-lg border border-gray-200 sticky top-8">
               <div className="px-4 py-3 border-b border-gray-200">
-                <h3 className="font-medium text-gray-900">Категории</h3>
+                <h3 className="font-medium text-gray-900">{t.categories}</h3>
               </div>
               <div className="p-2">
                 <button
@@ -293,7 +323,7 @@ const SMETemplates: React.FC = () => {
                       : 'hover:bg-gray-50'
                   }`}
                 >
-                  Все шаблоны
+                  {t.allTemplates}
                   <span className="float-right text-gray-500">{totalTemplates}</span>
                 </button>
                 {categories.map((category) => {
@@ -325,16 +355,16 @@ const SMETemplates: React.FC = () => {
             {templatesLoading ? (
               <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
                 <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
-                <p className="mt-4 text-gray-500">Загрузка шаблонов...</p>
+                <p className="mt-4 text-gray-500">{t.loadingTemplates}</p>
               </div>
             ) : filteredTemplates.length === 0 ? (
               <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
                 <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto" />
                 <h3 className="mt-4 text-lg font-medium text-gray-900">
-                  Шаблоны не найдены
+                  {t.noTemplates}
                 </h3>
                 <p className="mt-2 text-sm text-gray-500">
-                  Попробуйте изменить критерии поиска
+                  {t.tryDifferent}
                 </p>
               </div>
             ) : (
@@ -356,7 +386,7 @@ const SMETemplates: React.FC = () => {
                             {template.name}
                           </h4>
                           <p className="mt-1 text-sm text-gray-500 line-clamp-2">
-                            {template.description || `Категория: ${template.category}`}
+                            {template.description || `${t.category}: ${template.category}`}
                           </p>
                           <div className="mt-2 flex flex-wrap gap-1">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${categoryInfo.bgColor} ${categoryInfo.color}`}>
@@ -409,7 +439,7 @@ const SMETemplates: React.FC = () => {
             <div className="p-6">
               {generatedContent ? (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-500 mb-2">Сгенерированный документ</h3>
+                  <h3 className="text-sm font-medium text-gray-500 mb-2">{t.generatedDoc}</h3>
                   <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
                     <pre className="whitespace-pre-wrap text-sm text-gray-800 font-mono">
                       {generatedContent}
@@ -421,26 +451,26 @@ const SMETemplates: React.FC = () => {
                       className="flex-1 flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
                       <DocumentArrowDownIcon className="h-5 w-5 mr-2" />
-                      Скачать документ
+                      {t.downloadDoc}
                     </button>
                     <button
                       onClick={() => setGeneratedContent(null)}
                       className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                     >
-                      Назад
+                      {t.back}
                     </button>
                   </div>
                 </div>
               ) : (
                 <>
                   <div className="mb-6">
-                    <h3 className="text-sm font-medium text-gray-500 mb-1">Описание</h3>
-                    <p className="text-gray-900">{selectedTemplate.description || 'Нет описания'}</p>
+                    <h3 className="text-sm font-medium text-gray-500 mb-1">{t.description}</h3>
+                    <p className="text-gray-900">{selectedTemplate.description || t.noDescription}</p>
                   </div>
 
                   {selectedTemplate.regulatory_refs && selectedTemplate.regulatory_refs.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="text-sm font-medium text-gray-500 mb-2">Нормативные ссылки</h3>
+                      <h3 className="text-sm font-medium text-gray-500 mb-2">{t.regulatoryRefs}</h3>
                       <div className="flex flex-wrap gap-2">
                         {selectedTemplate.regulatory_refs.map((ref) => (
                           <span key={ref} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-50 text-blue-700">
@@ -453,7 +483,7 @@ const SMETemplates: React.FC = () => {
 
                   {selectedTemplate.tags && selectedTemplate.tags.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="text-sm font-medium text-gray-500 mb-2">Теги</h3>
+                      <h3 className="text-sm font-medium text-gray-500 mb-2">{t.tags}</h3>
                       <div className="flex flex-wrap gap-2">
                         {selectedTemplate.tags.map((tag) => (
                           <span key={tag} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700">
@@ -474,26 +504,26 @@ const SMETemplates: React.FC = () => {
                       {generateMutation.isPending ? (
                         <>
                           <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                          Генерация...
+                          {t.generating}
                         </>
                       ) : (
                         <>
                           <DocumentTextIcon className="h-5 w-5 mr-2" />
-                          Создать документ
+                          {t.createDoc}
                         </>
                       )}
                     </button>
                     <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                       <ArrowDownTrayIcon className="h-5 w-5 mr-2 text-gray-500" />
-                      Скачать шаблон
+                      {t.downloadTemplate}
                     </button>
                     <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                       <ShareIcon className="h-5 w-5 mr-2 text-gray-500" />
-                      Поделиться
+                      {t.share}
                     </button>
                     <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                       <ArchiveBoxIcon className="h-5 w-5 mr-2 text-gray-500" />
-                      В архив
+                      {t.archive}
                     </button>
                   </div>
                 </>

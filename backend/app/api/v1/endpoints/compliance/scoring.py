@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.deps import get_current_tenant_id
 from app.core.database import get_db
+from app.models.audit import AuditLog
 from app.models.compliance.framework import Control, Framework
 
 router = APIRouter()
@@ -431,21 +432,31 @@ async def get_compliance_dashboard(
     # Get framework mapping summary
     mapping_data = await get_framework_mapping(db=db, tenant_id=tenant_id)
 
-    # Recent activity (placeholder)
+    # Recent activity from audit log
+    compliance_resource_types = ["control", "framework", "policy", "evidence", "assessment", "gap"]
+    recent_activity_result = await db.execute(
+        select(AuditLog)
+        .where(
+            and_(
+                AuditLog.tenant_id == tenant_id,
+                AuditLog.resource_type.in_(compliance_resource_types),
+                AuditLog.success == True,  # noqa: E712
+            )
+        )
+        .order_by(AuditLog.created_at.desc())
+        .limit(10)
+    )
+    recent_logs = recent_activity_result.scalars().all()
+
     recent_activity = [
         {
-            "type": "ASSESSMENT",
-            "description": "ISO 27001 control A.5.1 assessed as IMPLEMENTED",
-            "timestamp": datetime.now(UTC).isoformat(),
-            "user": "System",
-        },
-        {
-            "type": "GAP_CLOSED",
-            "description": "Access Control gap remediated",
-            "timestamp": (datetime.now(UTC) - timedelta(hours=2)).isoformat(),
-            "user": "System",
-        },
-    ]
+            "type": log.action.value.upper(),
+            "description": log.description or f"{log.action.value.replace('_', ' ').title()} {log.resource_type or 'resource'}",
+            "timestamp": log.created_at.isoformat(),
+            "user": log.user_email or "System",
+        }
+        for log in recent_logs
+    ] if recent_logs else []
 
     return {
         "score": {

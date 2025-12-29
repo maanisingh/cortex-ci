@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { useLanguage } from "../contexts/LanguageContext";
 import {
   DocumentTextIcon,
   MagnifyingGlassIcon,
@@ -84,93 +85,15 @@ const documentTypeConfig: Record<DocumentType, { label: string; labelEn: string 
   agreement: { label: "Соглашение", labelEn: "Agreement" },
 };
 
-// Mock documents data
-const mockDocuments: Document[] = [
-  {
-    id: "1",
-    title: "Политика обработки персональных данных",
-    templateCode: "POLICY_PD_PROCESSING",
-    documentType: "policy",
-    framework: "152-ФЗ",
-    status: "approved",
-    version: 3,
-    createdAt: "2024-01-10T10:00:00Z",
-    updatedAt: "2024-01-15T14:30:00Z",
-    approvedBy: "Иванов И.И.",
-    approvedAt: "2024-01-15T14:30:00Z",
-    expiresAt: "2025-01-15T00:00:00Z",
-    linkedControls: ["CTRL-001", "CTRL-002"],
-    tags: ["ПДн", "обработка"],
-  },
-  {
-    id: "2",
-    title: "Приказ о назначении ответственного за ПДн",
-    templateCode: "ORDER_RESPONSIBLE",
-    documentType: "order",
-    framework: "152-ФЗ",
-    status: "approved",
-    version: 1,
-    createdAt: "2024-01-10T10:00:00Z",
-    updatedAt: "2024-01-10T10:00:00Z",
-    approvedBy: "Директор",
-    approvedAt: "2024-01-10T10:00:00Z",
-    linkedControls: ["CTRL-003"],
-    tags: ["ПДн", "ответственный"],
-  },
-  {
-    id: "3",
-    title: "Положение о защите персональных данных",
-    templateCode: "POLICY_PD_PROTECTION",
-    documentType: "policy",
-    framework: "152-ФЗ",
-    status: "pending_review",
-    version: 2,
-    createdAt: "2024-01-12T09:00:00Z",
-    updatedAt: "2024-01-18T11:00:00Z",
-    tags: ["ПДн", "защита"],
-  },
-  {
-    id: "4",
-    title: "Журнал учёта обращений субъектов ПДн",
-    templateCode: "JOURNAL_REQUESTS",
-    documentType: "journal",
-    framework: "152-ФЗ",
-    status: "draft",
-    version: 1,
-    createdAt: "2024-01-14T08:00:00Z",
-    updatedAt: "2024-01-14T08:00:00Z",
-    tags: ["журнал", "обращения"],
-  },
-  {
-    id: "5",
-    title: "Согласие на обработку персональных данных",
-    templateCode: "FORM_CONSENT",
-    documentType: "form",
-    framework: "152-ФЗ",
-    status: "approved",
-    version: 2,
-    createdAt: "2024-01-08T10:00:00Z",
-    updatedAt: "2024-01-12T16:00:00Z",
-    approvedBy: "Юрист",
-    approvedAt: "2024-01-12T16:00:00Z",
-    tags: ["согласие", "форма"],
-  },
-  {
-    id: "6",
-    title: "Инструкция пользователя ИСПДн",
-    templateCode: "INSTRUCTION_USER",
-    documentType: "instruction",
-    framework: "152-ФЗ",
-    status: "expired",
-    version: 1,
-    createdAt: "2023-01-10T10:00:00Z",
-    updatedAt: "2023-01-10T10:00:00Z",
-    expiresAt: "2024-01-10T00:00:00Z",
-    tags: ["ИСПДн", "пользователь"],
-  },
-];
+
+interface Company {
+  id: string;
+  legal_name: string;
+  inn: string;
+}
 
 export default function DocumentLibrary() {
+  const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<DocumentStatus | "all">("all");
@@ -178,10 +101,154 @@ export default function DocumentLibrary() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
   const [showBulkGenerate, setShowBulkGenerate] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
 
-  // Use mock data for now
-  const documents = mockDocuments;
-  const isLoading = false;
+  // Fetch companies for selector
+  const { data: companies = [] } = useQuery({
+    queryKey: ["companies"],
+    queryFn: () => russianComplianceApi.companies.list(),
+  });
+
+  // Fetch documents for selected company
+  const { data: documentsResponse, isLoading } = useQuery({
+    queryKey: ["documents", selectedCompanyId],
+    queryFn: async () => {
+      if (!selectedCompanyId) return { data: [] };
+      return russianComplianceApi.documents.list(selectedCompanyId);
+    },
+    enabled: !!selectedCompanyId,
+  });
+
+  // Extract documents array from response
+  const documentsData = documentsResponse?.data || [];
+
+  // Bilingual translations
+  const t = {
+    title: language === "ru" ? "Библиотека документов" : "Document Library",
+    subtitle: language === "ru"
+      ? "Управление документами соответствия с версионированием и согласованием"
+      : "Manage compliance documents with versioning and approval",
+    generate152: language === "ru" ? "Сгенерировать пакет 152-ФЗ" : "Generate 152-FZ Package",
+    total: language === "ru" ? "Всего" : "Total",
+    approved: language === "ru" ? "Утверждено" : "Approved",
+    drafts: language === "ru" ? "Черновики" : "Drafts",
+    pendingReview: language === "ru" ? "На проверке" : "Pending Review",
+    expired: language === "ru" ? "Истёк срок" : "Expired",
+    searchPlaceholder: language === "ru" ? "Поиск по названию, коду или тегам..." : "Search by name, code, or tags...",
+    allStatuses: language === "ru" ? "Все статусы" : "All Statuses",
+    draft: language === "ru" ? "Черновик" : "Draft",
+    onReview: language === "ru" ? "На проверке" : "On Review",
+    approvedStatus: language === "ru" ? "Утверждён" : "Approved",
+    expiredStatus: language === "ru" ? "Истёк срок" : "Expired",
+    allTypes: language === "ru" ? "Все типы" : "All Types",
+    policies: language === "ru" ? "Политики" : "Policies",
+    orders: language === "ru" ? "Приказы" : "Orders",
+    instructions: language === "ru" ? "Инструкции" : "Instructions",
+    journals: language === "ru" ? "Журналы" : "Journals",
+    forms: language === "ru" ? "Формы" : "Forms",
+    selected: language === "ru" ? "Выбрано" : "Selected",
+    approve: language === "ru" ? "Утвердить" : "Approve",
+    export: language === "ru" ? "Экспортировать" : "Export",
+    cancelSelection: language === "ru" ? "Отменить выбор" : "Cancel Selection",
+    document: language === "ru" ? "Документ" : "Document",
+    type: language === "ru" ? "Тип" : "Type",
+    status: language === "ru" ? "Статус" : "Status",
+    version: language === "ru" ? "Версия" : "Version",
+    links: language === "ru" ? "Связи" : "Links",
+    updated: language === "ru" ? "Обновлено" : "Updated",
+    actions: language === "ru" ? "Действия" : "Actions",
+    view: language === "ru" ? "Просмотр" : "View",
+    download: language === "ru" ? "Скачать" : "Download",
+    noDocuments: language === "ru" ? "Документы не найдены" : "No documents found",
+    generateTitle: language === "ru" ? "Генерация пакета документов 152-ФЗ" : "Generate 152-FZ Document Package",
+    generateDesc: language === "ru"
+      ? "Будет создан полный пакет документов для соответствия 152-ФЗ «О персональных данных»:"
+      : "A complete document package will be created for 152-FZ \"Personal Data\" compliance:",
+    policiesCount: language === "ru" ? "8 Политик" : "8 Policies",
+    ordersCount: language === "ru" ? "6 Приказов" : "6 Orders",
+    journalsCount: language === "ru" ? "5 Журналов" : "5 Journals",
+    consentsCount: language === "ru" ? "3 Согласия" : "3 Consents",
+    cancel: language === "ru" ? "Отмена" : "Cancel",
+    generating: language === "ru" ? "Генерация..." : "Generating...",
+    generateAll: language === "ru" ? "Сгенерировать все" : "Generate All",
+    archived: language === "ru" ? "Архив" : "Archived",
+    // Status labels
+    statusDraft: language === "ru" ? "Черновик" : "Draft",
+    statusPending: language === "ru" ? "На проверке" : "Pending Review",
+    statusApproved: language === "ru" ? "Утверждён" : "Approved",
+    statusExpired: language === "ru" ? "Истёк срок" : "Expired",
+    statusArchived: language === "ru" ? "Архив" : "Archived",
+    // Document types
+    typePolicy: language === "ru" ? "Политика" : "Policy",
+    typeOrder: language === "ru" ? "Приказ" : "Order",
+    typeInstruction: language === "ru" ? "Инструкция" : "Instruction",
+    typeJournal: language === "ru" ? "Журнал" : "Journal",
+    typeForm: language === "ru" ? "Форма" : "Form",
+    typeAgreement: language === "ru" ? "Соглашение" : "Agreement",
+  };
+
+  // Bilingual status label getter
+  const getStatusLabel = (status: DocumentStatus) => {
+    const labels: Record<DocumentStatus, string> = {
+      draft: t.statusDraft,
+      pending_review: t.statusPending,
+      approved: t.statusApproved,
+      expired: t.statusExpired,
+      archived: t.statusArchived,
+    };
+    return labels[status];
+  };
+
+  // Bilingual type label getter
+  const getTypeLabel = (type: DocumentType) => {
+    const labels: Record<DocumentType, string> = {
+      policy: t.typePolicy,
+      order: t.typeOrder,
+      instruction: t.typeInstruction,
+      journal: t.typeJournal,
+      form: t.typeForm,
+      agreement: t.typeAgreement,
+    };
+    return labels[type];
+  };
+
+  // Transform API documents to component format
+  const documents: Document[] = useMemo(() => {
+    if (!documentsData || !Array.isArray(documentsData)) return [];
+    return documentsData.map((doc: {
+      id: string;
+      title: string;
+      template_code?: string;
+      document_type?: string;
+      framework?: string;
+      status?: string;
+      version?: number;
+      created_at?: string;
+      updated_at?: string;
+      approved_by?: string;
+      approved_at?: string;
+      expires_at?: string;
+      linked_controls?: string[];
+      linked_evidence?: string[];
+      tags?: string[];
+    }) => ({
+      id: doc.id,
+      title: doc.title,
+      templateCode: doc.template_code || "",
+      documentType: (doc.document_type || "policy") as DocumentType,
+      framework: doc.framework || "152-ФЗ",
+      status: (doc.status || "draft") as DocumentStatus,
+      version: doc.version || 1,
+      createdAt: doc.created_at || new Date().toISOString(),
+      updatedAt: doc.updated_at || new Date().toISOString(),
+      approvedBy: doc.approved_by,
+      approvedAt: doc.approved_at,
+      expiresAt: doc.expires_at,
+      linkedControls: doc.linked_controls,
+      linkedEvidence: doc.linked_evidence,
+      tags: doc.tags,
+    }));
+  }, [documentsData]);
 
   // Filter documents
   const filteredDocuments = useMemo(() => {
@@ -227,25 +294,54 @@ export default function DocumentLibrary() {
     }
   };
 
-  // Handle bulk actions
-  const handleBulkApprove = () => {
-    console.log("Approving documents:", selectedDocs);
-    setSelectedDocs([]);
-  };
-
-  const handleBulkExport = () => {
-    console.log("Exporting documents:", selectedDocs);
-    setSelectedDocs([]);
-  };
-
-  // Bulk document generation
-  const bulkGenerateMutation = useMutation({
-    mutationFn: async () => {
-      // In production, this would call the API to generate all documents
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      return { success: true, documentsGenerated: 22 };
+  // Bulk approve mutation
+  const bulkApproveMutation = useMutation({
+    mutationFn: async (docIds: string[]) => {
+      if (!selectedCompanyId) throw new Error("No company selected");
+      return Promise.all(
+        docIds.map((id) =>
+          russianComplianceApi.documents.update(selectedCompanyId, id, { status: "approved" })
+        )
+      );
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents", selectedCompanyId] });
+      setSelectedDocs([]);
+    },
+  });
+
+  // Bulk export - download documents
+  const handleBulkExport = async () => {
+    if (!selectedCompanyId) return;
+    for (const docId of selectedDocs) {
+      try {
+        const response = await russianComplianceApi.documents.get(selectedCompanyId, docId);
+        // Open document in new tab or trigger download
+        if (response?.data?.download_url) {
+          window.open(response.data.download_url, "_blank");
+        }
+      } catch (error) {
+        console.error(`Failed to export document ${docId}:`, error);
+      }
+    }
+    setSelectedDocs([]);
+  };
+
+  // Handle bulk approve
+  const handleBulkApprove = () => {
+    if (selectedDocs.length > 0) {
+      bulkApproveMutation.mutate(selectedDocs);
+    }
+  };
+
+  // Bulk document generation - generates full 152-FZ package
+  const bulkGenerateMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedCompanyId) throw new Error("No company selected");
+      return russianComplianceApi.tasks.generateFromTemplate(selectedCompanyId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents", selectedCompanyId] });
       setShowBulkGenerate(false);
     },
   });
@@ -256,24 +352,54 @@ export default function DocumentLibrary() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Библиотека документов
+            {t.title}
           </h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Управление документами соответствия с версионированием и согласованием
+            {t.subtitle}
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {/* Company Selector */}
+          <select
+            value={selectedCompanyId || ""}
+            onChange={(e) => setSelectedCompanyId(e.target.value || null)}
+            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+          >
+            <option value="">{language === "ru" ? "Выберите компанию" : "Select Company"}</option>
+            {(companies as Company[]).map((company) => (
+              <option key={company.id} value={company.id}>
+                {company.legal_name} ({company.inn})
+              </option>
+            ))}
+          </select>
           <button
             onClick={() => setShowBulkGenerate(true)}
-            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm"
+            disabled={!selectedCompanyId}
+            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <SparklesIcon className="h-5 w-5 mr-2" />
-            Сгенерировать пакет 152-ФЗ
+            {t.generate152}
           </button>
         </div>
       </div>
 
-      {/* Stats */}
+      {/* No company selected message */}
+      {!selectedCompanyId && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6 text-center">
+          <DocumentTextIcon className="h-12 w-12 mx-auto text-blue-400" />
+          <h3 className="mt-4 text-lg font-medium text-blue-900 dark:text-blue-100">
+            {language === "ru" ? "Выберите компанию" : "Select a Company"}
+          </h3>
+          <p className="mt-2 text-sm text-blue-600 dark:text-blue-300">
+            {language === "ru"
+              ? "Выберите компанию из списка выше, чтобы просмотреть её документы"
+              : "Select a company from the dropdown above to view its documents"}
+          </p>
+        </div>
+      )}
+
+      {/* Stats - only show when company selected */}
+      {selectedCompanyId && (
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center gap-3">
@@ -331,7 +457,11 @@ export default function DocumentLibrary() {
           </div>
         </div>
       </div>
+      )}
 
+      {/* Search and Filters - only when company selected */}
+      {selectedCompanyId && (
+      <>
       {/* Search and Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -541,13 +671,24 @@ export default function DocumentLibrary() {
           </table>
         </div>
 
-        {filteredDocuments.length === 0 && (
+        {filteredDocuments.length === 0 && !isLoading && (
           <div className="py-12 text-center">
             <DocumentTextIcon className="h-12 w-12 mx-auto text-gray-300 dark:text-gray-600" />
-            <p className="mt-4 text-gray-500 dark:text-gray-400">Документы не найдены</p>
+            <p className="mt-4 text-gray-500 dark:text-gray-400">{t.noDocuments}</p>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="py-12 text-center">
+            <ArrowPathIcon className="h-8 w-8 mx-auto text-blue-500 animate-spin" />
+            <p className="mt-4 text-gray-500 dark:text-gray-400">
+              {language === "ru" ? "Загрузка документов..." : "Loading documents..."}
+            </p>
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* Bulk Generate Modal */}
       {showBulkGenerate && (

@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import (
     admin,
     ai_analysis,
+    ai_documents,
     audit,
     auth,
     constraints,
@@ -74,6 +75,9 @@ api_router.include_router(
     history.router, prefix="/history", tags=["Phase 2 - Institutional Memory"]
 )
 api_router.include_router(ai_analysis.router, prefix="/ai", tags=["Phase 2 - AI Analysis"])
+api_router.include_router(
+    ai_documents.router, prefix="/ai/documents", tags=["AI Document Generation"]
+)
 api_router.include_router(monitoring.router, prefix="/monitoring", tags=["Monitoring & Alerts"])
 
 # Phase 4-5: WebSocket and Advanced Features

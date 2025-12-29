@@ -984,3 +984,8 @@ class HRTemplateService:
         content = template.get("template_content", "")
         tpl = Template(content)
         return tpl.render(**data)
+
+    @staticmethod
+    def generate_document(doc_type: HRDocType, data: Dict[str, Any]) -> str:
+        """Generate document from template (alias for generate)."""
+        return HRTemplateService.generate(doc_type, data)

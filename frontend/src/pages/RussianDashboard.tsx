@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { useLanguage } from "../contexts/LanguageContext";
 import {
   DocumentTextIcon,
   CheckCircleIcon,
@@ -8,19 +9,16 @@ import {
   ClockIcon,
   UserGroupIcon,
   ServerStackIcon,
-  ArrowTrendingUpIcon,
   ChevronRightIcon,
-  CalendarIcon,
   ShieldCheckIcon,
   BuildingOfficeIcon,
   DocumentDuplicateIcon,
-  FlagIcon,
   ArrowPathIcon,
-  BellAlertIcon,
   ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon as CheckCircleSolidIcon } from "@heroicons/react/24/solid";
 import { exportToPDF } from "../utils/pdfExport";
+import { russianComplianceApi } from "../services/api";
 
 interface ComplianceScore {
   framework: string;
@@ -51,143 +49,142 @@ interface UpcomingDeadline {
   assignee: string;
 }
 
-export default function RussianDashboard() {
-  const [selectedCompany, setSelectedCompany] = useState<string>("1");
+interface Company {
+  id: string;
+  name: string;
+  inn: string;
+  ispdnCount?: number;
+  employeeCount?: number;
+  documentsTotal?: number;
+  documentsApproved?: number;
+  tasksTotal?: number;
+  tasksCompleted?: number;
+  overallScore?: number;
+}
 
-  // Mock data
-  const companyData = {
-    id: "1",
-    name: "ООО «Демо Компания»",
-    inn: "7707083893",
-    ispdnCount: 3,
-    employeeCount: 150,
-    documentsTotal: 24,
-    documentsApproved: 18,
-    tasksTotal: 12,
-    tasksCompleted: 8,
-    overallScore: 75,
+interface DashboardData {
+  companyData: {
+    id: string;
+    name: string;
+    inn: string;
+    ispdnCount: number;
+    employeeCount: number;
+    documentsTotal: number;
+    documentsApproved: number;
+    tasksTotal: number;
+    tasksCompleted: number;
+    overallScore: number;
+  };
+  complianceScores: ComplianceScore[];
+  recentActivities: RecentActivity[];
+  upcomingDeadlines: UpcomingDeadline[];
+  checklist?: Array<{ title: string; completed: boolean }>;
+}
+
+export default function RussianDashboard() {
+  const { language } = useLanguage();
+  const [selectedCompany, setSelectedCompany] = useState<string>("");
+
+  // Bilingual text
+  const t = {
+    title: language === "ru" ? "Панель соответствия — Российское законодательство" : "Compliance Dashboard — Russian Regulations",
+    subtitle: language === "ru" ? "Мониторинг соответствия 152-ФЗ, 187-ФЗ, ГОСТ Р 57580, ФСТЭК" : "Compliance monitoring: 152-FZ, 187-FZ, GOST R 57580, FSTEC",
+    exportPdf: language === "ru" ? "Экспорт PDF" : "Export PDF",
+    addCompany: language === "ru" ? "Добавить организацию" : "Add Company",
+    documents: language === "ru" ? "Документы" : "Documents",
+    inn: language === "ru" ? "ИНН" : "INN",
+    overallCompliance: language === "ru" ? "Общий уровень соответствия" : "Overall Compliance",
+    ispdn: language === "ru" ? "ИСПДн" : "ISPDn",
+    employees: language === "ru" ? "Сотрудников" : "Employees",
+    tasks: language === "ru" ? "Задач" : "Tasks",
+    completed: language === "ru" ? "Выполнено" : "Completed",
+    inProgress: language === "ru" ? "В работе" : "In Progress",
+    pending: language === "ru" ? "Ожидает" : "Pending",
+    overdue: language === "ru" ? "Просрочено" : "Overdue",
+    moreDetails: language === "ru" ? "Подробнее о требованиях" : "View Requirements",
+    recentActivity: language === "ru" ? "Последние действия" : "Recent Activity",
+    showAll: language === "ru" ? "Показать все" : "Show All",
+    upcomingDeadlines: language === "ru" ? "Ближайшие сроки" : "Upcoming Deadlines",
+    allTasks: language === "ru" ? "Все задачи" : "All Tasks",
+    assignee: language === "ru" ? "Исполнитель" : "Assignee",
+    daysAgo: language === "ru" ? "дн. назад" : "days ago",
+    quickActions: language === "ru" ? "Быстрые действия" : "Quick Actions",
+    newCompany: language === "ru" ? "Новая организация" : "New Company",
+    fullCycle: language === "ru" ? "Полный цикл регистрации" : "Full registration cycle",
+    generateDocs: language === "ru" ? "Генерация документов" : "Generate Documents",
+    docPackage: language === "ru" ? "Пакет 152-ФЗ" : "152-FZ Package",
+    taskManagement: language === "ru" ? "Управление задачами" : "Task Management",
+    kanban: language === "ru" ? "Kanban-доска" : "Kanban Board",
+    runAudit: language === "ru" ? "Провести аудит" : "Run Audit",
+    selfCheck: language === "ru" ? "Самопроверка" : "Self-Check",
+    checklist: language === "ru" ? "Чек-лист соответствия 152-ФЗ" : "152-FZ Compliance Checklist",
+    outOf: language === "ru" ? "из" : "of",
+    done: language === "ru" ? "выполнено" : "completed",
+    critical: language === "ru" ? "Критично" : "Critical",
+    high: language === "ru" ? "Высокий" : "High",
+    medium: language === "ru" ? "Средний" : "Medium",
+    low: language === "ru" ? "Низкий" : "Low",
+    loading: language === "ru" ? "Загрузка..." : "Loading...",
+    error: language === "ru" ? "Ошибка загрузки данных" : "Error loading data",
+    retry: language === "ru" ? "Повторить" : "Retry",
+    noCompanies: language === "ru" ? "Нет зарегистрированных организаций" : "No registered companies",
+    selectCompany: language === "ru" ? "Выберите организацию" : "Select a company",
   };
 
-  const complianceScores: ComplianceScore[] = [
-    {
-      framework: "fz152",
-      frameworkName: "152-ФЗ «О персональных данных»",
-      score: 78,
-      total: 24,
-      completed: 18,
-      inProgress: 3,
-      pending: 2,
-      overdue: 1,
+  // Fetch companies list
+  const {
+    data: companiesData,
+    isLoading: isLoadingCompanies,
+    error: companiesError,
+    refetch: refetchCompanies,
+  } = useQuery({
+    queryKey: ["russian-companies"],
+    queryFn: async () => {
+      const response = await russianComplianceApi.companies.list();
+      return response.data as Company[];
     },
-    {
-      framework: "fz187",
-      frameworkName: "187-ФЗ «О безопасности КИИ»",
-      score: 45,
-      total: 16,
-      completed: 7,
-      inProgress: 4,
-      pending: 5,
-      overdue: 0,
-    },
-    {
-      framework: "gost57580",
-      frameworkName: "ГОСТ Р 57580 (Банковская безопасность)",
-      score: 62,
-      total: 32,
-      completed: 20,
-      inProgress: 6,
-      pending: 4,
-      overdue: 2,
-    },
-    {
-      framework: "fstec",
-      frameworkName: "Приказы ФСТЭК (№ 17, 21, 31, 239)",
-      score: 55,
-      total: 48,
-      completed: 26,
-      inProgress: 10,
-      pending: 10,
-      overdue: 2,
-    },
-  ];
+  });
 
-  const recentActivities: RecentActivity[] = [
-    {
-      id: "1",
-      type: "document",
-      action: "Создан документ",
-      title: "Политика обработки персональных данных",
-      user: "Иванов И.И.",
-      timestamp: "2024-01-15T14:30:00Z",
-    },
-    {
-      id: "2",
-      type: "task",
-      action: "Задача выполнена",
-      title: "Провести обучение сотрудников",
-      user: "Петров П.П.",
-      timestamp: "2024-01-15T12:00:00Z",
-    },
-    {
-      id: "3",
-      type: "ispdn",
-      action: "Классификация ИСПДн",
-      title: "CRM-система — УЗ-3",
-      user: "Сидоров С.С.",
-      timestamp: "2024-01-15T10:15:00Z",
-    },
-    {
-      id: "4",
-      type: "document",
-      action: "Документ утверждён",
-      title: "Инструкция пользователя ИСПДн",
-      user: "Директор",
-      timestamp: "2024-01-14T16:45:00Z",
-    },
-    {
-      id: "5",
-      type: "training",
-      action: "Обучение пройдено",
-      title: "Основы защиты ПДн",
-      user: "12 сотрудников",
-      timestamp: "2024-01-14T14:00:00Z",
-    },
-  ];
+  // Set first company as selected when companies load
+  useEffect(() => {
+    if (companiesData && companiesData.length > 0 && !selectedCompany) {
+      setSelectedCompany(companiesData[0].id);
+    }
+  }, [companiesData, selectedCompany]);
 
-  const upcomingDeadlines: UpcomingDeadline[] = [
-    {
-      id: "1",
-      title: "Подать уведомление в Роскомнадзор",
-      type: "Задача",
-      dueDate: "2024-01-20T00:00:00Z",
-      priority: "critical",
-      assignee: "Иванов И.И.",
+  // Fetch dashboard data for selected company
+  const {
+    data: dashboardData,
+    isLoading: isLoadingDashboard,
+    error: dashboardError,
+    refetch: refetchDashboard,
+  } = useQuery({
+    queryKey: ["russian-dashboard", selectedCompany],
+    queryFn: async () => {
+      const response = await russianComplianceApi.dashboard(selectedCompany);
+      return response.data as DashboardData;
     },
-    {
-      id: "2",
-      title: "Утвердить Политику обработки ПДн",
-      type: "Документ",
-      dueDate: "2024-01-25T00:00:00Z",
-      priority: "high",
-      assignee: "Директор",
-    },
-    {
-      id: "3",
-      title: "Разработать модель угроз",
-      type: "Документ",
-      dueDate: "2024-02-01T00:00:00Z",
-      priority: "high",
-      assignee: "Сидоров С.С.",
-    },
-    {
-      id: "4",
-      title: "Провести аудит ИСПДн",
-      type: "Задача",
-      dueDate: "2024-02-10T00:00:00Z",
-      priority: "medium",
-      assignee: "Петров П.П.",
-    },
-  ];
+    enabled: !!selectedCompany,
+  });
+
+  // Extract data from dashboard response
+  const companyData = dashboardData?.companyData || {
+    id: "",
+    name: "",
+    inn: "",
+    ispdnCount: 0,
+    employeeCount: 0,
+    documentsTotal: 0,
+    documentsApproved: 0,
+    tasksTotal: 0,
+    tasksCompleted: 0,
+    overallScore: 0,
+  };
+
+  const complianceScores: ComplianceScore[] = dashboardData?.complianceScores || [];
+  const recentActivities: RecentActivity[] = dashboardData?.recentActivities || [];
+  const upcomingDeadlines: UpcomingDeadline[] = dashboardData?.upcomingDeadlines || [];
+  const checklist = dashboardData?.checklist || [];
 
   const priorityColors = {
     low: "text-gray-500",
@@ -244,15 +241,120 @@ export default function RussianDashboard() {
       auditReadiness: {
         score: 78,
         categories: [
-          { name: "Документация", score: 85 },
-          { name: "Технические меры", score: 72 },
-          { name: "Организационные меры", score: 90 },
-          { name: "Обучение персонала", score: 65 },
+          { name: language === "ru" ? "Документация" : "Documentation", score: 85 },
+          { name: language === "ru" ? "Технические меры" : "Technical Controls", score: 72 },
+          { name: language === "ru" ? "Организационные меры" : "Organizational Controls", score: 90 },
+          { name: language === "ru" ? "Обучение персонала" : "Staff Training", score: 65 },
         ],
       },
       risks: [],
     });
   };
+
+  // Loading state
+  if (isLoadingCompanies) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <ArrowPathIcon className="h-12 w-12 text-blue-500 animate-spin mx-auto" />
+          <p className="mt-4 text-gray-600">{t.loading}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state for companies
+  if (companiesError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <ExclamationTriangleIcon className="h-12 w-12 text-red-500 mx-auto" />
+          <p className="mt-4 text-gray-900 font-medium">{t.error}</p>
+          <p className="mt-2 text-sm text-gray-500">
+            {companiesError instanceof Error ? companiesError.message : String(companiesError)}
+          </p>
+          <button
+            onClick={() => refetchCompanies()}
+            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            <ArrowPathIcon className="h-4 w-4 mr-2" />
+            {t.retry}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // No companies state
+  if (!companiesData || companiesData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <BuildingOfficeIcon className="h-12 w-12 text-gray-400 mx-auto" />
+          <p className="mt-4 text-gray-900 font-medium">{t.noCompanies}</p>
+          <Link
+            to="/russian-onboarding"
+            className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            <BuildingOfficeIcon className="h-4 w-4 mr-2" />
+            {t.addCompany}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Dashboard loading state
+  if (isLoadingDashboard) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{t.title}</h1>
+            <p className="mt-1 text-sm text-gray-500">{t.subtitle}</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <ArrowPathIcon className="h-12 w-12 text-blue-500 animate-spin mx-auto" />
+            <p className="mt-4 text-gray-600">{t.loading}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Dashboard error state
+  if (dashboardError) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{t.title}</h1>
+            <p className="mt-1 text-sm text-gray-500">{t.subtitle}</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <ExclamationTriangleIcon className="h-12 w-12 text-red-500 mx-auto" />
+            <p className="mt-4 text-gray-900 font-medium">{t.error}</p>
+            <p className="mt-2 text-sm text-gray-500">
+              {dashboardError instanceof Error ? dashboardError.message : String(dashboardError)}
+            </p>
+            <button
+              onClick={() => refetchDashboard()}
+              className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            >
+              <ArrowPathIcon className="h-4 w-4 mr-2" />
+              {t.retry}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -260,33 +362,47 @@ export default function RussianDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Панель соответствия — Российское законодательство
+            {t.title}
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Комплексный мониторинг соответствия требованиям 152-ФЗ, 187-ФЗ, ГОСТ Р 57580, ФСТЭК
+            {t.subtitle}
           </p>
         </div>
         <div className="flex items-center space-x-3">
+          {/* Company selector */}
+          {companiesData && companiesData.length > 1 && (
+            <select
+              value={selectedCompany}
+              onChange={(e) => setSelectedCompany(e.target.value)}
+              className="block w-48 px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+            >
+              {companiesData.map((company) => (
+                <option key={company.id} value={company.id}>
+                  {company.name}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             onClick={handleExportPDF}
             className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
           >
             <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
-            Экспорт PDF
+            {t.exportPdf}
           </button>
           <Link
             to="/russian-onboarding"
             className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             <BuildingOfficeIcon className="h-5 w-5 mr-2" />
-            Добавить организацию
+            {t.addCompany}
           </Link>
           <Link
             to="/russian-compliance"
             className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
           >
             <DocumentDuplicateIcon className="h-5 w-5 mr-2" />
-            Документы
+            {t.documents}
           </Link>
         </div>
       </div>
@@ -296,11 +412,11 @@ export default function RussianDashboard() {
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-xl font-bold">{companyData.name}</h2>
-            <p className="text-blue-100">ИНН: {companyData.inn}</p>
+            <p className="text-blue-100">{t.inn}: {companyData.inn}</p>
           </div>
           <div className="text-right">
             <div className="text-4xl font-bold">{companyData.overallScore}%</div>
-            <div className="text-blue-100">Общий уровень соответствия</div>
+            <div className="text-blue-100">{t.overallCompliance}</div>
           </div>
         </div>
 
@@ -310,7 +426,7 @@ export default function RussianDashboard() {
               <ServerStackIcon className="h-8 w-8 text-blue-200" />
               <div className="ml-3">
                 <div className="text-2xl font-bold">{companyData.ispdnCount}</div>
-                <div className="text-sm text-blue-200">ИСПДн</div>
+                <div className="text-sm text-blue-200">{t.ispdn}</div>
               </div>
             </div>
           </div>
@@ -319,7 +435,7 @@ export default function RussianDashboard() {
               <UserGroupIcon className="h-8 w-8 text-blue-200" />
               <div className="ml-3">
                 <div className="text-2xl font-bold">{companyData.employeeCount}</div>
-                <div className="text-sm text-blue-200">Сотрудников</div>
+                <div className="text-sm text-blue-200">{t.employees}</div>
               </div>
             </div>
           </div>
@@ -330,7 +446,7 @@ export default function RussianDashboard() {
                 <div className="text-2xl font-bold">
                   {companyData.documentsApproved}/{companyData.documentsTotal}
                 </div>
-                <div className="text-sm text-blue-200">Документов</div>
+                <div className="text-sm text-blue-200">{t.documents}</div>
               </div>
             </div>
           </div>
@@ -341,7 +457,7 @@ export default function RussianDashboard() {
                 <div className="text-2xl font-bold">
                   {companyData.tasksCompleted}/{companyData.tasksTotal}
                 </div>
-                <div className="text-sm text-blue-200">Задач</div>
+                <div className="text-sm text-blue-200">{t.tasks}</div>
               </div>
             </div>
           </div>
@@ -377,19 +493,19 @@ export default function RussianDashboard() {
             <div className="mt-4 grid grid-cols-4 gap-2 text-center">
               <div className="bg-green-50 rounded-lg p-2">
                 <div className="text-lg font-bold text-green-700">{framework.completed}</div>
-                <div className="text-xs text-green-600">Выполнено</div>
+                <div className="text-xs text-green-600">{t.completed}</div>
               </div>
               <div className="bg-blue-50 rounded-lg p-2">
                 <div className="text-lg font-bold text-blue-700">{framework.inProgress}</div>
-                <div className="text-xs text-blue-600">В работе</div>
+                <div className="text-xs text-blue-600">{t.inProgress}</div>
               </div>
               <div className="bg-gray-50 rounded-lg p-2">
                 <div className="text-lg font-bold text-gray-700">{framework.pending}</div>
-                <div className="text-xs text-gray-600">Ожидает</div>
+                <div className="text-xs text-gray-600">{t.pending}</div>
               </div>
               <div className="bg-red-50 rounded-lg p-2">
                 <div className="text-lg font-bold text-red-700">{framework.overdue}</div>
-                <div className="text-xs text-red-600">Просрочено</div>
+                <div className="text-xs text-red-600">{t.overdue}</div>
               </div>
             </div>
 
@@ -398,7 +514,7 @@ export default function RussianDashboard() {
                 to={`/russian-compliance?framework=${framework.framework}`}
                 className="text-sm text-blue-600 hover:text-blue-700 flex items-center"
               >
-                Подробнее о требованиях
+                {t.moreDetails}
                 <ChevronRightIcon className="h-4 w-4 ml-1" />
               </Link>
             </div>
@@ -411,8 +527,8 @@ export default function RussianDashboard() {
         {/* Recent activity */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">Последние действия</h3>
-            <button className="text-sm text-blue-600 hover:text-blue-700">Показать все</button>
+            <h3 className="text-lg font-medium text-gray-900">{t.recentActivity}</h3>
+            <button className="text-sm text-blue-600 hover:text-blue-700">{t.showAll}</button>
           </div>
           <div className="divide-y">
             {recentActivities.map((activity) => (
@@ -456,9 +572,9 @@ export default function RussianDashboard() {
         {/* Upcoming deadlines */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">Ближайшие сроки</h3>
+            <h3 className="text-lg font-medium text-gray-900">{t.upcomingDeadlines}</h3>
             <Link to="/compliance-tasks" className="text-sm text-blue-600 hover:text-blue-700">
-              Все задачи
+              {t.allTasks}
             </Link>
           </div>
           <div className="divide-y">
@@ -483,14 +599,14 @@ export default function RussianDashboard() {
                           {deadline.type}
                         </span>
                         <span className={`ml-2 text-xs ${priorityColors[deadline.priority]}`}>
-                          {deadline.priority === "critical" && "Критично"}
-                          {deadline.priority === "high" && "Высокий"}
-                          {deadline.priority === "medium" && "Средний"}
-                          {deadline.priority === "low" && "Низкий"}
+                          {deadline.priority === "critical" && t.critical}
+                          {deadline.priority === "high" && t.high}
+                          {deadline.priority === "medium" && t.medium}
+                          {deadline.priority === "low" && t.low}
                         </span>
                       </div>
                       <p className="mt-1 text-sm font-medium text-gray-900">{deadline.title}</p>
-                      <p className="text-xs text-gray-500">Исполнитель: {deadline.assignee}</p>
+                      <p className="text-xs text-gray-500">{t.assignee}: {deadline.assignee}</p>
                     </div>
                     <div className="text-right">
                       <div
@@ -503,12 +619,12 @@ export default function RussianDashboard() {
                         }`}
                       >
                         {daysUntil === 0
-                          ? "Сегодня"
+                          ? (language === "ru" ? "Сегодня" : "Today")
                           : daysUntil === 1
-                          ? "Завтра"
+                          ? (language === "ru" ? "Завтра" : "Tomorrow")
                           : daysUntil < 0
-                          ? `${Math.abs(daysUntil)} дн. назад`
-                          : `${daysUntil} дн.`}
+                          ? `${Math.abs(daysUntil)} ${t.daysAgo}`
+                          : `${daysUntil} ${language === "ru" ? "дн." : "days"}`}
                       </div>
                       <div className="text-xs text-gray-400">
                         {new Date(deadline.dueDate).toLocaleDateString("ru-RU")}
@@ -524,76 +640,69 @@ export default function RussianDashboard() {
 
       {/* Quick actions */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Быстрые действия</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">{t.quickActions}</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Link
             to="/russian-onboarding"
             className="flex flex-col items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors"
           >
             <BuildingOfficeIcon className="h-8 w-8 text-blue-600" />
-            <span className="mt-2 text-sm font-medium text-gray-900">Новая организация</span>
-            <span className="text-xs text-gray-500">Полный цикл регистрации</span>
+            <span className="mt-2 text-sm font-medium text-gray-900">{t.newCompany}</span>
+            <span className="text-xs text-gray-500">{t.fullCycle}</span>
           </Link>
           <Link
             to="/russian-compliance"
             className="flex flex-col items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors"
           >
             <DocumentDuplicateIcon className="h-8 w-8 text-green-600" />
-            <span className="mt-2 text-sm font-medium text-gray-900">Генерация документов</span>
-            <span className="text-xs text-gray-500">Пакет 152-ФЗ</span>
+            <span className="mt-2 text-sm font-medium text-gray-900">{t.generateDocs}</span>
+            <span className="text-xs text-gray-500">{t.docPackage}</span>
           </Link>
           <Link
             to="/compliance-tasks"
             className="flex flex-col items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors"
           >
             <ClockIcon className="h-8 w-8 text-orange-600" />
-            <span className="mt-2 text-sm font-medium text-gray-900">Управление задачами</span>
-            <span className="text-xs text-gray-500">Kanban-доска</span>
+            <span className="mt-2 text-sm font-medium text-gray-900">{t.taskManagement}</span>
+            <span className="text-xs text-gray-500">{t.kanban}</span>
           </Link>
           <button className="flex flex-col items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors">
             <ArrowPathIcon className="h-8 w-8 text-purple-600" />
-            <span className="mt-2 text-sm font-medium text-gray-900">Провести аудит</span>
-            <span className="text-xs text-gray-500">Самопроверка</span>
+            <span className="mt-2 text-sm font-medium text-gray-900">{t.runAudit}</span>
+            <span className="text-xs text-gray-500">{t.selfCheck}</span>
           </button>
         </div>
       </div>
 
       {/* Compliance checklist summary */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-gray-900">Чек-лист соответствия 152-ФЗ</h3>
-          <span className="text-sm text-gray-500">8 из 10 выполнено</span>
+      {checklist.length > 0 && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">{t.checklist}</h3>
+            <span className="text-sm text-gray-500">
+              {checklist.filter((item) => item.completed).length} {t.outOf} {checklist.length} {t.done}
+            </span>
+          </div>
+          <div className="space-y-3">
+            {checklist.map((item, index) => (
+              <div key={index} className="flex items-center">
+                {item.completed ? (
+                  <CheckCircleSolidIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
+                ) : (
+                  <div className="h-5 w-5 rounded-full border-2 border-gray-300 flex-shrink-0" />
+                )}
+                <span
+                  className={`ml-3 text-sm ${
+                    item.completed ? "text-gray-500 line-through" : "text-gray-900"
+                  }`}
+                >
+                  {item.title}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="space-y-3">
-          {[
-            { title: "Назначен ответственный за ПДн", completed: true },
-            { title: "Утверждена политика обработки ПДн", completed: true },
-            { title: "Определены цели обработки ПДн", completed: true },
-            { title: "Проведена классификация ИСПДн", completed: true },
-            { title: "Разработана модель угроз", completed: true },
-            { title: "Внедрены технические меры защиты", completed: true },
-            { title: "Подготовлены согласия на обработку ПДн", completed: true },
-            { title: "Обучены сотрудники", completed: true },
-            { title: "Подано уведомление в Роскомнадзор", completed: false },
-            { title: "Проведён внутренний аудит", completed: false },
-          ].map((item, index) => (
-            <div key={index} className="flex items-center">
-              {item.completed ? (
-                <CheckCircleSolidIcon className="h-5 w-5 text-green-500 flex-shrink-0" />
-              ) : (
-                <div className="h-5 w-5 rounded-full border-2 border-gray-300 flex-shrink-0" />
-              )}
-              <span
-                className={`ml-3 text-sm ${
-                  item.completed ? "text-gray-500 line-through" : "text-gray-900"
-                }`}
-              >
-                {item.title}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 import {
   LightBulbIcon,
   BuildingOfficeIcon,
@@ -202,8 +203,29 @@ const PRIORITY_COLORS = {
 
 const CompanyLifecycle: React.FC = () => {
   const navigate = useNavigate();
+  const { language } = useLanguage();
   const [selectedStage, setSelectedStage] = useState<LifecycleStage>('idea');
   const [showAllTemplates, setShowAllTemplates] = useState(false);
+
+  // Bilingual translations
+  const t = {
+    title: language === 'ru' ? 'Навигатор жизненного цикла компании' : 'Company Lifecycle Navigator',
+    subtitle: language === 'ru' ? 'Выберите этап развития вашей компании для получения рекомендаций по документам' : 'Select your company stage to get document recommendations',
+    typicalDuration: language === 'ru' ? 'Типичная длительность' : 'Typical duration',
+    keyActions: language === 'ru' ? 'Ключевые действия' : 'Key actions',
+    stageStats: language === 'ru' ? 'Статистика этапа' : 'Stage statistics',
+    templates: language === 'ru' ? 'Шаблонов' : 'Templates',
+    required: language === 'ru' ? 'Обязательных' : 'Required',
+    recommendedDocs: language === 'ru' ? 'Рекомендуемые документы' : 'Recommended documents',
+    showMain: language === 'ru' ? 'Показать основные' : 'Show main',
+    showAll: language === 'ru' ? 'Показать все' : 'Show all',
+    loading: language === 'ru' ? 'Загрузка шаблонов...' : 'Loading templates...',
+    noTemplates: language === 'ru' ? 'Нет шаблонов для этого этапа' : 'No templates for this stage',
+    category: language === 'ru' ? 'Категория' : 'Category',
+    createAllDocs: language === 'ru' ? 'Создать все обязательные документы' : 'Create all required documents',
+    nextStage: language === 'ru' ? 'Следующий этап' : 'Next stage',
+    docs: language === 'ru' ? 'док.' : 'docs',
+  };
 
   const currentStage = LIFECYCLE_STAGES.find(s => s.id === selectedStage)!;
 
@@ -235,10 +257,10 @@ const CompanyLifecycle: React.FC = () => {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <h1 className="text-2xl font-bold text-gray-900">
-            Навигатор жизненного цикла компании
+            {t.title}
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Выберите этап развития вашей компании для получения рекомендаций по документам
+            {t.subtitle}
           </p>
         </div>
       </div>
@@ -269,7 +291,7 @@ const CompanyLifecycle: React.FC = () => {
                     </span>
                     {stageTemplates.length > 0 && (
                       <span className="mt-0.5 text-[10px] text-gray-400">
-                        {stageTemplates.length} док.
+                        {stageTemplates.length} {t.docs}
                       </span>
                     )}
                   </button>
@@ -307,11 +329,11 @@ const CompanyLifecycle: React.FC = () => {
 
               <div className="mt-4 flex items-center text-sm text-gray-600">
                 <ClockIcon className="h-4 w-4 mr-1" />
-                <span>Типичная длительность: {currentStage.typicalDuration}</span>
+                <span>{t.typicalDuration}: {currentStage.typicalDuration}</span>
               </div>
 
               <div className="mt-6">
-                <h3 className="font-medium text-gray-900 mb-3">Ключевые действия:</h3>
+                <h3 className="font-medium text-gray-900 mb-3">{t.keyActions}:</h3>
                 <ul className="space-y-2">
                   {currentStage.keyActions.map((action, index) => (
                     <li key={index} className="flex items-start">
@@ -325,19 +347,19 @@ const CompanyLifecycle: React.FC = () => {
 
             {/* Statistics */}
             <div className="mt-6 bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="font-medium text-gray-900 mb-4">Статистика этапа</h3>
+              <h3 className="font-medium text-gray-900 mb-4">{t.stageStats}</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-3 bg-gray-50 rounded-lg">
                   <div className="text-2xl font-bold text-gray-900">
                     {isLoading ? '...' : apiTemplates.length}
                   </div>
-                  <div className="text-xs text-gray-500">Шаблонов</div>
+                  <div className="text-xs text-gray-500">{t.templates}</div>
                 </div>
                 <div className="text-center p-3 bg-gray-50 rounded-lg">
                   <div className="text-2xl font-bold text-red-600">
-                    {isLoading ? '...' : apiTemplates.filter(t => t.priority === 'required').length}
+                    {isLoading ? '...' : apiTemplates.filter(tmpl => tmpl.priority === 'required').length}
                   </div>
-                  <div className="text-xs text-gray-500">Обязательных</div>
+                  <div className="text-xs text-gray-500">{t.required}</div>
                 </div>
               </div>
             </div>
@@ -348,23 +370,23 @@ const CompanyLifecycle: React.FC = () => {
             <div className="bg-white rounded-lg border border-gray-200">
               <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <h3 className="font-medium text-gray-900">
-                  Рекомендуемые документы
+                  {t.recommendedDocs}
                 </h3>
                 <button
                   onClick={() => setShowAllTemplates(!showAllTemplates)}
                   className="text-sm text-blue-600 hover:text-blue-700"
                 >
-                  {showAllTemplates ? 'Показать основные' : 'Показать все'}
+                  {showAllTemplates ? t.showMain : t.showAll}
                 </button>
               </div>
 
               {isLoading ? (
                 <div className="p-8 text-center text-gray-500">
-                  Загрузка шаблонов...
+                  {t.loading}
                 </div>
               ) : apiTemplates.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
-                  Нет шаблонов для этого этапа
+                  {t.noTemplates}
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200">
@@ -382,7 +404,7 @@ const CompanyLifecycle: React.FC = () => {
                             <div>
                               <h4 className="font-medium text-gray-900">{template.name}</h4>
                               <p className="text-sm text-gray-500 mt-0.5">
-                                {template.description || `Категория: ${template.category}`}
+                                {template.description || `${t.category}: ${template.category}`}
                               </p>
                             </div>
                           </div>
@@ -410,7 +432,7 @@ const CompanyLifecycle: React.FC = () => {
                     currentStage.color.replace('text-', 'bg-')
                   } hover:opacity-90 transition-opacity`}
                 >
-                  Создать все обязательные документы
+                  {t.createAllDocs}
                 </button>
               </div>
             </div>
@@ -418,7 +440,7 @@ const CompanyLifecycle: React.FC = () => {
             {/* Next Stage Preview */}
             {selectedStage !== 'exit' && (
               <div className="mt-6 bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="font-medium text-gray-900 mb-2">Следующий этап</h3>
+                <h3 className="font-medium text-gray-900 mb-2">{t.nextStage}</h3>
                 {(() => {
                   const currentIndex = LIFECYCLE_STAGES.findIndex(s => s.id === selectedStage);
                   const nextStage = LIFECYCLE_STAGES[currentIndex + 1];

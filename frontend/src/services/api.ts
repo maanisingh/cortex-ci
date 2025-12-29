@@ -436,6 +436,21 @@ export const aiApi = {
 
   modelCard: (analysisType: string) =>
     api.get(`/ai/model-card/${analysisType}`),
+
+  // AI Document Generation
+  documents: {
+    generate: (data: {
+      document_type: string;
+      company_name: string;
+      company_inn: string;
+      framework?: string;
+      additional_context?: Record<string, unknown>;
+    }) => api.post("/ai/documents/generate", data),
+
+    status: () => api.get("/ai/documents/status"),
+
+    documentTypes: () => api.get("/ai/documents/document-types"),
+  },
 };
 
 // ============= COMPLIANCE PLATFORM APIs =============
@@ -784,7 +799,7 @@ export const incidentsApi = {
     is_breach?: boolean;
     skip?: number;
     limit?: number;
-  }) => api.get("/compliance/incidents", { params }),
+  }) => api.get("/compliance/incidents/", { params }),
 
   get: (id: string) => api.get(`/compliance/incidents/${id}`),
 
@@ -811,7 +826,7 @@ export const incidentsApi = {
 // Vendor Risk Management API
 export const vendorsApi = {
   list: (params?: { tier?: string; status?: string; category?: string }) =>
-    api.get("/compliance/vendors", { params }),
+    api.get("/compliance/vendors/", { params }),
 
   get: (id: string) => api.get(`/compliance/vendors/${id}`),
 

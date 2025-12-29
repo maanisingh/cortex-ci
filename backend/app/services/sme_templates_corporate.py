@@ -902,3 +902,8 @@ class CorporateTemplateService:
         content = template.get("template_content", "")
         tpl = Template(content)
         return tpl.render(**data)
+
+    @staticmethod
+    def generate_document(doc_type: CorporateDocType, data: Dict[str, Any]) -> str:
+        """Generate document from template (alias for generate)."""
+        return CorporateTemplateService.generate(doc_type, data)

@@ -66,6 +66,33 @@ export default function RussianCompliance() {
   const [lookupLoading, setLookupLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "ispdn" | "documents" | "tasks">("overview");
 
+  // Quick Action modals state
+  const [showISPDNModal, setShowISPDNModal] = useState(false);
+  const [showResponsibleModal, setShowResponsibleModal] = useState(false);
+  const [showUZCalculator, setShowUZCalculator] = useState(false);
+  const [ispdnFormData, setIspdnFormData] = useState({
+    name: "",
+    description: "",
+    pdn_category: "other",
+    subject_count: "up_to_100k",
+    threat_type: "third",
+    has_foreign_transfer: false,
+    has_biometric: false,
+  });
+  const [responsibleFormData, setResponsibleFormData] = useState({
+    role: "dpo",
+    full_name: "",
+    position: "",
+    phone: "",
+    email: "",
+  });
+  const [uzCalculatorData, setUzCalculatorData] = useState({
+    pdn_category: "other",
+    subject_count: "up_to_100k",
+    threat_type: "third",
+  });
+  const [uzResult, setUzResult] = useState<string | null>(null);
+
   // Fetch companies
   const { data: companies = [], isLoading: companiesLoading } = useQuery({
     queryKey: ["russian-companies"],
@@ -138,6 +165,83 @@ export default function RussianCompliance() {
       setLookupResult(null);
     },
   });
+
+  // Generate 152-FZ package mutation
+  const generatePackageMutation = useMutation({
+    mutationFn: () => {
+      if (!selectedCompanyId) throw new Error("No company selected");
+      return russianComplianceApi.tasks.generateFromTemplate(selectedCompanyId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["russian-tasks", selectedCompanyId] });
+      queryClient.invalidateQueries({ queryKey: ["russian-documents", selectedCompanyId] });
+      alert("Document package generated successfully!");
+    },
+    onError: (error) => {
+      console.error("Failed to generate package:", error);
+      alert("Failed to generate document package");
+    },
+  });
+
+  // Create ISPDN mutation
+  const createISPDNMutation = useMutation({
+    mutationFn: (data: typeof ispdnFormData) => {
+      if (!selectedCompanyId) throw new Error("No company selected");
+      return russianComplianceApi.ispdn.create(selectedCompanyId, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["russian-ispdn", selectedCompanyId] });
+      setShowISPDNModal(false);
+      setIspdnFormData({
+        name: "",
+        description: "",
+        pdn_category: "other",
+        subject_count: "up_to_100k",
+        threat_type: "third",
+        has_foreign_transfer: false,
+        has_biometric: false,
+      });
+    },
+  });
+
+  // Create responsible person mutation
+  const createResponsibleMutation = useMutation({
+    mutationFn: (data: typeof responsibleFormData) => {
+      if (!selectedCompanyId) throw new Error("No company selected");
+      return russianComplianceApi.responsiblePersons.create(selectedCompanyId, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["russian-responsible", selectedCompanyId] });
+      setShowResponsibleModal(false);
+      setResponsibleFormData({
+        role: "dpo",
+        full_name: "",
+        position: "",
+        phone: "",
+        email: "",
+      });
+    },
+  });
+
+  // Calculate protection level
+  const handleCalculateUZ = async () => {
+    try {
+      // Convert subject_count string to number for API
+      const subjectCountMap: Record<string, number> = {
+        "up_to_100k": 50000,
+        "over_100k": 150000,
+      };
+      const response = await russianComplianceApi.calculateProtectionLevel({
+        pdn_category: uzCalculatorData.pdn_category,
+        subject_count: subjectCountMap[uzCalculatorData.subject_count] || 50000,
+        threat_type: uzCalculatorData.threat_type,
+      });
+      setUzResult(response.data?.protection_level || "УЗ-4");
+    } catch (error) {
+      console.error("Failed to calculate UZ:", error);
+      setUzResult("УЗ-4"); // Default fallback
+    }
+  };
 
   // Lookup INN
   const handleLookupINN = async () => {
@@ -462,7 +566,7 @@ export default function RussianCompliance() {
                 <div className="card">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-medium">Responsible Persons</h3>
-                    <button className="btn-secondary text-sm">Add Person</button>
+                    <button onClick={() => setShowResponsibleModal(true)} className="btn-secondary text-sm">Add Person</button>
                   </div>
                   {responsiblePersons.length > 0 ? (
                     <div className="space-y-3">
@@ -495,16 +599,23 @@ export default function RussianCompliance() {
                 <div className="card lg:col-span-2">
                   <h3 className="text-lg font-medium mb-4">Quick Actions</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <button className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-left hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                    <button
+                      onClick={() => generatePackageMutation.mutate()}
+                      disabled={generatePackageMutation.isPending}
+                      className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-left hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors disabled:opacity-50"
+                    >
                       <DocumentTextIcon className="h-8 w-8 text-blue-600 mb-2" />
                       <p className="font-medium text-blue-900 dark:text-blue-100">
-                        Generate 152-ФЗ Package
+                        {generatePackageMutation.isPending ? "Generating..." : "Generate 152-ФЗ Package"}
                       </p>
                       <p className="text-xs text-blue-600 dark:text-blue-300">
                         All required documents
                       </p>
                     </button>
-                    <button className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-left hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors">
+                    <button
+                      onClick={() => setShowISPDNModal(true)}
+                      className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-left hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                    >
                       <ServerStackIcon className="h-8 w-8 text-purple-600 mb-2" />
                       <p className="font-medium text-purple-900 dark:text-purple-100">
                         Add ISPDN System
@@ -513,7 +624,10 @@ export default function RussianCompliance() {
                         Register new system
                       </p>
                     </button>
-                    <button className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg text-left hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors">
+                    <button
+                      onClick={() => setShowUZCalculator(true)}
+                      className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg text-left hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors"
+                    >
                       <ShieldCheckIcon className="h-8 w-8 text-emerald-600 mb-2" />
                       <p className="font-medium text-emerald-900 dark:text-emerald-100">
                         Calculate УЗ Level
@@ -522,7 +636,10 @@ export default function RussianCompliance() {
                         Protection level calc
                       </p>
                     </button>
-                    <button className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-left hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors">
+                    <button
+                      onClick={() => setShowResponsibleModal(true)}
+                      className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-left hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors"
+                    >
                       <UserGroupIcon className="h-8 w-8 text-orange-600 mb-2" />
                       <p className="font-medium text-orange-900 dark:text-orange-100">
                         Assign Responsible
@@ -742,6 +859,255 @@ export default function RussianCompliance() {
             )}
           </div>
         </>
+      )}
+
+      {/* ISPDN Modal */}
+      {showISPDNModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-dark-800 rounded-lg shadow-xl w-full max-w-lg p-6">
+            <h2 className="text-xl font-bold mb-4">Add ISPDN System</h2>
+            <form onSubmit={(e) => { e.preventDefault(); createISPDNMutation.mutate(ispdnFormData); }} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">System Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={ispdnFormData.name}
+                  onChange={(e) => setIspdnFormData({ ...ispdnFormData, name: e.target.value })}
+                  className="w-full rounded-md border-gray-300 dark:bg-dark-700 dark:border-dark-600"
+                  placeholder="e.g., HR Database, CRM System"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Description</label>
+                <textarea
+                  value={ispdnFormData.description}
+                  onChange={(e) => setIspdnFormData({ ...ispdnFormData, description: e.target.value })}
+                  className="w-full rounded-md border-gray-300 dark:bg-dark-700 dark:border-dark-600"
+                  rows={2}
+                  placeholder="Brief description of the system and its purpose"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">PDN Category</label>
+                <select
+                  value={ispdnFormData.pdn_category}
+                  onChange={(e) => setIspdnFormData({ ...ispdnFormData, pdn_category: e.target.value })}
+                  className="w-full rounded-md border-gray-300 dark:bg-dark-700 dark:border-dark-600"
+                >
+                  <option value="special">Специальные (Special)</option>
+                  <option value="biometric">Биометрические (Biometric)</option>
+                  <option value="public">Общедоступные (Public)</option>
+                  <option value="other">Иные (Other)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Number of Subjects</label>
+                <select
+                  value={ispdnFormData.subject_count}
+                  onChange={(e) => setIspdnFormData({ ...ispdnFormData, subject_count: e.target.value })}
+                  className="w-full rounded-md border-gray-300 dark:bg-dark-700 dark:border-dark-600"
+                >
+                  <option value="up_to_100k">До 100 000</option>
+                  <option value="over_100k">Более 100 000</option>
+                </select>
+              </div>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={ispdnFormData.has_foreign_transfer}
+                    onChange={(e) => setIspdnFormData({ ...ispdnFormData, has_foreign_transfer: e.target.checked })}
+                    className="rounded border-gray-300"
+                  />
+                  <span className="text-sm">Cross-border transfer</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={ispdnFormData.has_biometric}
+                    onChange={(e) => setIspdnFormData({ ...ispdnFormData, has_biometric: e.target.checked })}
+                    className="rounded border-gray-300"
+                  />
+                  <span className="text-sm">Contains biometric data</span>
+                </label>
+              </div>
+              <div className="flex gap-3 justify-end pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowISPDNModal(false)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createISPDNMutation.isPending || !ispdnFormData.name}
+                  className="btn-primary"
+                >
+                  {createISPDNMutation.isPending ? "Creating..." : "Create ISPDN"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* UZ Calculator Modal */}
+      {showUZCalculator && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-dark-800 rounded-lg shadow-xl w-full max-w-lg p-6">
+            <h2 className="text-xl font-bold mb-4">Calculate Protection Level (УЗ)</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">PDN Category</label>
+                <select
+                  value={uzCalculatorData.pdn_category}
+                  onChange={(e) => setUzCalculatorData({ ...uzCalculatorData, pdn_category: e.target.value })}
+                  className="w-full rounded-md border-gray-300 dark:bg-dark-700 dark:border-dark-600"
+                >
+                  <option value="special">Специальные (Special)</option>
+                  <option value="biometric">Биометрические (Biometric)</option>
+                  <option value="public">Общедоступные (Public)</option>
+                  <option value="other">Иные (Other)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Number of Subjects</label>
+                <select
+                  value={uzCalculatorData.subject_count}
+                  onChange={(e) => setUzCalculatorData({ ...uzCalculatorData, subject_count: e.target.value })}
+                  className="w-full rounded-md border-gray-300 dark:bg-dark-700 dark:border-dark-600"
+                >
+                  <option value="up_to_100k">До 100 000</option>
+                  <option value="over_100k">Более 100 000</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Threat Type</label>
+                <select
+                  value={uzCalculatorData.threat_type}
+                  onChange={(e) => setUzCalculatorData({ ...uzCalculatorData, threat_type: e.target.value })}
+                  className="w-full rounded-md border-gray-300 dark:bg-dark-700 dark:border-dark-600"
+                >
+                  <option value="first">Type 1 (НДВ in system software)</option>
+                  <option value="second">Type 2 (НДВ in application software)</option>
+                  <option value="third">Type 3 (No НДВ threats)</option>
+                </select>
+              </div>
+
+              {uzResult && (
+                <div className="p-4 bg-gray-50 dark:bg-dark-700 rounded-lg">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Calculated Protection Level:</p>
+                  <span className={`px-3 py-1.5 text-lg font-bold rounded ${PROTECTION_LEVEL_COLORS[uzResult] || "bg-gray-100 text-gray-800"}`}>
+                    {uzResult}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex gap-3 justify-end pt-4">
+                <button
+                  type="button"
+                  onClick={() => { setShowUZCalculator(false); setUzResult(null); }}
+                  className="btn-secondary"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={handleCalculateUZ}
+                  className="btn-primary"
+                >
+                  Calculate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Responsible Person Modal */}
+      {showResponsibleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-dark-800 rounded-lg shadow-xl w-full max-w-lg p-6">
+            <h2 className="text-xl font-bold mb-4">Assign Responsible Person</h2>
+            <form onSubmit={(e) => { e.preventDefault(); createResponsibleMutation.mutate(responsibleFormData); }} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Role *</label>
+                <select
+                  value={responsibleFormData.role}
+                  onChange={(e) => setResponsibleFormData({ ...responsibleFormData, role: e.target.value })}
+                  className="w-full rounded-md border-gray-300 dark:bg-dark-700 dark:border-dark-600"
+                >
+                  <option value="dpo">DPO (Ответственный за ПДн)</option>
+                  <option value="security_admin">Security Administrator</option>
+                  <option value="system_admin">System Administrator</option>
+                  <option value="data_owner">Data Owner</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={responsibleFormData.full_name}
+                  onChange={(e) => setResponsibleFormData({ ...responsibleFormData, full_name: e.target.value })}
+                  className="w-full rounded-md border-gray-300 dark:bg-dark-700 dark:border-dark-600"
+                  placeholder="Иванов Иван Иванович"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Position *</label>
+                <input
+                  type="text"
+                  required
+                  value={responsibleFormData.position}
+                  onChange={(e) => setResponsibleFormData({ ...responsibleFormData, position: e.target.value })}
+                  className="w-full rounded-md border-gray-300 dark:bg-dark-700 dark:border-dark-600"
+                  placeholder="e.g., IT Director, Legal Counsel"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    value={responsibleFormData.phone}
+                    onChange={(e) => setResponsibleFormData({ ...responsibleFormData, phone: e.target.value })}
+                    className="w-full rounded-md border-gray-300 dark:bg-dark-700 dark:border-dark-600"
+                    placeholder="+7 (XXX) XXX-XX-XX"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Email *</label>
+                  <input
+                    type="email"
+                    required
+                    value={responsibleFormData.email}
+                    onChange={(e) => setResponsibleFormData({ ...responsibleFormData, email: e.target.value })}
+                    className="w-full rounded-md border-gray-300 dark:bg-dark-700 dark:border-dark-600"
+                    placeholder="email@company.ru"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 justify-end pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowResponsibleModal(false)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createResponsibleMutation.isPending || !responsibleFormData.full_name || !responsibleFormData.email}
+                  className="btn-primary"
+                >
+                  {createResponsibleMutation.isPending ? "Assigning..." : "Assign Person"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -102,6 +102,12 @@ class Settings(BaseSettings):
     SIMULATION_MAX_ENTITIES: int = 1000
     SIMULATION_TIMEOUT_SECONDS: int = 300
 
+    # AI Document Generation
+    AI_PROVIDER: str = Field(default="huggingface", env="AI_PROVIDER")  # huggingface, ollama, none
+    HUGGINGFACE_TOKEN: str = Field(default="", env="HUGGINGFACE_TOKEN")
+    HUGGINGFACE_MODEL: str = Field(default="maani/cortex-compliance-ai", env="HUGGINGFACE_MODEL")
+    OLLAMA_URL: str = Field(default="http://localhost:11434", env="OLLAMA_URL")
+
     @validator("ALLOWED_ORIGINS", pre=True)
     def parse_allowed_origins(cls, v):
         if isinstance(v, str):

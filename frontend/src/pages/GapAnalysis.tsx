@@ -1,5 +1,8 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "../contexts/LanguageContext";
+import { complianceScoringApi, complianceControlsApi, auditsApi, evidenceApi } from "../services/api";
 import {
   ChartBarIcon,
   CheckCircleIcon,
@@ -12,6 +15,7 @@ import {
   PlusIcon,
   FunnelIcon,
   ArrowDownTrayIcon,
+  ArrowPathIcon,
   LinkIcon,
   ChevronRightIcon,
   SparklesIcon,
@@ -80,193 +84,226 @@ const priorityConfig: Record<Priority, { label: string; color: string }> = {
   low: { label: "Низкий", color: "text-gray-600 bg-gray-50 dark:bg-gray-700" },
 };
 
-// Mock data for gap analysis
-const mockControls: ControlRequirement[] = [
-  {
-    id: "1",
-    controlId: "CTRL-001",
-    controlName: "Политика обработки ПДн",
-    frameworkRequirement: "ст. 18.1 152-ФЗ",
-    category: "Организационные меры",
-    status: "compliant",
-    currentState: "Политика утверждена и опубликована",
-    gap: "",
-    remediation: "",
-    priority: "high",
-    progress: 100,
-    evidence: ["POL-001", "ORD-001"],
-  },
-  {
-    id: "2",
-    controlId: "CTRL-002",
-    controlName: "Назначение ответственного за ПДн",
-    frameworkRequirement: "ст. 22.1 152-ФЗ",
-    category: "Организационные меры",
-    status: "compliant",
-    currentState: "Ответственный назначен приказом",
-    gap: "",
-    remediation: "",
-    priority: "critical",
-    progress: 100,
-    evidence: ["ORD-002"],
-    assignee: "Иванов И.И.",
-  },
-  {
-    id: "3",
-    controlId: "CTRL-003",
-    controlName: "Уведомление Роскомнадзора",
-    frameworkRequirement: "ст. 22 152-ФЗ",
-    category: "Регуляторные требования",
-    status: "partial",
-    currentState: "Уведомление подано, ожидает подтверждения",
-    gap: "Не получено подтверждение регистрации",
-    remediation: "Проверить статус уведомления в ЛК РКН",
-    priority: "critical",
-    dueDate: "2024-02-01",
-    progress: 70,
-    assignee: "Петров П.П.",
-  },
-  {
-    id: "4",
-    controlId: "CTRL-004",
-    controlName: "Модель угроз безопасности ПДн",
-    frameworkRequirement: "п. 2 ПП РФ № 1119",
-    category: "Технические меры",
-    status: "non_compliant",
-    currentState: "Модель угроз отсутствует",
-    gap: "Не разработана модель угроз для ИСПДн",
-    remediation: "Разработать модель угроз по методике ФСТЭК",
-    priority: "high",
-    dueDate: "2024-02-15",
-    progress: 20,
-    assignee: "Сидоров С.С.",
-  },
-  {
-    id: "5",
-    controlId: "CTRL-005",
-    controlName: "Классификация ИСПДн",
-    frameworkRequirement: "ПП РФ № 1119",
-    category: "Технические меры",
-    status: "partial",
-    currentState: "Классификация выполнена для 2 из 3 ИСПДн",
-    gap: "Не классифицирована CRM-система",
-    remediation: "Провести классификацию CRM как ИСПДн",
-    priority: "high",
-    dueDate: "2024-01-25",
-    progress: 66,
-    assignee: "Сидоров С.С.",
-  },
-  {
-    id: "6",
-    controlId: "CTRL-006",
-    controlName: "Обучение персонала",
-    frameworkRequirement: "ст. 18.1 152-ФЗ",
-    category: "Организационные меры",
-    status: "partial",
-    currentState: "Обучено 80% сотрудников",
-    gap: "20% сотрудников не прошли обучение",
-    remediation: "Провести обучение для оставшихся сотрудников",
-    priority: "medium",
-    dueDate: "2024-02-28",
-    progress: 80,
-    assignee: "HR отдел",
-  },
-  {
-    id: "7",
-    controlId: "CTRL-007",
-    controlName: "Согласия на обработку ПДн",
-    frameworkRequirement: "ст. 9 152-ФЗ",
-    category: "Правовые основания",
-    status: "compliant",
-    currentState: "Согласия получены от всех субъектов",
-    gap: "",
-    remediation: "",
-    priority: "high",
-    progress: 100,
-    evidence: ["FORM-001"],
-  },
-  {
-    id: "8",
-    controlId: "CTRL-008",
-    controlName: "Журнал учёта обращений",
-    frameworkRequirement: "ст. 20 152-ФЗ",
-    category: "Организационные меры",
-    status: "not_assessed",
-    currentState: "Не проверено",
-    gap: "Требуется оценка",
-    remediation: "Провести проверку наличия журнала",
-    priority: "medium",
-    progress: 0,
-  },
-];
 
-const mockChecklists: AuditChecklist[] = [
-  {
-    id: "1",
-    name: "Чек-лист 152-ФЗ: Организационные меры",
-    framework: "152-ФЗ",
-    totalItems: 25,
-    completedItems: 20,
-    status: "in_progress",
-  },
-  {
-    id: "2",
-    name: "Чек-лист 152-ФЗ: Технические меры",
-    framework: "152-ФЗ",
-    totalItems: 30,
-    completedItems: 18,
-    status: "in_progress",
-  },
-  {
-    id: "3",
-    name: "Чек-лист 152-ФЗ: Правовые основания",
-    framework: "152-ФЗ",
-    totalItems: 15,
-    completedItems: 15,
-    status: "completed",
-  },
-  {
-    id: "4",
-    name: "Подготовка к проверке РКН",
-    framework: "152-ФЗ",
-    totalItems: 40,
-    completedItems: 0,
-    status: "not_started",
-  },
-];
+// Map API implementation status to component status
+const mapImplementationStatus = (apiStatus: string): GapStatus => {
+  const statusMap: Record<string, GapStatus> = {
+    "FULLY_IMPLEMENTED": "compliant",
+    "PARTIALLY_IMPLEMENTED": "partial",
+    "NOT_IMPLEMENTED": "non_compliant",
+    "NOT_ASSESSED": "not_assessed",
+    "NOT_APPLICABLE": "compliant",
+    "PLANNED": "partial",
+  };
+  return statusMap[apiStatus] || "not_assessed";
+};
 
 export default function GapAnalysis() {
+  const { language } = useLanguage();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState<"gaps" | "checklists" | "evidence">("gaps");
   const [statusFilter, setStatusFilter] = useState<GapStatus | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [selectedControl, setSelectedControl] = useState<ControlRequirement | null>(null);
+  const [showEvidenceModal, setShowEvidenceModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingControlId, setEditingControlId] = useState<string | null>(null);
 
-  // Calculate stats
+  // Fetch controls from API
+  const { data: controlsData, isLoading: controlsLoading } = useQuery({
+    queryKey: ["compliance-controls"],
+    queryFn: () => complianceControlsApi.list(),
+  });
+
+  // Fetch gaps from API
+  const { data: gapsData, isLoading: gapsLoading } = useQuery({
+    queryKey: ["compliance-gaps"],
+    queryFn: () => complianceScoringApi.gaps(),
+  });
+
+  // Fetch audits/checklists
+  const { data: auditsData, isLoading: auditsLoading } = useQuery({
+    queryKey: ["audits"],
+    queryFn: () => auditsApi.list(),
+  });
+
+  // Transform API controls to component format
+  const controls: ControlRequirement[] = useMemo(() => {
+    if (!controlsData || !Array.isArray(controlsData)) return [];
+    return controlsData.map((control: {
+      id: string;
+      control_id?: string;
+      title?: string;
+      family?: string;
+      category?: string;
+      implementation_status?: string;
+      description?: string;
+      guidance?: string;
+      priority?: number;
+      references?: string[];
+    }) => ({
+      id: control.id,
+      controlId: control.control_id || `CTRL-${control.id.slice(0, 4)}`,
+      controlName: control.title || "Untitled Control",
+      frameworkRequirement: control.family || "",
+      category: control.category || "General",
+      status: mapImplementationStatus(control.implementation_status || "NOT_ASSESSED"),
+      currentState: control.description || "",
+      gap: control.implementation_status === "NOT_IMPLEMENTED" ? "Требуется внедрение" : "",
+      remediation: control.guidance || "",
+      priority: (["critical", "high", "medium", "low"][control.priority || 2] || "medium") as Priority,
+      progress: control.implementation_status === "FULLY_IMPLEMENTED" ? 100 :
+                control.implementation_status === "PARTIALLY_IMPLEMENTED" ? 50 : 0,
+      evidence: control.references,
+    }));
+  }, [controlsData]);
+
+  // Transform audits to checklists format
+  const checklists: AuditChecklist[] = useMemo(() => {
+    if (!auditsData || !Array.isArray(auditsData)) return [];
+    return auditsData.map((audit: {
+      id: string;
+      name: string;
+      assessment_type?: string;
+      status?: string;
+      controls_assessed?: number;
+      controls_compliant?: number;
+    }) => ({
+      id: audit.id,
+      name: audit.name,
+      framework: audit.assessment_type || "152-ФЗ",
+      totalItems: audit.controls_assessed || 0,
+      completedItems: audit.controls_compliant || 0,
+      status: (audit.status === "COMPLETED" ? "completed" :
+               audit.status === "IN_PROGRESS" ? "in_progress" : "not_started") as "not_started" | "in_progress" | "completed",
+    }));
+  }, [auditsData]);
+
+  // Handler functions
+  const handleOpenChecklist = (checklistId: string) => {
+    navigate(`/audits/${checklistId}`);
+  };
+
+  const handleUploadEvidence = () => {
+    setShowEvidenceModal(true);
+  };
+
+  const handleEditControl = (controlId: string) => {
+    setEditingControlId(controlId);
+    setShowEditModal(true);
+  };
+
+  const isLoading = controlsLoading || gapsLoading || auditsLoading;
+
+  // Bilingual translations
+  const t = {
+    title: language === "ru" ? "Анализ разрывов и подготовка к аудиту" : "Gap Analysis & Audit Preparation",
+    subtitle: language === "ru" ? "Оценка соответствия требованиям, отслеживание устранения разрывов" : "Assess compliance requirements, track gap remediation",
+    export: language === "ru" ? "Экспорт" : "Export",
+    selfAssess: language === "ru" ? "Автооценка" : "Self Assessment",
+    overallCompliance: language === "ru" ? "Общий уровень соответствия" : "Overall Compliance Level",
+    compliant: language === "ru" ? "Соответствует" : "Compliant",
+    partial: language === "ru" ? "Частично" : "Partial",
+    nonCompliant: language === "ru" ? "Не соответствует" : "Non-compliant",
+    notAssessed: language === "ru" ? "Не оценено" : "Not Assessed",
+    gapAnalysis: language === "ru" ? "Анализ разрывов" : "Gap Analysis",
+    auditChecklists: language === "ru" ? "Чек-листы аудита" : "Audit Checklists",
+    evidenceCollection: language === "ru" ? "Сбор доказательств" : "Evidence Collection",
+    allStatuses: language === "ru" ? "Все статусы" : "All Statuses",
+    allCategories: language === "ru" ? "Все категории" : "All Categories",
+    critical: language === "ru" ? "Критический" : "Critical",
+    high: language === "ru" ? "Высокий" : "High",
+    medium: language === "ru" ? "Средний" : "Medium",
+    low: language === "ru" ? "Низкий" : "Low",
+    progress: language === "ru" ? "Прогресс" : "Progress",
+    viewDetails: language === "ru" ? "Подробнее" : "View Details",
+    startChecklist: language === "ru" ? "Начать проверку" : "Start Checklist",
+    continueChecklist: language === "ru" ? "Продолжить" : "Continue",
+    viewResults: language === "ru" ? "Результаты" : "View Results",
+    items: language === "ru" ? "пунктов" : "items",
+    uploadEvidence: language === "ru" ? "Загрузить документ" : "Upload Evidence",
+    noResults: language === "ru" ? "Нет результатов" : "No results",
+    tryDifferent: language === "ru" ? "Попробуйте изменить фильтры" : "Try different filters",
+    // Table headers
+    control: language === "ru" ? "Контроль" : "Control",
+    requirement: language === "ru" ? "Требование" : "Requirement",
+    status: language === "ru" ? "Статус" : "Status",
+    priority: language === "ru" ? "Приоритет" : "Priority",
+    dueDate: language === "ru" ? "Срок" : "Due Date",
+    // Checklist statuses
+    completed: language === "ru" ? "Завершено" : "Completed",
+    inProgress: language === "ru" ? "В работе" : "In Progress",
+    notStarted: language === "ru" ? "Не начато" : "Not Started",
+    openChecklist: language === "ru" ? "Открыть чек-лист" : "Open Checklist",
+    // Evidence tab
+    evidenceTitle: language === "ru" ? "Сбор доказательств" : "Evidence Collection",
+    evidenceDesc: language === "ru"
+      ? "Загрузите документы, скриншоты и другие доказательства соответствия требованиям для подготовки к аудиту."
+      : "Upload documents, screenshots and other compliance evidence for audit preparation.",
+    uploadEvidenceBtn: language === "ru" ? "Загрузить доказательства" : "Upload Evidence",
+    // Modal labels
+    currentState: language === "ru" ? "Текущее состояние" : "Current State",
+    identifiedGap: language === "ru" ? "Выявленный разрыв" : "Identified Gap",
+    remediationPlan: language === "ru" ? "План устранения" : "Remediation Plan",
+    relatedDocs: language === "ru" ? "Связанные документы" : "Related Documents",
+    close: language === "ru" ? "Закрыть" : "Close",
+    edit: language === "ru" ? "Редактировать" : "Edit",
+    // Categories
+    organizationalMeasures: language === "ru" ? "Организационные меры" : "Organizational Measures",
+    technicalMeasures: language === "ru" ? "Технические меры" : "Technical Measures",
+    regulatoryReqs: language === "ru" ? "Регуляторные требования" : "Regulatory Requirements",
+    legalBasis: language === "ru" ? "Правовые основания" : "Legal Basis",
+  };
+
+  // Bilingual status labels
+  const getStatusLabel = (status: GapStatus) => {
+    const labels: Record<GapStatus, string> = {
+      compliant: t.compliant,
+      partial: t.partial,
+      non_compliant: t.nonCompliant,
+      not_assessed: t.notAssessed,
+    };
+    return labels[status];
+  };
+
+  // Bilingual priority labels
+  const getPriorityLabel = (priority: Priority) => {
+    const labels: Record<Priority, string> = {
+      critical: t.critical,
+      high: t.high,
+      medium: t.medium,
+      low: t.low,
+    };
+    return labels[priority];
+  };
+
+  // Calculate stats from controls
   const stats = useMemo(() => {
-    const total = mockControls.length;
-    const compliant = mockControls.filter((c) => c.status === "compliant").length;
-    const partial = mockControls.filter((c) => c.status === "partial").length;
-    const nonCompliant = mockControls.filter((c) => c.status === "non_compliant").length;
-    const notAssessed = mockControls.filter((c) => c.status === "not_assessed").length;
-    const overallScore = Math.round(
+    const total = controls.length;
+    const compliant = controls.filter((c) => c.status === "compliant").length;
+    const partial = controls.filter((c) => c.status === "partial").length;
+    const nonCompliant = controls.filter((c) => c.status === "non_compliant").length;
+    const notAssessed = controls.filter((c) => c.status === "not_assessed").length;
+    const overallScore = total > 0 ? Math.round(
       (compliant * 100 + partial * 50) / (total - notAssessed || 1)
-    );
+    ) : 0;
     return { total, compliant, partial, nonCompliant, notAssessed, overallScore };
-  }, []);
+  }, [controls]);
 
   // Filter controls
   const filteredControls = useMemo(() => {
-    return mockControls.filter((control) => {
+    return controls.filter((control) => {
       if (statusFilter !== "all" && control.status !== statusFilter) return false;
       if (categoryFilter !== "all" && control.category !== categoryFilter) return false;
       return true;
     });
-  }, [statusFilter, categoryFilter]);
+  }, [controls, statusFilter, categoryFilter]);
 
   // Get unique categories
   const categories = useMemo(() => {
-    return [...new Set(mockControls.map((c) => c.category))];
-  }, []);
+    return [...new Set(controls.map((c) => c.category))];
+  }, [controls]);
 
   return (
     <div className="space-y-6">
@@ -274,20 +311,20 @@ export default function GapAnalysis() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Анализ разрывов и подготовка к аудиту
+            {t.title}
           </h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Оценка соответствия требованиям, отслеживание устранения разрывов
+            {t.subtitle}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
             <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
-            Экспорт
+            {t.export}
           </button>
           <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             <SparklesIcon className="h-5 w-5 mr-2" />
-            Автооценка
+            {t.selfAssess}
           </button>
         </div>
       </div>
@@ -296,7 +333,7 @@ export default function GapAnalysis() {
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl shadow-lg p-6 text-white">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
-            <h2 className="text-lg font-medium text-blue-100">Общий уровень соответствия</h2>
+            <h2 className="text-lg font-medium text-blue-100">{t.overallCompliance}</h2>
             <div className="flex items-baseline gap-2 mt-2">
               <span className="text-5xl font-bold">{stats.overallScore}%</span>
               <span className="text-blue-200">152-ФЗ</span>
@@ -305,19 +342,19 @@ export default function GapAnalysis() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="bg-white/10 rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-green-300">{stats.compliant}</p>
-              <p className="text-xs text-blue-200">Соответствует</p>
+              <p className="text-xs text-blue-200">{t.compliant}</p>
             </div>
             <div className="bg-white/10 rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-yellow-300">{stats.partial}</p>
-              <p className="text-xs text-blue-200">Частично</p>
+              <p className="text-xs text-blue-200">{t.partial}</p>
             </div>
             <div className="bg-white/10 rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-red-300">{stats.nonCompliant}</p>
-              <p className="text-xs text-blue-200">Не соответствует</p>
+              <p className="text-xs text-blue-200">{t.nonCompliant}</p>
             </div>
             <div className="bg-white/10 rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-gray-300">{stats.notAssessed}</p>
-              <p className="text-xs text-blue-200">Не оценено</p>
+              <p className="text-xs text-blue-200">{t.notAssessed}</p>
             </div>
           </div>
         </div>
@@ -327,9 +364,9 @@ export default function GapAnalysis() {
       <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="flex gap-6">
           {[
-            { id: "gaps", label: "Анализ разрывов", icon: ChartBarIcon },
-            { id: "checklists", label: "Чек-листы аудита", icon: ClipboardDocumentListIcon },
-            { id: "evidence", label: "Сбор доказательств", icon: FolderOpenIcon },
+            { id: "gaps", label: t.gapAnalysis, icon: ChartBarIcon },
+            { id: "checklists", label: t.auditChecklists, icon: ClipboardDocumentListIcon },
+            { id: "evidence", label: t.evidenceCollection, icon: FolderOpenIcon },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -357,18 +394,18 @@ export default function GapAnalysis() {
               onChange={(e) => setStatusFilter(e.target.value as GapStatus | "all")}
               className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
             >
-              <option value="all">Все статусы</option>
-              <option value="compliant">Соответствует</option>
-              <option value="partial">Частично</option>
-              <option value="non_compliant">Не соответствует</option>
-              <option value="not_assessed">Не оценено</option>
+              <option value="all">{t.allStatuses}</option>
+              <option value="compliant">{t.compliant}</option>
+              <option value="partial">{t.partial}</option>
+              <option value="non_compliant">{t.nonCompliant}</option>
+              <option value="not_assessed">{t.notAssessed}</option>
             </select>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"
             >
-              <option value="all">Все категории</option>
+              <option value="all">{t.allCategories}</option>
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
@@ -384,27 +421,41 @@ export default function GapAnalysis() {
                 <thead>
                   <tr className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Контроль
+                      {t.control}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Требование
+                      {t.requirement}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Статус
+                      {t.status}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Прогресс
+                      {t.progress}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Приоритет
+                      {t.priority}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Срок
+                      {t.dueDate}
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredControls.map((control) => {
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center">
+                        <ArrowPathIcon className="h-8 w-8 mx-auto text-blue-500 animate-spin" />
+                        <p className="mt-4 text-gray-500">{language === "ru" ? "Загрузка контролей..." : "Loading controls..."}</p>
+                      </td>
+                    </tr>
+                  ) : filteredControls.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center">
+                        <ChartBarIcon className="h-12 w-12 mx-auto text-gray-300" />
+                        <p className="mt-4 text-gray-500">{language === "ru" ? "Контроли не найдены" : "No controls found"}</p>
+                      </td>
+                    </tr>
+                  ) : filteredControls.map((control) => {
                     const statusConf = statusConfig[control.status];
                     const StatusIcon = statusConf.icon;
                     const priorityConf = priorityConfig[control.priority];
@@ -435,7 +486,7 @@ export default function GapAnalysis() {
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConf.bgColor} ${statusConf.color}`}
                           >
                             <StatusIcon className="h-3.5 w-3.5" />
-                            {statusConf.label}
+                            {getStatusLabel(control.status)}
                           </span>
                         </td>
                         <td className="px-4 py-4">
@@ -461,7 +512,7 @@ export default function GapAnalysis() {
                           <span
                             className={`px-2 py-0.5 rounded text-xs font-medium ${priorityConf.color}`}
                           >
-                            {priorityConf.label}
+                            {getPriorityLabel(control.priority)}
                           </span>
                         </td>
                         <td className="px-4 py-4">
@@ -486,7 +537,17 @@ export default function GapAnalysis() {
       {/* Checklists Tab */}
       {selectedTab === "checklists" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {mockChecklists.map((checklist) => (
+          {isLoading ? (
+            <div className="col-span-2 py-12 text-center">
+              <ArrowPathIcon className="h-8 w-8 mx-auto text-blue-500 animate-spin" />
+              <p className="mt-4 text-gray-500">{language === "ru" ? "Загрузка..." : "Loading..."}</p>
+            </div>
+          ) : checklists.length === 0 ? (
+            <div className="col-span-2 py-12 text-center">
+              <ClipboardDocumentListIcon className="h-12 w-12 mx-auto text-gray-300" />
+              <p className="mt-4 text-gray-500">{language === "ru" ? "Нет чек-листов" : "No checklists"}</p>
+            </div>
+          ) : checklists.map((checklist) => (
             <div
               key={checklist.id}
               className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
@@ -508,15 +569,15 @@ export default function GapAnalysis() {
                   }`}
                 >
                   {checklist.status === "completed"
-                    ? "Завершено"
+                    ? t.completed
                     : checklist.status === "in_progress"
-                    ? "В работе"
-                    : "Не начато"}
+                    ? t.inProgress
+                    : t.notStarted}
                 </span>
               </div>
               <div className="mt-4">
                 <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="text-gray-500 dark:text-gray-400">Прогресс</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t.progress}</span>
                   <span className="font-medium text-gray-900 dark:text-white">
                     {checklist.completedItems}/{checklist.totalItems}
                   </span>
@@ -530,8 +591,11 @@ export default function GapAnalysis() {
                   />
                 </div>
               </div>
-              <button className="mt-4 w-full py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">
-                Открыть чек-лист
+              <button
+                onClick={() => handleOpenChecklist(checklist.id)}
+                className="mt-4 w-full py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+              >
+                {t.openChecklist}
               </button>
             </div>
           ))}
@@ -544,15 +608,17 @@ export default function GapAnalysis() {
           <div className="text-center py-12">
             <FolderOpenIcon className="h-12 w-12 mx-auto text-gray-300 dark:text-gray-600" />
             <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
-              Сбор доказательств
+              {t.evidenceTitle}
             </h3>
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-              Загрузите документы, скриншоты и другие доказательства соответствия требованиям
-              для подготовки к аудиту.
+              {t.evidenceDesc}
             </p>
-            <button className="mt-6 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <button
+              onClick={handleUploadEvidence}
+              className="mt-6 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
               <PlusIcon className="h-5 w-5 mr-2" />
-              Загрузить доказательства
+              {t.uploadEvidenceBtn}
             </button>
           </div>
         </div>
@@ -585,7 +651,7 @@ export default function GapAnalysis() {
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Текущее состояние
+                      {t.currentState}
                     </label>
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                       {selectedControl.currentState}
@@ -595,7 +661,7 @@ export default function GapAnalysis() {
                   {selectedControl.gap && (
                     <div>
                       <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Выявленный разрыв
+                        {t.identifiedGap}
                       </label>
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {selectedControl.gap}
@@ -606,7 +672,7 @@ export default function GapAnalysis() {
                   {selectedControl.remediation && (
                     <div>
                       <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        План устранения
+                        {t.remediationPlan}
                       </label>
                       <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                         {selectedControl.remediation}
@@ -617,7 +683,7 @@ export default function GapAnalysis() {
                   {selectedControl.evidence && selectedControl.evidence.length > 0 && (
                     <div>
                       <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Связанные документы
+                        {t.relatedDocs}
                       </label>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {selectedControl.evidence.map((doc) => (
@@ -638,10 +704,16 @@ export default function GapAnalysis() {
                       onClick={() => setSelectedControl(null)}
                       className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900"
                     >
-                      Закрыть
+                      {t.close}
                     </button>
-                    <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                      Редактировать
+                    <button
+                      onClick={() => {
+                        handleEditControl(selectedControl.id);
+                        setSelectedControl(null);
+                      }}
+                      className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      {t.edit}
                     </button>
                   </div>
                 </div>

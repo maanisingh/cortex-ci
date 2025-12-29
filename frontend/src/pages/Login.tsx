@@ -69,10 +69,10 @@ export default function Login() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h1 className="text-center text-4xl font-bold text-white">
-            CORTEX-CI
+            CORTEX <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">AI</span>
           </h1>
           <p className="mt-2 text-center text-primary-200">
-            {t("loginSubtitle")}
+            {language === "ru" ? "AI-платформа для делопроизводства" : "AI Paperwork Platform for Business"}
           </p>
         </div>
 
@@ -173,7 +173,7 @@ export default function Login() {
         </div>
 
         <p className="text-center text-primary-200 text-sm">
-          {t("governmentGrade")}
+          {language === "ru" ? "285+ шаблонов документов • AI-генерация за секунды" : "285+ document templates • AI generation in seconds"}
         </p>
       </div>
     </div>

@@ -196,6 +196,11 @@ services:
       LOKI_URL: http://loki:3100
       EGRUL_SERVICE_URL: http://egrul-service:8000
 
+      # AI Document Generation
+      AI_PROVIDER: ${AI_PROVIDER:-huggingface}
+      HUGGINGFACE_TOKEN: ${HUGGINGFACE_TOKEN}
+      HUGGINGFACE_MODEL: ${HUGGINGFACE_MODEL:-IlyaGusev/saiga_mistral_7b_lora}
+
     depends_on:
       db:
         condition: service_healthy

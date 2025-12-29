@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   DocumentTextIcon,
   MagnifyingGlassIcon,
@@ -15,6 +16,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   XMarkIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import {
   FRAMEWORKS,
@@ -25,6 +27,13 @@ import {
   FrameworkInfo,
 } from '../data/documentTemplates';
 import { useLanguage } from '../contexts/LanguageContext';
+import { russianComplianceApi, aiApi } from '../services/api';
+
+interface Company {
+  id: string;
+  legal_name: string;
+  inn: string;
+}
 
 const FRAMEWORK_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   '152-FZ': DocumentTextIcon,
@@ -48,6 +57,7 @@ interface TemplateCustomization {
 
 export default function TemplateCatalog() {
   const { t, language } = useLanguage();
+  const queryClient = useQueryClient();
   const [selectedFramework, setSelectedFramework] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,6 +67,90 @@ export default function TemplateCatalog() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [customization, setCustomization] = useState<TemplateCustomization | null>(null);
   const [selectedForGeneration, setSelectedForGeneration] = useState<Set<string>>(new Set());
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+
+  // Fetch companies for selector
+  const { data: companies = [] } = useQuery({
+    queryKey: ["companies"],
+    queryFn: () => russianComplianceApi.companies.list(),
+  });
+
+  // Document generation mutation
+  const generateDocMutation = useMutation({
+    mutationFn: async (templateIds: string[]) => {
+      if (!selectedCompanyId) throw new Error("Please select a company first");
+      const results = await Promise.all(
+        templateIds.map(async (id) => {
+          try {
+            return await russianComplianceApi.smeTemplates.generate(id, { company_id: selectedCompanyId });
+          } catch (error) {
+            console.error(`Failed to generate template ${id}:`, error);
+            return null;
+          }
+        })
+      );
+      return results.filter(Boolean);
+    },
+    onSuccess: (data) => {
+      // Download generated documents
+      data.forEach((response) => {
+        const doc = response?.data;
+        if (doc?.download_url) {
+          window.open(doc.download_url, '_blank');
+        }
+      });
+      setSelectedForGeneration(new Set());
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+    },
+  });
+
+  // AI Document Generation
+  const aiGenerateMutation = useMutation({
+    mutationFn: async (documentType: string) => {
+      if (!selectedCompanyId) throw new Error("Please select a company first");
+      const company = (companies as { data?: Company[] })?.data?.find((c: Company) => c.id === selectedCompanyId);
+      if (!company) throw new Error("Company not found");
+
+      return aiApi.documents.generate({
+        document_type: documentType,
+        company_name: company.legal_name,
+        company_inn: company.inn,
+        framework: selectedFramework || "152-FZ",
+      });
+    },
+    onSuccess: (response) => {
+      const content = response?.data?.content;
+      if (content) {
+        // Create downloadable document
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ai_generated_document_${Date.now()}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    },
+  });
+
+  // Single template download
+  const handleDownloadTemplate = async (templateId: string) => {
+    if (!selectedCompanyId) {
+      alert(language === 'ru' ? 'Пожалуйста, выберите компанию' : 'Please select a company first');
+      return;
+    }
+    try {
+      const response = await russianComplianceApi.smeTemplates.generate(templateId, {
+        company_id: selectedCompanyId,
+      });
+      if (response?.data?.download_url) {
+        window.open(response.data.download_url, '_blank');
+      }
+    } catch (error) {
+      console.error('Failed to download template:', error);
+      alert(language === 'ru' ? 'Ошибка при скачивании' : 'Download failed');
+    }
+  };
 
   const stats = getTemplateStats();
 
@@ -150,8 +244,11 @@ export default function TemplateCatalog() {
 
   const handleGenerateDocuments = () => {
     if (selectedForGeneration.size === 0) return;
-    // In a real app, this would trigger document generation
-    alert(`Generating ${selectedForGeneration.size} documents...`);
+    if (!selectedCompanyId) {
+      alert(language === 'ru' ? 'Пожалуйста, выберите компанию' : 'Please select a company first');
+      return;
+    }
+    generateDocMutation.mutate(Array.from(selectedForGeneration));
   };
 
   const renderFrameworkCard = (framework: FrameworkInfo) => {
@@ -299,17 +396,60 @@ export default function TemplateCatalog() {
               : `${stats.total} templates for ${FRAMEWORKS.length} regulatory frameworks`}
           </p>
         </div>
-        {selectedForGeneration.size > 0 && (
-          <button
-            onClick={handleGenerateDocuments}
-            className="btn-primary flex items-center gap-2"
+        <div className="flex items-center gap-3">
+          {/* Company Selector */}
+          <select
+            value={selectedCompanyId || ""}
+            onChange={(e) => setSelectedCompanyId(e.target.value || null)}
+            className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
           >
-            <DocumentDuplicateIcon className="h-5 w-5" />
-            {language === 'ru'
-              ? `Генерировать (${selectedForGeneration.size})`
-              : `Generate (${selectedForGeneration.size})`}
+            <option value="">{language === 'ru' ? 'Выберите компанию' : 'Select Company'}</option>
+            {(companies as Company[]).map((company) => (
+              <option key={company.id} value={company.id}>
+                {company.legal_name} ({company.inn})
+              </option>
+            ))}
+          </select>
+          {selectedForGeneration.size > 0 && (
+            <button
+              onClick={handleGenerateDocuments}
+              disabled={generateDocMutation.isPending || !selectedCompanyId}
+              className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {generateDocMutation.isPending ? (
+                <>
+                  <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                  {language === 'ru' ? 'Генерация...' : 'Generating...'}
+                </>
+              ) : (
+                <>
+                  <DocumentDuplicateIcon className="h-5 w-5" />
+                  {language === 'ru'
+                    ? `Генерировать (${selectedForGeneration.size})`
+                    : `Generate (${selectedForGeneration.size})`}
+                </>
+              )}
+            </button>
+          )}
+          {/* AI Generate Button */}
+          <button
+            onClick={() => aiGenerateMutation.mutate('policy')}
+            disabled={aiGenerateMutation.isPending || !selectedCompanyId}
+            className="btn-secondary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700"
+          >
+            {aiGenerateMutation.isPending ? (
+              <>
+                <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                {language === 'ru' ? 'AI генерация...' : 'AI Generating...'}
+              </>
+            ) : (
+              <>
+                <span className="text-lg">✨</span>
+                {language === 'ru' ? 'AI Генерация' : 'AI Generate'}
+              </>
+            )}
           </button>
-        )}
+        </div>
       </div>
 
       {/* Framework Selection */}

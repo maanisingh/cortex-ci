@@ -30,8 +30,8 @@ interface TourStep {
 const TOUR_STEPS: TourStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to CORTEX GRC',
-    titleRu: 'Добро пожаловать в CORTEX GRC',
+    title: 'Welcome to CORTEX AI',
+    titleRu: 'Добро пожаловать в CORTEX AI',
     description: 'Your comprehensive platform for Russian regulatory compliance. This tour will guide you through the key features.',
     descriptionRu: 'Ваша комплексная платформа для соответствия российским нормативным требованиям. Этот тур познакомит вас с ключевыми функциями.',
     icon: SparklesIcon,

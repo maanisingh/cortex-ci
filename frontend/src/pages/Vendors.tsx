@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   TruckIcon,
   PlusIcon,
@@ -8,6 +9,26 @@ import {
   DocumentCheckIcon,
   CheckBadgeIcon,
 } from "@heroicons/react/24/outline";
+import { vendorsApi } from "../services/api";
+
+interface Vendor {
+  id: string;
+  vendor_ref: string;
+  legal_name: string;
+  trading_name: string | null;
+  tier: "critical" | "high" | "medium" | "low";
+  status: string;
+  category: string;
+  risk_score: number;
+  residual_risk: "high" | "medium" | "low";
+  last_assessment_date: string | null;
+  next_assessment_date: string | null;
+  certifications: string[];
+  has_data_access: boolean;
+  data_types: string[];
+  primary_contact_name: string | null;
+  primary_contact_email: string | null;
+}
 
 const TIER_CONFIG = {
   critical: {
@@ -46,113 +67,51 @@ const RISK_CONFIG = {
   },
 };
 
-// Mock vendors data
-const mockVendors = [
-  {
-    id: "1",
-    name: "CloudSecure Inc.",
-    tier: "critical" as const,
-    category: "Cloud Infrastructure",
-    riskScore: 25,
-    riskLevel: "low" as const,
-    lastAssessment: "2024-10-15",
-    nextAssessment: "2025-04-15",
-    certifications: ["SOC 2 Type II", "ISO 27001", "FedRAMP"],
-    contractEnd: "2025-12-31",
-    dataAccess: "Customer PII",
-    questionnaireStatus: "completed",
-    contactName: "John Smith",
-    contactEmail: "john@cloudsecure.com",
-  },
-  {
-    id: "2",
-    name: "DataFlow Analytics",
-    tier: "high" as const,
-    category: "Analytics Platform",
-    riskScore: 45,
-    riskLevel: "medium" as const,
-    lastAssessment: "2024-08-20",
-    nextAssessment: "2025-02-20",
-    certifications: ["SOC 2 Type II"],
-    contractEnd: "2025-06-30",
-    dataAccess: "Aggregated Metrics",
-    questionnaireStatus: "pending",
-    contactName: "Jane Doe",
-    contactEmail: "jane@dataflow.io",
-  },
-  {
-    id: "3",
-    name: "PaySecure Gateway",
-    tier: "critical" as const,
-    category: "Payment Processing",
-    riskScore: 18,
-    riskLevel: "low" as const,
-    lastAssessment: "2024-11-01",
-    nextAssessment: "2025-05-01",
-    certifications: ["PCI-DSS Level 1", "SOC 2 Type II", "ISO 27001"],
-    contractEnd: "2026-03-31",
-    dataAccess: "Payment Card Data",
-    questionnaireStatus: "completed",
-    contactName: "Mike Johnson",
-    contactEmail: "mike@paysecure.com",
-  },
-  {
-    id: "4",
-    name: "TalentHub HR",
-    tier: "medium" as const,
-    category: "HR Management",
-    riskScore: 62,
-    riskLevel: "high" as const,
-    lastAssessment: "2024-03-15",
-    nextAssessment: "2024-09-15",
-    certifications: ["SOC 2 Type I"],
-    contractEnd: "2025-01-31",
-    dataAccess: "Employee PII",
-    questionnaireStatus: "overdue",
-    contactName: "Sarah Wilson",
-    contactEmail: "sarah@talenthub.io",
-  },
-  {
-    id: "5",
-    name: "SecureComms",
-    tier: "high" as const,
-    category: "Communications",
-    riskScore: 35,
-    riskLevel: "medium" as const,
-    lastAssessment: "2024-09-01",
-    nextAssessment: "2025-03-01",
-    certifications: ["SOC 2 Type II", "HIPAA"],
-    contractEnd: "2025-09-30",
-    dataAccess: "Internal Communications",
-    questionnaireStatus: "completed",
-    contactName: "Tom Brown",
-    contactEmail: "tom@securecomms.net",
-  },
-];
-
 export default function Vendors() {
   const [searchQuery, setSearchQuery] = useState("");
   const [tierFilter, setTierFilter] = useState<string | null>(null);
 
-  const filteredVendors = mockVendors.filter((vendor) => {
+  const { data: vendorsData, isLoading, error } = useQuery({
+    queryKey: ["vendors"],
+    queryFn: () => vendorsApi.list(),
+  });
+
+  const vendors: Vendor[] = vendorsData?.data || [];
+
+  const filteredVendors = vendors.filter((vendor) => {
     const matchesSearch =
-      vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vendor.category.toLowerCase().includes(searchQuery.toLowerCase());
+      vendor.legal_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (vendor.category?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
     const matchesTier = !tierFilter || vendor.tier === tierFilter;
     return matchesSearch && matchesTier;
   });
 
-  const assessmentsDue = mockVendors.filter(
-    (v) => new Date(v.nextAssessment) <= new Date(),
+  const assessmentsDue = vendors.filter(
+    (v) => v.next_assessment_date && new Date(v.next_assessment_date) <= new Date(),
   ).length;
-  const highRiskVendors = mockVendors.filter(
-    (v) => v.riskLevel === "high",
+  const highRiskVendors = vendors.filter(
+    (v) => v.residual_risk === "high",
   ).length;
-  const pendingQuestionnaires = mockVendors.filter(
-    (v) =>
-      v.questionnaireStatus === "pending" ||
-      v.questionnaireStatus === "overdue",
+  const activeVendors = vendors.filter(
+    (v) => v.status === "active",
   ).length;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+        <span className="ml-3 text-gray-600">Loading vendors...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p className="text-red-800">Error loading vendors. Please try again.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -183,7 +142,7 @@ export default function Vendors() {
             <div>
               <p className="text-sm text-gray-500">Total Vendors</p>
               <p className="text-2xl font-bold text-gray-900">
-                {mockVendors.length}
+                {vendors.length}
               </p>
             </div>
             <div className="p-3 bg-amber-100 rounded-lg">
@@ -220,9 +179,9 @@ export default function Vendors() {
         <div className="bg-white rounded-lg shadow-sm border border-blue-200 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Pending Questionnaires</p>
+              <p className="text-sm text-gray-500">Active Vendors</p>
               <p className="text-2xl font-bold text-blue-600">
-                {pendingQuestionnaires}
+                {activeVendors}
               </p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -263,9 +222,9 @@ export default function Vendors() {
       {/* Vendors Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {filteredVendors.map((vendor) => {
-          const tierConfig = TIER_CONFIG[vendor.tier];
-          const riskConfig = RISK_CONFIG[vendor.riskLevel];
-          const isAssessmentDue = new Date(vendor.nextAssessment) <= new Date();
+          const tierConfig = TIER_CONFIG[vendor.tier] || TIER_CONFIG.medium;
+          const riskConfig = RISK_CONFIG[vendor.residual_risk] || RISK_CONFIG.medium;
+          const isAssessmentDue = vendor.next_assessment_date && new Date(vendor.next_assessment_date) <= new Date();
 
           return (
             <div
@@ -277,7 +236,7 @@ export default function Vendors() {
                   <div>
                     <div className="flex items-center space-x-2">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        {vendor.name}
+                        {vendor.legal_name}
                       </h3>
                       <span
                         className={`px-2 py-0.5 rounded text-xs font-medium ${tierConfig.color}`}
@@ -285,7 +244,7 @@ export default function Vendors() {
                         {tierConfig.label}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-500">{vendor.category}</p>
+                    <p className="text-sm text-gray-500">{vendor.category || "Uncategorized"}</p>
                   </div>
                   <div className="text-right">
                     <div className="flex items-center space-x-1">
@@ -295,7 +254,7 @@ export default function Vendors() {
                       <span
                         className={`text-sm font-medium ${riskConfig.textColor}`}
                       >
-                        {vendor.riskScore}
+                        {vendor.risk_score || 0}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500">{riskConfig.label}</p>
@@ -306,19 +265,19 @@ export default function Vendors() {
                   <div>
                     <span className="text-gray-500">Data Access</span>
                     <p className="font-medium text-gray-900">
-                      {vendor.dataAccess}
+                      {vendor.has_data_access ? "Yes" : "No"}
                     </p>
                   </div>
                   <div>
-                    <span className="text-gray-500">Contract Ends</span>
+                    <span className="text-gray-500">Status</span>
                     <p className="font-medium text-gray-900">
-                      {new Date(vendor.contractEnd).toLocaleDateString()}
+                      {vendor.status || "N/A"}
                     </p>
                   </div>
                   <div>
                     <span className="text-gray-500">Last Assessment</span>
                     <p className="font-medium text-gray-900">
-                      {new Date(vendor.lastAssessment).toLocaleDateString()}
+                      {vendor.last_assessment_date ? new Date(vendor.last_assessment_date).toLocaleDateString() : "Never"}
                     </p>
                   </div>
                   <div>
@@ -326,52 +285,42 @@ export default function Vendors() {
                     <p
                       className={`font-medium ${isAssessmentDue ? "text-red-600" : "text-gray-900"}`}
                     >
-                      {new Date(vendor.nextAssessment).toLocaleDateString()}
+                      {vendor.next_assessment_date ? new Date(vendor.next_assessment_date).toLocaleDateString() : "Not scheduled"}
                       {isAssessmentDue && " (Overdue)"}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-4">
-                  <span className="text-sm text-gray-500">Certifications</span>
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {vendor.certifications.map((cert) => (
-                      <span
-                        key={cert}
-                        className="inline-flex items-center px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded"
-                      >
-                        <CheckBadgeIcon className="h-3 w-3 mr-1" />
-                        {cert}
-                      </span>
-                    ))}
+                {vendor.certifications && vendor.certifications.length > 0 && (
+                  <div className="mt-4">
+                    <span className="text-sm text-gray-500">Certifications</span>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {vendor.certifications.map((cert) => (
+                        <span
+                          key={cert}
+                          className="inline-flex items-center px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded"
+                        >
+                          <CheckBadgeIcon className="h-3 w-3 mr-1" />
+                          {cert}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="flex items-center text-sm">
-                    <span className="text-gray-500">Questionnaire:</span>
-                    <span
-                      className={`ml-2 px-2 py-0.5 rounded text-xs font-medium ${
-                        vendor.questionnaireStatus === "completed"
-                          ? "bg-green-100 text-green-800"
-                          : vendor.questionnaireStatus === "pending"
-                            ? "bg-amber-100 text-amber-800"
-                            : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {vendor.questionnaireStatus === "completed"
-                        ? "Completed"
-                        : vendor.questionnaireStatus === "pending"
-                          ? "Pending"
-                          : "Overdue"}
+                {vendor.data_types && vendor.data_types.length > 0 && (
+                  <div className="mt-4">
+                    <span className="text-sm text-gray-500">Data Types:</span>
+                    <span className="ml-2 text-sm text-gray-700">
+                      {vendor.data_types.join(", ")}
                     </span>
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
                 <div className="text-sm text-gray-500">
-                  {vendor.contactName} • {vendor.contactEmail}
+                  {vendor.primary_contact_name || "No contact"} {vendor.primary_contact_email && `• ${vendor.primary_contact_email}`}
                 </div>
                 <div className="flex space-x-3">
                   <button className="text-sm text-gray-600 hover:text-gray-900">
@@ -387,14 +336,16 @@ export default function Vendors() {
         })}
       </div>
 
-      {filteredVendors.length === 0 && (
+      {filteredVendors.length === 0 && !isLoading && (
         <div className="text-center py-12 bg-white rounded-lg shadow-sm">
           <TruckIcon className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">
             No vendors found
           </h3>
           <p className="mt-1 text-sm text-gray-500">
-            Try adjusting your search or add a new vendor.
+            {vendors.length === 0
+              ? "Get started by adding your first vendor."
+              : "Try adjusting your search or filters."}
           </p>
         </div>
       )}

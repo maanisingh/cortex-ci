@@ -39,7 +39,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id: "overview",
     title: "Platform Overview",
     icon: BookOpenIcon,
-    content: `CORTEX-CI is a Government-grade Constraint Intelligence Platform designed for comprehensive compliance monitoring, risk management, and scenario simulation. The platform enables organizations to:
+    content: `CORTEX AI is a Government-grade Constraint Intelligence Platform designed for comprehensive compliance monitoring, risk management, and scenario simulation. The platform enables organizations to:
 
 • Monitor sanctions and regulatory constraints in real-time
 • Map complex dependency relationships across your organization
@@ -80,7 +80,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id: "constraints",
     title: "Constraint Monitoring",
     icon: ShieldCheckIcon,
-    content: `Constraints are the regulatory and compliance rules that affect your entities. CORTEX-CI supports multiple constraint types:
+    content: `Constraints are the regulatory and compliance rules that affect your entities. CORTEX AI supports multiple constraint types:
 
 • **Regulations**: Government laws and regulatory requirements
 • **Compliance**: Internal compliance policies
@@ -183,7 +183,7 @@ The Risk Justification Engine explains why each score was assigned, providing tr
     id: "analytics",
     title: "Analytics & Reporting",
     icon: ChartBarIcon,
-    content: `CORTEX-CI provides comprehensive analytics capabilities:
+    content: `CORTEX AI provides comprehensive analytics capabilities:
 
 • **Dashboard Metrics**: Real-time overview of key metrics
 • **Risk Trends**: Historical risk score analysis
@@ -204,7 +204,7 @@ All data can be exported for external reporting and integration.`,
     id: "security",
     title: "Security & Access",
     icon: ShieldCheckIcon,
-    content: `CORTEX-CI implements enterprise-grade security:
+    content: `CORTEX AI implements enterprise-grade security:
 
 • **Role-Based Access**: Admin, Analyst, Viewer roles
 • **Audit Logging**: Complete activity trail
@@ -224,7 +224,7 @@ All data can be exported for external reporting and integration.`,
 const TOUR_STEPS: TourStep[] = [
   {
     target: "[data-tour='dashboard']",
-    title: "Welcome to CORTEX-CI",
+    title: "Welcome to CORTEX AI",
     content:
       "This is your executive dashboard showing key metrics and risk overview.",
     position: "bottom",
@@ -369,7 +369,7 @@ export default function UserGuide() {
             <div className="px-6 py-4 border-b flex items-center justify-between bg-indigo-600 text-white">
               <div className="flex items-center gap-3">
                 <BookOpenIcon className="h-6 w-6" />
-                <h2 className="text-xl font-semibold">CORTEX-CI User Guide</h2>
+                <h2 className="text-xl font-semibold">CORTEX AI User Guide</h2>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
@@ -383,7 +383,7 @@ export default function UserGuide() {
             <div className="px-6 py-3 bg-indigo-50 border-b flex items-center justify-between">
               <div className="flex items-center gap-2 text-indigo-700">
                 <PlayIcon className="h-5 w-5" />
-                <span className="text-sm font-medium">New to CORTEX-CI?</span>
+                <span className="text-sm font-medium">New to CORTEX AI?</span>
               </div>
               <button
                 onClick={startTour}
@@ -514,7 +514,7 @@ export default function UserGuide() {
 
             {/* Footer */}
             <div className="px-6 py-3 border-t bg-gray-50 text-center text-xs text-gray-500">
-              CORTEX-CI v1.0.0 • Government-grade Constraint Intelligence
+              CORTEX AI v1.0.0 • Government-grade Constraint Intelligence
               Platform
             </div>
           </div>
