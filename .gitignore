@@ -75,4 +75,7 @@ Thumbs.db
 *.pem
 *.key
 secrets/
-data/
+/data/
+
+# Allow frontend data directory
+!frontend/src/data/
