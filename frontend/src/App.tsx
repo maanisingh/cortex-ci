@@ -109,7 +109,7 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Routes>
-                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/dashboard" element={<RussianDashboard />} />
                   <Route path="/entities" element={<Entities />} />
                   <Route path="/entities/:id" element={<EntityDetail />} />
                   <Route path="/constraints" element={<Constraints />} />

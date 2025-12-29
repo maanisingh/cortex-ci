@@ -201,11 +201,11 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      {/* Hero Section */}
-      <div className="relative isolate pt-14">
+      {/* Hero Section - SME Focused */}
+      <div className="relative isolate pt-14 bg-gradient-to-b from-blue-50 to-white">
         <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
           <div
-            className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary-600 to-cyan-400 opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+            className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-blue-600 to-cyan-400 opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
             style={{
               clipPath:
                 "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
@@ -215,55 +215,153 @@ export default function LandingPage() {
 
         <div className="py-24 sm:py-32 lg:pb-40">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="mx-auto max-w-3xl text-center">
-              <div className="mb-8 flex justify-center">
-                <div className="rounded-full px-4 py-1.5 text-sm font-medium text-primary-700 ring-1 ring-primary-600/20 bg-primary-50">
-                  {t("integratedGrcPlatform")}
+            <div className="mx-auto max-w-4xl text-center">
+              <div className="mb-8 flex justify-center gap-3">
+                <div className="rounded-full px-4 py-1.5 text-sm font-medium text-blue-700 ring-1 ring-blue-600/20 bg-blue-50">
+                  🇷🇺 {language === "ru" ? "Для российского бизнеса" : "For Russian Business"}
+                </div>
+                <div className="rounded-full px-4 py-1.5 text-sm font-medium text-green-700 ring-1 ring-green-600/20 bg-green-50">
+                  {language === "ru" ? "285+ шаблонов" : "285+ Templates"}
                 </div>
               </div>
               <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-                {t("unifiedGrc")}{" "}
-                <span className="text-primary-600">
-                  {t("governanceRiskCompliance")}
-                </span>{" "}
+                {language === "ru" ? (
+                  <>
+                    Введите ИНН — <span className="text-blue-600">получите все документы</span>
+                  </>
+                ) : (
+                  <>
+                    Enter INN — <span className="text-blue-600">Get All Documents</span>
+                  </>
+                )}
               </h1>
-              <p className="mt-6 text-lg leading-8 text-gray-600">
-                {t("heroDescription")}
+              <p className="mt-6 text-xl leading-8 text-gray-600">
+                {language === "ru"
+                  ? "Полный комплект документов для российского малого и среднего бизнеса. От регистрации до проверки — всё в одном месте."
+                  : "Complete document package for Russian SMEs. From registration to audit — everything in one place."}
               </p>
-              <div className="mt-10 flex items-center justify-center gap-x-6">
-                <Link
-                  to="/login"
-                  className="rounded-md bg-primary-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
-                >
-                  {t("startTrial")}
-                </Link>
-                <a
-                  href="#modules"
-                  className="text-base font-semibold leading-6 text-gray-900"
-                >
-                  {t("exploreModules")} <span aria-hidden="true">→</span>
-                </a>
+
+              {/* INN Input Demo */}
+              <div className="mt-10 flex flex-col items-center gap-4">
+                <div className="flex w-full max-w-md gap-2">
+                  <input
+                    type="text"
+                    placeholder={language === "ru" ? "Введите ИНН компании" : "Enter company INN"}
+                    className="flex-1 rounded-lg border-2 border-gray-200 px-4 py-3 text-lg focus:border-blue-500 focus:outline-none"
+                  />
+                  <Link
+                    to="/login"
+                    className="rounded-lg bg-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-sm hover:bg-blue-500"
+                  >
+                    {language === "ru" ? "Найти" : "Find"}
+                  </Link>
+                </div>
+                <p className="text-sm text-gray-500">
+                  {language === "ru"
+                    ? "Бесплатно для МСП. Без кредитной карты."
+                    : "Free for SMEs. No credit card required."}
+                </p>
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="mx-auto mt-16 max-w-7xl px-6 lg:px-8">
-              <dl className="grid grid-cols-2 gap-x-8 gap-y-16 text-center lg:grid-cols-4">
-                {stats.map((stat) => (
-                  <div
-                    key={stat.id}
-                    className="mx-auto flex max-w-xs flex-col gap-y-4"
-                  >
-                    <dt className="text-base leading-7 text-gray-600">
-                      {stat.name}
-                    </dt>
-                    <dd className="order-first text-3xl font-semibold tracking-tight text-primary-600 sm:text-5xl">
-                      {stat.value}
-                    </dd>
-                  </div>
-                ))}
+            {/* SME Stats */}
+            <div className="mx-auto mt-16 max-w-5xl">
+              <dl className="grid grid-cols-2 gap-4 text-center lg:grid-cols-4">
+                <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+                  <dt className="text-sm text-gray-600">{language === "ru" ? "Шаблонов документов" : "Document Templates"}</dt>
+                  <dd className="text-3xl font-bold text-blue-600">285+</dd>
+                </div>
+                <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+                  <dt className="text-sm text-gray-600">{language === "ru" ? "Российских стандартов" : "Russian Standards"}</dt>
+                  <dd className="text-3xl font-bold text-blue-600">6</dd>
+                </div>
+                <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+                  <dt className="text-sm text-gray-600">{language === "ru" ? "Этапов жизни компании" : "Company Lifecycle Stages"}</dt>
+                  <dd className="text-3xl font-bold text-blue-600">8</dd>
+                </div>
+                <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+                  <dt className="text-sm text-gray-600">{language === "ru" ? "Минут на документ" : "Minutes per Document"}</dt>
+                  <dd className="text-3xl font-bold text-blue-600">~5</dd>
+                </div>
               </dl>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Russian Frameworks Section */}
+      <div className="bg-white py-16 sm:py-24">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-base font-semibold text-blue-600">
+              {language === "ru" ? "Соответствие законодательству" : "Regulatory Compliance"}
+            </h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              {language === "ru" ? "Все российские стандарты" : "All Russian Standards"}
+            </p>
+          </div>
+          <div className="mx-auto mt-12 grid max-w-5xl grid-cols-2 gap-4 lg:grid-cols-3">
+            {russianFrameworks.map((framework) => (
+              <div
+                key={framework.name}
+                className="rounded-xl bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm ring-1 ring-blue-100 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-bold text-blue-700">{framework.name}</span>
+                  <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-700">
+                    {framework.controls} {language === "ru" ? "треб." : "req."}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">{framework.description}</p>
+                <p className="mt-1 text-xs text-gray-400">{framework.category}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Company Lifecycle Section */}
+      <div className="bg-gray-50 py-16 sm:py-24">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-base font-semibold text-blue-600">
+              {language === "ru" ? "Жизненный цикл компании" : "Company Lifecycle"}
+            </h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              {language === "ru" ? "Документы на каждом этапе" : "Documents for Every Stage"}
+            </p>
+          </div>
+          <div className="mx-auto mt-12 grid max-w-6xl grid-cols-2 gap-4 lg:grid-cols-4">
+            {[
+              { stage: language === "ru" ? "Идея" : "Idea", docs: 5, icon: "💡" },
+              { stage: language === "ru" ? "Регистрация" : "Registration", docs: 12, icon: "📝" },
+              { stage: language === "ru" ? "Запуск" : "Launch", docs: 25, icon: "🚀" },
+              { stage: language === "ru" ? "Рост" : "Growth", docs: 45, icon: "📈" },
+              { stage: language === "ru" ? "Зрелость" : "Maturity", docs: 60, icon: "🏢" },
+              { stage: language === "ru" ? "Расширение" : "Expansion", docs: 35, icon: "🌍" },
+              { stage: language === "ru" ? "Реструктуризация" : "Restructuring", docs: 20, icon: "🔄" },
+              { stage: language === "ru" ? "Выход" : "Exit", docs: 15, icon: "🚪" },
+            ].map((item) => (
+              <div
+                key={item.stage}
+                className="rounded-xl bg-white p-6 text-center shadow-sm ring-1 ring-gray-200 hover:shadow-md transition-shadow"
+              >
+                <span className="text-4xl">{item.icon}</span>
+                <h3 className="mt-3 font-semibold text-gray-900">{item.stage}</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  {item.docs} {language === "ru" ? "шаблонов" : "templates"}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-10 text-center">
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-blue-500"
+            >
+              {language === "ru" ? "Начать бесплатно" : "Start Free"}
+              <ArrowRightIcon className="h-5 w-5" />
+            </Link>
           </div>
         </div>
       </div>
