@@ -1,0 +1,26 @@
+# Ntfy Configuration - Self-hosted push notifications
+base-url: "http://localhost:8090"
+listen-http: ":80"
+cache-file: "/var/lib/ntfy/cache.db"
+cache-duration: "12h"
+auth-file: "/var/lib/ntfy/auth.db"
+auth-default-access: "read-write"
+behind-proxy: false
+attachment-cache-dir: "/var/lib/ntfy/attachments"
+attachment-total-size-limit: "1G"
+attachment-file-size-limit: "15M"
+attachment-expiry-duration: "3h"
+keepalive-interval: "45s"
+manager-interval: "1m"
+web-root: "/"
+enable-signup: true
+enable-login: true
+enable-reservations: true
+upstream-base-url: ""
+visitor-subscription-limit: 30
+visitor-request-limit-burst: 60
+visitor-request-limit-replenish: "5s"
+visitor-email-limit-burst: 16
+visitor-email-limit-replenish: "1h"
+visitor-attachment-total-size-limit: "100M"
+visitor-attachment-daily-bandwidth-limit: "500M"

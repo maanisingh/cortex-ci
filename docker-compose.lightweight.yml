@@ -1,0 +1,369 @@
+version: '3.8'
+
+# =============================================================================
+# CORTEX GRC - LIGHTWEIGHT PRODUCTION STACK
+# Total RAM: ~500MB (vs 4GB+ for full stack)
+# No external signups required - fully self-contained
+# =============================================================================
+
+services:
+  # =============================================================================
+  # CORE INFRASTRUCTURE (Required)
+  # =============================================================================
+
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: cortex-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-cortex_ci}
+      # Create additional databases for services
+      POSTGRES_MULTIPLE_DATABASES: cortex_ci,egrul_cache
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: cortex-redis
+    command: redis-server --appendonly yes --maxmemory 64mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+  # =============================================================================
+  # LIGHTWEIGHT EMAIL (Mailpit - replaces heavy SMTP servers)
+  # Web UI: http://localhost:8025
+  # SMTP: localhost:1025
+  # =============================================================================
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: cortex-mailpit
+    ports:
+      - "8025:8025"   # Web UI
+      - "1025:1025"   # SMTP
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    volumes:
+      - mailpit_data:/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 32M
+
+  # =============================================================================
+  # LIGHTWEIGHT SSO (Authelia - replaces Keycloak 512MB+ with ~50MB)
+  # =============================================================================
+
+  authelia:
+    image: authelia/authelia:latest
+    container_name: cortex-authelia
+    volumes:
+      - ./config/authelia:/config:ro
+      - authelia_data:/data
+    ports:
+      - "9091:9091"
+    environment:
+      TZ: Europe/Moscow
+      AUTHELIA_JWT_SECRET: ${AUTHELIA_JWT_SECRET:-a_very_long_random_secret_key_min_20_chars}
+      AUTHELIA_SESSION_SECRET: ${AUTHELIA_SESSION_SECRET:-another_long_random_secret_key}
+      AUTHELIA_STORAGE_ENCRYPTION_KEY: ${AUTHELIA_ENCRYPTION_KEY:-yet_another_32_char_random_key!!}
+    restart: unless-stopped
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+  # =============================================================================
+  # LIGHTWEIGHT LOGGING (Loki + Promtail - replaces Elasticsearch/Wazuh)
+  # =============================================================================
+
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: cortex-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./config/loki:/etc/loki:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/loki-config.yml
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: cortex-promtail
+    volumes:
+      - ./config/promtail:/etc/promtail:ro
+      - /var/log:/var/log:ro
+      - ./logs:/app/logs:ro
+    command: -config.file=/etc/promtail/promtail-config.yml
+    restart: unless-stopped
+    depends_on:
+      - loki
+    deploy:
+      resources:
+        limits:
+          memory: 32M
+
+  # =============================================================================
+  # LIGHTWEIGHT PUSH NOTIFICATIONS (Ntfy - no signup required)
+  # =============================================================================
+
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    container_name: cortex-ntfy
+    command: serve
+    ports:
+      - "8090:80"
+    volumes:
+      - ntfy_data:/var/lib/ntfy
+      - ./config/ntfy:/etc/ntfy:ro
+    environment:
+      TZ: Europe/Moscow
+      NTFY_BASE_URL: ${NTFY_BASE_URL:-http://localhost:8090}
+      NTFY_CACHE_FILE: /var/lib/ntfy/cache.db
+      NTFY_AUTH_FILE: /var/lib/ntfy/auth.db
+      NTFY_AUTH_DEFAULT_ACCESS: read-write
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 32M
+
+  # =============================================================================
+  # EGRUL DATA SERVICE (Company data without API signup)
+  # =============================================================================
+
+  egrul-service:
+    build:
+      context: ./services/egrul
+      dockerfile: Dockerfile
+    container_name: cortex-egrul
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/egrul_cache
+      REDIS_URL: redis://redis:6379/1
+      SCRAPE_DELAY: ${EGRUL_SCRAPE_DELAY:-2}
+    ports:
+      - "8200:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # =============================================================================
+  # MEILISEARCH (Fast search - already lightweight)
+  # =============================================================================
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.6
+    container_name: cortex-search
+    environment:
+      MEILI_MASTER_KEY: ${MEILISEARCH_MASTER_KEY:-masterkey}
+      MEILI_ENV: production
+      MEILI_NO_ANALYTICS: true
+    volumes:
+      - meilisearch_data:/meili_data
+    ports:
+      - "7700:7700"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # =============================================================================
+  # CORTEX APPLICATION
+  # =============================================================================
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cortex-backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-cortex_ci}
+      REDIS_URL: redis://redis:6379/0
+      MEILISEARCH_URL: http://meilisearch:7700
+      MEILISEARCH_MASTER_KEY: ${MEILISEARCH_MASTER_KEY:-masterkey}
+      SECRET_KEY: ${SECRET_KEY:-change-this-in-production}
+      DEBUG: ${DEBUG:-false}
+      # Lightweight services
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+      SMTP_FROM: noreply@cortex.local
+      AUTHELIA_URL: http://authelia:9091
+      LOKI_URL: http://loki:3100
+      NTFY_URL: http://ntfy:80
+      NTFY_TOPIC: cortex-alerts
+      EGRUL_SERVICE_URL: http://egrul-service:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${API_URL:-/api}
+    container_name: cortex-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+  # Celery Worker
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cortex-worker
+    command: celery -A app.workers worker --loglevel=info --concurrency=2
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-cortex_ci}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-change-this-in-production}
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      NTFY_URL: http://ntfy:80
+      NTFY_TOPIC: cortex-alerts
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # Celery Beat Scheduler
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cortex-scheduler
+    command: celery -A app.workers beat --loglevel=info
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-cortex_ci}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-change-this-in-production}
+    depends_on:
+      - redis
+      - worker
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+  # =============================================================================
+  # REVERSE PROXY (Caddy - automatic HTTPS)
+  # =============================================================================
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: cortex-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 32M
+
+volumes:
+  postgres_data:
+  redis_data:
+  mailpit_data:
+  authelia_data:
+  loki_data:
+  ntfy_data:
+  meilisearch_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  default:
+    name: cortex-network

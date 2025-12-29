@@ -17,8 +17,10 @@ import {
   FlagIcon,
   ArrowPathIcon,
   BellAlertIcon,
+  ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon as CheckCircleSolidIcon } from "@heroicons/react/24/solid";
+import { exportToPDF } from "../utils/pdfExport";
 
 interface ComplianceScore {
   framework: string;
@@ -214,6 +216,44 @@ export default function RussianDashboard() {
     return "bg-red-500";
   };
 
+  // Handle PDF export
+  const handleExportPDF = () => {
+    exportToPDF({
+      companyName: companyData.name,
+      companyInn: companyData.inn,
+      generatedAt: new Date(),
+      overallScore: companyData.overallScore,
+      frameworks: complianceScores.map((fw) => ({
+        name: fw.frameworkName,
+        score: fw.score,
+        completed: fw.completed,
+        total: fw.total,
+      })),
+      documentStats: {
+        total: companyData.documentsTotal,
+        approved: companyData.documentsApproved,
+        draft: companyData.documentsTotal - companyData.documentsApproved,
+        expired: 0,
+      },
+      taskStats: {
+        total: companyData.tasksTotal,
+        completed: companyData.tasksCompleted,
+        inProgress: companyData.tasksTotal - companyData.tasksCompleted - 1,
+        overdue: 1,
+      },
+      auditReadiness: {
+        score: 78,
+        categories: [
+          { name: "Документация", score: 85 },
+          { name: "Технические меры", score: 72 },
+          { name: "Организационные меры", score: 90 },
+          { name: "Обучение персонала", score: 65 },
+        ],
+      },
+      risks: [],
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -227,6 +267,13 @@ export default function RussianDashboard() {
           </p>
         </div>
         <div className="flex items-center space-x-3">
+          <button
+            onClick={handleExportPDF}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
+          >
+            <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
+            Экспорт PDF
+          </button>
           <Link
             to="/russian-onboarding"
             className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"

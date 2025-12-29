@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { useDueDateReminders } from "../hooks/useDueDateReminders";
+import { TaskForReminder } from "../stores/notificationStore";
 import {
   CheckCircleIcon,
   ClockIcon,
@@ -166,6 +168,21 @@ export default function ComplianceTasks() {
 
   // Map API tasks to frontend format
   const tasks: Task[] = apiTasks.map((t: ApiTask) => mapApiTask(t, selectedCompanyId));
+
+  // Convert tasks to reminder format for due date notifications
+  const tasksForReminders = useMemo<TaskForReminder[]>(() => {
+    return tasks.map((task) => ({
+      id: task.id,
+      title: task.title,
+      dueDate: task.dueDate,
+      status: task.status,
+      priority: task.priority,
+      url: `/compliance-tasks`,
+    }));
+  }, [tasks]);
+
+  // Check for due date reminders
+  useDueDateReminders(tasksForReminders, { enabled: tasks.length > 0 });
 
   // Complete task mutation
   const completeMutation = useMutation({

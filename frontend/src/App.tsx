@@ -49,8 +49,15 @@ import Vendors from "./pages/Vendors";
 import RussianCompliance from "./pages/RussianCompliance";
 import RussianOnboarding from "./pages/RussianOnboarding";
 import DocumentEditor from "./pages/DocumentEditor";
+import DocumentLibrary from "./pages/DocumentLibrary";
 import ComplianceTasks from "./pages/ComplianceTasks";
 import RussianDashboard from "./pages/RussianDashboard";
+import ComplianceCalendar from "./pages/ComplianceCalendar";
+import GapAnalysis from "./pages/GapAnalysis";
+import TemplateCatalog from "./pages/TemplateCatalog";
+// SME Business Templates pages
+import CompanyLifecycle from "./pages/CompanyLifecycle";
+import SMETemplates from "./pages/SMETemplates";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
@@ -161,9 +168,16 @@ function App() {
                   {/* Russian Compliance routes */}
                   <Route path="/russian-compliance" element={<RussianCompliance />} />
                   <Route path="/russian-onboarding" element={<RussianOnboarding />} />
+                  <Route path="/documents" element={<DocumentLibrary />} />
                   <Route path="/documents/:id" element={<DocumentEditor />} />
                   <Route path="/compliance-tasks" element={<ComplianceTasks />} />
+                  <Route path="/compliance-calendar" element={<ComplianceCalendar />} />
                   <Route path="/russian-dashboard" element={<RussianDashboard />} />
+                  <Route path="/gap-analysis" element={<GapAnalysis />} />
+                  <Route path="/templates" element={<TemplateCatalog />} />
+                  {/* SME Business Templates routes */}
+                  <Route path="/company-lifecycle" element={<CompanyLifecycle />} />
+                  <Route path="/sme-templates" element={<SMETemplates />} />
                   {/* Alias routes for navigation */}
                   <Route path="/cross-layer" element={<CrossLayerAnalysis />} />
                 </Routes>

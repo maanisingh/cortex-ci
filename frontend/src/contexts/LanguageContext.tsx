@@ -65,10 +65,20 @@ type TranslationStrings = {
   complianceDashboard: string;
   controlsNav: string;
   policies: string;
+  documentLibrary: string;
+  templateCatalog: string;
   russianCompliance: string;
+  complianceTasks: string;
+  complianceCalendar: string;
+
+  // Navigation - SME Business
+  smeBusiness: string;
+  companyLifecycle: string;
+  smeTemplates: string;
 
   // Navigation - Audit
   auditPlanning: string;
+  gapAnalysis: string;
   findings: string;
   incidents: string;
   activityLog: string;
@@ -517,8 +527,16 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     complianceDashboard: "Compliance Dashboard",
     controlsNav: "Controls",
     policies: "Policies",
+    documentLibrary: "Document Library",
+    templateCatalog: "Template Catalog",
     russianCompliance: "Russian Compliance",
+    complianceTasks: "Compliance Tasks",
+    complianceCalendar: "Compliance Calendar",
+    smeBusiness: "SME Business",
+    companyLifecycle: "Company Lifecycle",
+    smeTemplates: "Business Templates",
     auditPlanning: "Audit Planning",
+    gapAnalysis: "Gap Analysis",
     findings: "Findings",
     incidents: "Incidents",
     activityLog: "Activity Log",
@@ -945,8 +963,16 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     complianceDashboard: "Панель соответствия",
     controlsNav: "Контроли",
     policies: "Политики",
+    documentLibrary: "Библиотека документов",
+    templateCatalog: "Каталог шаблонов",
     russianCompliance: "Российское соответствие",
+    complianceTasks: "Задачи соответствия",
+    complianceCalendar: "Календарь соответствия",
+    smeBusiness: "Бизнес-шаблоны",
+    companyLifecycle: "Жизненный цикл компании",
+    smeTemplates: "Шаблоны для бизнеса",
     auditPlanning: "Планирование аудита",
+    gapAnalysis: "Анализ пробелов",
     findings: "Выявленные проблемы",
     incidents: "Инциденты",
     activityLog: "Журнал действий",
@@ -1374,7 +1400,10 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     controlsNav: "Контрольләр",
     policies: "Сәясәтләр",
     russianCompliance: "Россия туры килү",
+    complianceTasks: "Туры килү бурычлары",
+    complianceCalendar: "Туры килү календаре",
     auditPlanning: "Тикшерү планлаштыру",
+    gapAnalysis: "Аерымлык анализы",
     findings: "Табылган мәсьәләләр",
     incidents: "Инцидентлар",
     activityLog: "Эшчәнлек журналы",
@@ -1619,7 +1648,10 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     controlsNav: "Контрольдар",
     policies: "Сәйәсәттәр",
     russianCompliance: "Рәсәй тура килеүе",
+    complianceTasks: "Тура килеү бурыстары",
+    complianceCalendar: "Тура килеү календары",
     auditPlanning: "Тикшереү планлаштырыу",
+    gapAnalysis: "Ҡушылыу анализы",
     findings: "Табылған мәсьәләләр",
     incidents: "Инциденттар",
     activityLog: "Эшмәкәрлек журналы",
@@ -1787,7 +1819,10 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     controlsNav: "Тергамаш",
     policies: "Сиясаташ",
     russianCompliance: "Росси дакъаделла",
+    complianceTasks: "Дакъаделлан декхарш",
+    complianceCalendar: "Дакъаделлан календарь",
     auditPlanning: "Аудитан планир",
+    gapAnalysis: "Дефицитан анализ",
     findings: "Карарш",
     incidents: "Хилларш",
     activityLog: "БІаьргдалар журнал",
@@ -1955,7 +1990,10 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     controlsNav: "Тĕрĕслевсем",
     policies: "Политикăсем",
     russianCompliance: "Раççей тĕрĕслĕхĕ",
+    complianceTasks: "Тĕрĕслĕх ĕçĕсем",
+    complianceCalendar: "Тĕрĕслĕх календарĕ",
     auditPlanning: "Аудит планлани",
+    gapAnalysis: "Ҫуратлӑх анализӗ",
     findings: "Тупнисем",
     incidents: "Пулнисем",
     activityLog: "Ĕç журналĕ",
@@ -2123,7 +2161,10 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     controlsNav: "Бақылаулар",
     policies: "Саясаттар",
     russianCompliance: "Ресей сәйкестігі",
+    complianceTasks: "Сәйкестік тапсырмалары",
+    complianceCalendar: "Сәйкестік күнтізбесі",
     auditPlanning: "Аудит жоспарлау",
+    gapAnalysis: "Алшақтық талдауы",
     findings: "Табылған мәселелер",
     incidents: "Оқиғалар",
     activityLog: "Әрекет журналы",
@@ -2368,7 +2409,10 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     controlsNav: "Көзөмөлдөр",
     policies: "Саясаттар",
     russianCompliance: "Россия шайкештиги",
+    complianceTasks: "Шайкештик тапшырмалары",
+    complianceCalendar: "Шайкештик календары",
     auditPlanning: "Аудит пландоо",
+    gapAnalysis: "Ажырымдык анализи",
     findings: "Табылгандар",
     incidents: "Окуялар",
     activityLog: "Иш-аракет журналы",
@@ -2536,7 +2580,10 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     controlsNav: "Nazoratlar",
     policies: "Siyosatlar",
     russianCompliance: "Rossiya muvofiqlig'i",
+    complianceTasks: "Muvofiqlik vazifalari",
+    complianceCalendar: "Muvofiqlik taqvimi",
     auditPlanning: "Audit rejalashtirish",
+    gapAnalysis: "Bo'shliq tahlili",
     findings: "Topilgan muammolar",
     incidents: "Hodisalar",
     activityLog: "Faoliyat jurnali",
@@ -3026,7 +3073,10 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     controlsNav: "კონტროლები",
     policies: "პოლიტიკები",
     russianCompliance: "რუსეთის შესაბამისობა",
+    complianceTasks: "შესაბამისობის ამოცანები",
+    complianceCalendar: "შესაბამისობის კალენდარი",
     auditPlanning: "აუდიტის დაგეგმვა",
+    gapAnalysis: "ხარვეზების ანალიზი",
     findings: "აღმოჩენები",
     incidents: "ინციდენტები",
     activityLog: "აქტივობის ჟურნალი",
@@ -3271,7 +3321,10 @@ const translations: Record<LanguageCode, TranslationStrings> = {
     controlsNav: "Nəzarətlər",
     policies: "Siyasətlər",
     russianCompliance: "Rusiya uyğunluğu",
+    complianceTasks: "Uyğunluq tapşırıqları",
+    complianceCalendar: "Uyğunluq təqvimi",
     auditPlanning: "Audit planlaması",
+    gapAnalysis: "Boşluq analizi",
     findings: "Tapıntılar",
     incidents: "Hadisələr",
     activityLog: "Fəaliyyət jurnalı",

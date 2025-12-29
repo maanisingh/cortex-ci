@@ -38,12 +38,23 @@ import {
   TruckIcon,
   FolderOpenIcon,
   ListBulletIcon,
+  // Calendar icons
+  CalendarDaysIcon,
+  ClipboardDocumentCheckIcon,
+  // Template icons
+  RectangleStackIcon,
+  // SME Business icons
+  LightBulbIcon,
+  BriefcaseIcon,
 } from "@heroicons/react/24/outline";
 import { useAuthStore } from "../../stores/authStore";
 import RealTimeAlerts from "./RealTimeAlerts";
 import ThemeToggle from "./ThemeToggle";
 import UserGuide from "./UserGuide";
 import LanguageSelector from "./LanguageSelector";
+import NotificationCenter from "./NotificationCenter";
+import OnboardingTour, { useOnboardingTour } from "./OnboardingTour";
+import MobileBottomNav from "./MobileBottomNav";
 import {
   useKeyboardShortcuts,
   KeyboardShortcutsHelp,
@@ -87,12 +98,23 @@ const complianceNavigation = [
   },
   { name: "controlsNav", href: "/constraints", icon: ShieldExclamationIcon },
   { name: "policies", href: "/policies", icon: DocumentTextIcon },
+  { name: "documentLibrary", href: "/documents", icon: FolderOpenIcon },
+  { name: "templateCatalog", href: "/templates", icon: RectangleStackIcon },
   { name: "russianCompliance", href: "/russian-compliance", icon: ShieldCheckIcon },
+  { name: "complianceTasks", href: "/compliance-tasks", icon: ClipboardDocumentCheckIcon },
+  { name: "complianceCalendar", href: "/compliance-calendar", icon: CalendarDaysIcon },
+];
+
+// SME Business Templates
+const smeNavigation = [
+  { name: "companyLifecycle", href: "/company-lifecycle", icon: LightBulbIcon },
+  { name: "smeTemplates", href: "/sme-templates", icon: BriefcaseIcon },
 ];
 
 // Audit & Issue Management
 const auditNavigation = [
   { name: "auditPlanning", href: "/audits", icon: MagnifyingGlassCircleIcon },
+  { name: "gapAnalysis", href: "/gap-analysis", icon: DocumentCheckIcon },
   { name: "findings", href: "/findings", icon: ListBulletIcon },
   { name: "incidents", href: "/incidents", icon: ExclamationCircleIcon },
   { name: "activityLog", href: "/audit", icon: ClipboardDocumentListIcon },
@@ -134,6 +156,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const { t } = useLanguage();
+
+  // Onboarding tour
+  const { showTour, endTour } = useOnboardingTour();
 
   // Enable keyboard shortcuts
   useKeyboardShortcuts(() => setShowShortcuts(true));
@@ -407,6 +432,35 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </ul>
               </li>
 
+              {/* SME Business */}
+              <li>
+                <div className="text-xs font-semibold leading-6 text-primary-400 uppercase">
+                  {t("smeBusiness")}
+                </div>
+                <ul role="list" className="-mx-2 mt-2 space-y-1">
+                  {smeNavigation.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        to={item.href}
+                        className={classNames(
+                          location.pathname === item.href ||
+                            location.pathname.startsWith(item.href + "/")
+                            ? "bg-primary-800 text-white"
+                            : "text-primary-200 hover:text-white hover:bg-primary-800",
+                          "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold",
+                        )}
+                      >
+                        <item.icon
+                          className="h-6 w-6 shrink-0"
+                          aria-hidden="true"
+                        />
+                        {t(item.name as any)}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+
               {/* Audit */}
               <li>
                 <div className="text-xs font-semibold leading-6 text-primary-400 uppercase">
@@ -583,6 +637,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <ThemeToggle />
               {/* Real-time Alerts */}
               <RealTimeAlerts />
+              {/* Notification Center - Due Date Reminders */}
+              <NotificationCenter />
               <span className="text-sm text-gray-500 dark:text-gray-400">
                 Role:{" "}
                 <span className="font-medium text-gray-900 dark:text-gray-200 capitalize">
@@ -593,10 +649,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <main className="py-10 bg-gray-50 dark:bg-dark-900 min-h-screen transition-colors">
+        <main className="py-10 pb-24 lg:pb-10 bg-gray-50 dark:bg-dark-900 min-h-screen transition-colors">
           <div className="px-4 sm:px-6 lg:px-8">{children}</div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav onMenuClick={() => setSidebarOpen(true)} />
 
       {/* User Guide / Help System */}
       <UserGuide />
@@ -606,6 +665,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         isOpen={showShortcuts}
         onClose={() => setShowShortcuts(false)}
       />
+
+      {/* Onboarding Tour */}
+      <OnboardingTour isOpen={showTour} onClose={endTour} />
     </div>
   );
 }

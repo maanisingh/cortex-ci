@@ -1,0 +1,70 @@
+# Caddy Configuration for CORTEX GRC
+# Automatic HTTPS with Let's Encrypt
+
+{
+    email admin@{$DOMAIN:localhost}
+    # Uncomment for production
+    # acme_ca https://acme-v02.api.letsencrypt.org/directory
+}
+
+# Main application
+{$DOMAIN:localhost} {
+    # Frontend
+    handle {
+        reverse_proxy frontend:80
+    }
+
+    # API proxy
+    handle /api/* {
+        reverse_proxy backend:8000
+    }
+
+    # WebSocket support for real-time features
+    handle /ws/* {
+        reverse_proxy backend:8000
+    }
+
+    # Health check
+    handle /health {
+        respond "OK" 200
+    }
+
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy strict-origin-when-cross-origin
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    }
+
+    # Compression
+    encode gzip zstd
+
+    # Logging
+    log {
+        output file /var/log/caddy/access.log
+        format json
+    }
+}
+
+# Authentication portal
+auth.{$DOMAIN:localhost} {
+    reverse_proxy authelia:9091
+}
+
+# Mail interface (dev only)
+mail.{$DOMAIN:localhost} {
+    reverse_proxy mailpit:8025
+}
+
+# Notifications
+notify.{$DOMAIN:localhost} {
+    reverse_proxy ntfy:80
+}
+
+# Logs dashboard (protected)
+logs.{$DOMAIN:localhost} {
+    # Add basic auth or forward to Authelia
+    reverse_proxy loki:3100
+}

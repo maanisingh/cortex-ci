@@ -1,0 +1,329 @@
+version: "3.8"
+
+# =============================================================================
+# CORTEX GRC - PRODUCTION DEPLOYMENT
+# Lightweight, fully self-contained stack with all Phase 4 & 5 features
+# No external signups required - zero third-party dependencies
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # CORE INFRASTRUCTURE
+  # ===========================================================================
+
+  db:
+    image: postgres:16-alpine
+    container_name: cortex-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-cortex_ci}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cortex-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cortex_ci"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    container_name: cortex-redis
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - cortex-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # ===========================================================================
+  # LIGHTWEIGHT EMAIL (Mailpit - replaces SMTP servers)
+  # ===========================================================================
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: cortex-mailpit
+    environment:
+      MP_MAX_MESSAGES: 1000
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    volumes:
+      - mailpit_data:/data
+    networks:
+      - cortex-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+  # ===========================================================================
+  # PUSH NOTIFICATIONS (Ntfy - self-hosted, no signup)
+  # ===========================================================================
+
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    container_name: cortex-ntfy
+    command: serve
+    environment:
+      TZ: Europe/Moscow
+      NTFY_BASE_URL: ${NTFY_BASE_URL:-http://localhost:8090}
+      NTFY_CACHE_FILE: /var/lib/ntfy/cache.db
+      NTFY_AUTH_FILE: /var/lib/ntfy/auth.db
+      NTFY_AUTH_DEFAULT_ACCESS: read-write
+    volumes:
+      - ntfy_data:/var/lib/ntfy
+    networks:
+      - cortex-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+  # ===========================================================================
+  # LOGGING (Loki - lightweight log aggregation)
+  # ===========================================================================
+
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: cortex-loki
+    volumes:
+      - ./config/loki:/etc/loki:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/loki-config.yml
+    networks:
+      - cortex-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ===========================================================================
+  # EGRUL DATA SERVICE (Company registry without API signup)
+  # ===========================================================================
+
+  egrul-service:
+    build:
+      context: ./services/egrul
+      dockerfile: Dockerfile
+    container_name: cortex-egrul
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/egrul_cache
+      REDIS_URL: redis://redis:6379/1
+      SCRAPE_DELAY: 2
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cortex-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ===========================================================================
+  # MEILISEARCH (Fast search)
+  # ===========================================================================
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.6
+    container_name: cortex-search
+    environment:
+      MEILI_MASTER_KEY: ${MEILISEARCH_MASTER_KEY:-masterkey}
+      MEILI_ENV: production
+      MEILI_NO_ANALYTICS: true
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - cortex-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ===========================================================================
+  # CORTEX BACKEND
+  # ===========================================================================
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cortex-backend
+    environment:
+      # Database
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-cortex_ci}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-your-production-secret-key-change-this}
+      DEBUG: "false"
+      APP_NAME: CORTEX GRC Platform
+
+      # Search
+      MEILISEARCH_URL: http://meilisearch:7700
+      MEILISEARCH_MASTER_KEY: ${MEILISEARCH_MASTER_KEY:-masterkey}
+
+      # Lightweight Services (Phase 4)
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+      SMTP_FROM: ${SMTP_FROM:-noreply@cortex.local}
+      NTFY_URL: http://ntfy:80
+      NTFY_TOPIC: ${NTFY_TOPIC:-cortex-alerts}
+      LOKI_URL: http://loki:3100
+      EGRUL_SERVICE_URL: http://egrul-service:8000
+
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_started
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - cortex-network
+      - dokploy-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.cortex-api.rule=Host(`cortex.alexandratechlab.com`) && PathPrefix(`/api`)
+      - traefik.http.routers.cortex-api.entrypoints=websecure
+      - traefik.http.routers.cortex-api.tls.certresolver=letsencrypt
+      - traefik.http.services.cortex-api.loadbalancer.server.port=8000
+
+  # ===========================================================================
+  # CORTEX FRONTEND
+  # ===========================================================================
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api/v1
+    container_name: cortex-frontend
+    depends_on:
+      - backend
+    networks:
+      - cortex-network
+      - dokploy-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.cortex-web.rule=Host(`cortex.alexandratechlab.com`)
+      - traefik.http.routers.cortex-web.entrypoints=websecure
+      - traefik.http.routers.cortex-web.tls.certresolver=letsencrypt
+      - traefik.http.services.cortex-web.loadbalancer.server.port=80
+      # Security headers
+      - traefik.http.middlewares.cortex-headers.headers.stsSeconds=31536000
+      - traefik.http.middlewares.cortex-headers.headers.stsIncludeSubdomains=true
+      - traefik.http.middlewares.cortex-headers.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.cortex-headers.headers.frameDeny=true
+      - traefik.http.routers.cortex-web.middlewares=cortex-headers
+
+  # ===========================================================================
+  # CELERY WORKER (Background Tasks)
+  # ===========================================================================
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cortex-worker
+    command: celery -A app.workers worker --loglevel=info --concurrency=2
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-cortex_ci}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-your-production-secret-key-change-this}
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      NTFY_URL: http://ntfy:80
+      NTFY_TOPIC: ${NTFY_TOPIC:-cortex-alerts}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - cortex-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ===========================================================================
+  # CELERY BEAT (Scheduler)
+  # ===========================================================================
+
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cortex-scheduler
+    command: celery -A app.workers beat --loglevel=info
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-cortex_ci}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-your-production-secret-key-change-this}
+    depends_on:
+      - redis
+      - worker
+    networks:
+      - cortex-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+volumes:
+  postgres_data:
+  redis_data:
+  mailpit_data:
+  ntfy_data:
+  loki_data:
+  meilisearch_data:
+
+networks:
+  cortex-network:
+    driver: bridge
+  dokploy-network:
+    external: true
