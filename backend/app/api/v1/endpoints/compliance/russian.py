@@ -3,11 +3,14 @@ Russian Compliance API Endpoints
 Company profiles, ISPDN systems, documents, tasks for 152-ФЗ, 187-ФЗ, etc.
 """
 
+import logging
 from datetime import date, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+logger = logging.getLogger(__name__)
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,6 +42,7 @@ from app.services.russian_compliance import (
     ProtectionLevelCalculator,
     get_company_by_inn_demo,
 )
+from app.services.template_registry import TemplateRegistry, CompanyLifecycleStage
 
 router = APIRouter(tags=["Russian Compliance"])
 
@@ -223,6 +227,24 @@ class ComplianceDocumentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class LifecycleStageTemplate(BaseModel):
+    """Template info for lifecycle stage."""
+
+    id: str
+    name: str
+    category: str
+    priority: str = "recommended"  # required, recommended, optional
+    description: str | None = None
+
+
+class LifecycleStageResponse(BaseModel):
+    """Response for lifecycle stage templates."""
+
+    stage: str
+    stage_name: str
+    templates: list[LifecycleStageTemplate]
 
 
 class ComplianceTaskResponse(BaseModel):
@@ -622,6 +644,117 @@ async def list_document_templates(
 
     result = await db.execute(query)
     return list(result.scalars().all())
+
+
+# Lifecycle stage names in Russian
+LIFECYCLE_STAGE_NAMES = {
+    "idea": "Идея",
+    "registration": "Регистрация",
+    "launch": "Запуск",
+    "growth": "Рост",
+    "maturity": "Зрелость",
+    "expansion": "Экспансия",
+    "restructuring": "Реструктуризация",
+    "exit": "Выход",
+}
+
+# Priority mapping for lifecycle templates
+LIFECYCLE_PRIORITY_MAP = {
+    "idea": {"founders_agreement": "required", "nda": "required", "preliminary_agreement": "recommended"},
+    "registration": {
+        "charter_ooo": "required", "formation_decision_sole": "required",
+        "formation_decision_multiple": "required", "tax_registration": "recommended",
+        "usn_application": "recommended", "account_opening": "required",
+    },
+    "launch": {
+        "employment_contract": "required", "internal_labor_rules": "required",
+        "accounting_policy": "required", "privacy_policy": "required",
+        "online_terms": "recommended", "director_appointment_order": "required",
+    },
+    "growth": {
+        "supply": "required", "service": "required", "lease": "recommended",
+        "loan": "optional", "contractor_agreement": "recommended", "leasing": "optional",
+    },
+    "maturity": {
+        "dividend_resolution": "required", "shareholder_meeting_minutes": "required",
+        "quality_manual": "recommended", "sla_agreement": "recommended", "distribution": "optional",
+    },
+    "expansion": {
+        "franchise": "recommended", "joint_venture": "recommended",
+        "licensing": "recommended", "bank_guarantee": "optional",
+    },
+    "restructuring": {
+        "restructuring_plan": "required", "creditor_agreement": "required",
+        "debt_restructuring": "required", "capital_increase_decision": "recommended",
+    },
+    "exit": {
+        "voluntary_liquidation": "required", "liquidation_decision": "required",
+        "asset_sale": "recommended", "settlement": "optional",
+    },
+}
+
+
+@router.get("/lifecycle-templates", response_model=list[LifecycleStageResponse])
+async def list_lifecycle_templates(
+    current_user: User = Depends(get_current_user),
+):
+    """Get all templates grouped by company lifecycle stage."""
+    result = []
+
+    for stage in CompanyLifecycleStage:
+        stage_templates = TemplateRegistry.get_templates_for_stage(stage)
+        priority_map = LIFECYCLE_PRIORITY_MAP.get(stage.value, {})
+
+        templates = [
+            LifecycleStageTemplate(
+                id=t["type"],
+                name=t["name"],
+                category=t.get("category", "general"),
+                priority=priority_map.get(t["type"], "recommended"),
+                description=None,
+            )
+            for t in stage_templates
+        ]
+
+        result.append(LifecycleStageResponse(
+            stage=stage.value,
+            stage_name=LIFECYCLE_STAGE_NAMES.get(stage.value, stage.value),
+            templates=templates,
+        ))
+
+    return result
+
+
+@router.get("/lifecycle-templates/{stage}", response_model=LifecycleStageResponse)
+async def get_lifecycle_stage_templates(
+    stage: str,
+    current_user: User = Depends(get_current_user),
+):
+    """Get templates for a specific lifecycle stage."""
+    try:
+        lifecycle_stage = CompanyLifecycleStage(stage)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid lifecycle stage: {stage}")
+
+    stage_templates = TemplateRegistry.get_templates_for_stage(lifecycle_stage)
+    priority_map = LIFECYCLE_PRIORITY_MAP.get(stage, {})
+
+    templates = [
+        LifecycleStageTemplate(
+            id=t["type"],
+            name=t["name"],
+            category=t.get("category", "general"),
+            priority=priority_map.get(t["type"], "recommended"),
+            description=None,
+        )
+        for t in stage_templates
+    ]
+
+    return LifecycleStageResponse(
+        stage=stage,
+        stage_name=LIFECYCLE_STAGE_NAMES.get(stage, stage),
+        templates=templates,
+    )
 
 
 @router.get("/templates/{template_id}", response_model=DocumentTemplateResponse)
@@ -1276,3 +1409,143 @@ async def list_frameworks(
         },
     ]
     return frameworks
+
+
+# ============================================================================
+# SME TEMPLATES ENDPOINTS (285+ business document templates)
+# ============================================================================
+
+
+class SMETemplateResponse(BaseModel):
+    """SME template info."""
+
+    id: str
+    name: str
+    category: str
+    description: str | None = None
+    tags: list[str] = []
+    regulatory_refs: list[str] = []
+
+
+class SMECategoryResponse(BaseModel):
+    """SME template category info."""
+
+    id: str
+    name: str
+    name_en: str | None = None
+    template_count: int
+
+
+class DocumentGenerateRequest(BaseModel):
+    """Request to generate a document."""
+
+    template_id: str
+    company_data: dict = {}
+
+
+class DocumentGenerateResponse(BaseModel):
+    """Generated document response."""
+
+    content: str
+    template_id: str
+    template_name: str
+
+
+@router.get("/sme-templates", response_model=list[SMETemplateResponse])
+async def list_sme_templates(
+    category: str | None = Query(None, description="Filter by category"),
+    search: str | None = Query(None, description="Search query"),
+    current_user: User = Depends(get_current_user),
+):
+    """List all SME templates (285+ templates)."""
+    from app.services.template_registry import TemplateRegistry, TemplateCategory
+
+    # Get all templates or filter by category
+    if category:
+        try:
+            cat = TemplateCategory(category)
+            templates = TemplateRegistry.list_templates(cat)
+        except ValueError:
+            templates = TemplateRegistry.list_templates()
+    else:
+        templates = TemplateRegistry.list_templates()
+
+    # Apply search filter
+    if search:
+        search_lower = search.lower()
+        templates = [
+            t for t in templates
+            if search_lower in t.get("name", "").lower() or search_lower in t.get("type", "").lower()
+        ]
+
+    return [
+        SMETemplateResponse(
+            id=t.get("type", t.get("id", "")),
+            name=t.get("name", ""),
+            category=t.get("category", "general"),
+            description=None,
+            tags=[],
+            regulatory_refs=[],
+        )
+        for t in templates
+    ]
+
+
+@router.get("/sme-templates/categories", response_model=list[SMECategoryResponse])
+async def list_sme_categories(
+    current_user: User = Depends(get_current_user),
+):
+    """List all SME template categories."""
+    from app.services.template_registry import TemplateRegistry
+
+    categories = TemplateRegistry.get_categories()
+
+    return [
+        SMECategoryResponse(
+            id=cat["id"],
+            name=cat["name"],
+            name_en=None,
+            template_count=cat["template_count"],
+        )
+        for cat in categories
+    ]
+
+
+@router.get("/sme-templates/statistics")
+async def get_sme_statistics(
+    current_user: User = Depends(get_current_user),
+):
+    """Get SME template statistics."""
+    from app.services.template_registry import TemplateRegistry
+
+    return TemplateRegistry.get_statistics()
+
+
+@router.post("/sme-templates/generate", response_model=DocumentGenerateResponse)
+async def generate_sme_document(
+    request: DocumentGenerateRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """Generate a document from an SME template."""
+    from app.services.template_registry import TemplateRegistry
+
+    try:
+        content = TemplateRegistry.generate_document(
+            template_type=request.template_id,
+            data=request.company_data,
+        )
+
+        # Get template name
+        all_templates = TemplateRegistry.list_templates()
+        template_name = next(
+            (t["name"] for t in all_templates if t.get("type") == request.template_id),
+            request.template_id,
+        )
+
+        return DocumentGenerateResponse(
+            content=content,
+            template_id=request.template_id,
+            template_name=template_name,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import {
   LightBulbIcon,
   BuildingOfficeIcon,
@@ -11,7 +13,9 @@ import {
   DocumentTextIcon,
   ChevronRightIcon,
   ClockIcon,
+  ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
+import { russianComplianceApi } from '../services/api';
 
 // Company lifecycle stages
 type LifecycleStage =
@@ -33,17 +37,22 @@ interface StageInfo {
   color: string;
   bgColor: string;
   borderColor: string;
-  templates: TemplateRecommendation[];
   keyActions: string[];
   typicalDuration: string;
 }
 
-interface TemplateRecommendation {
+interface ApiTemplate {
   id: string;
   name: string;
   category: string;
   priority: 'required' | 'recommended' | 'optional';
-  description: string;
+  description: string | null;
+}
+
+interface ApiLifecycleStage {
+  stage: string;
+  stage_name: string;
+  templates: ApiTemplate[];
 }
 
 const LIFECYCLE_STAGES: StageInfo[] = [
@@ -63,12 +72,6 @@ const LIFECYCLE_STAGES: StageInfo[] = [
       'Защита интеллектуальной собственности',
       'Предварительные договоренности',
     ],
-    templates: [
-      { id: 'founders_agreement', name: 'Соглашение учредителей', category: 'corporate', priority: 'required', description: 'Определение долей и обязанностей' },
-      { id: 'nda', name: 'Соглашение о конфиденциальности (NDA)', category: 'contracts', priority: 'required', description: 'Защита бизнес-идеи' },
-      { id: 'preliminary_agreement', name: 'Предварительный договор', category: 'contracts', priority: 'recommended', description: 'Фиксация договоренностей' },
-      { id: 'ip_assignment', name: 'Договор об отчуждении ИС', category: 'legal', priority: 'optional', description: 'Передача прав на разработки' },
-    ],
   },
   {
     id: 'registration',
@@ -85,14 +88,6 @@ const LIFECYCLE_STAGES: StageInfo[] = [
       'Подготовка учредительных документов',
       'Регистрация в ФНС',
       'Открытие расчетного счета',
-    ],
-    templates: [
-      { id: 'charter_ooo', name: 'Устав ООО', category: 'corporate', priority: 'required', description: 'Основной учредительный документ' },
-      { id: 'formation_decision_sole', name: 'Решение о создании (единст. учредитель)', category: 'corporate', priority: 'required', description: 'Для ООО с одним учредителем' },
-      { id: 'formation_decision_multiple', name: 'Протокол собрания учредителей', category: 'corporate', priority: 'required', description: 'Для ООО с несколькими учредителями' },
-      { id: 'usn_application', name: 'Заявление о переходе на УСН', category: 'tax', priority: 'recommended', description: 'Упрощенная система налогообложения' },
-      { id: 'account_opening', name: 'Заявление на открытие счета', category: 'banking', priority: 'required', description: 'Банковский счет для ООО' },
-      { id: 'director_appointment', name: 'Приказ о вступлении в должность директора', category: 'hr', priority: 'required', description: 'Назначение руководителя' },
     ],
   },
   {
@@ -111,14 +106,6 @@ const LIFECYCLE_STAGES: StageInfo[] = [
       'Запуск продаж',
       'Внутренние регламенты',
     ],
-    templates: [
-      { id: 'employment_contract', name: 'Трудовой договор', category: 'hr', priority: 'required', description: 'Оформление сотрудников' },
-      { id: 'internal_labor_rules', name: 'Правила внутреннего трудового распорядка', category: 'hr', priority: 'required', description: 'Обязательный ЛНА' },
-      { id: 'accounting_policy', name: 'Учетная политика', category: 'financial', priority: 'required', description: 'Организация бухучета' },
-      { id: 'privacy_policy', name: 'Политика конфиденциальности', category: 'legal', priority: 'required', description: 'Для сайта и ПДн' },
-      { id: 'online_terms', name: 'Пользовательское соглашение', category: 'legal', priority: 'recommended', description: 'Для онлайн-сервисов' },
-      { id: 'pdp_policy', name: 'Политика обработки ПДн (152-ФЗ)', category: 'grc', priority: 'required', description: 'Соответствие 152-ФЗ' },
-    ],
   },
   {
     id: 'growth',
@@ -135,14 +122,6 @@ const LIFECYCLE_STAGES: StageInfo[] = [
       'Увеличение клиентской базы',
       'Работа с поставщиками',
       'Привлечение финансирования',
-    ],
-    templates: [
-      { id: 'supply', name: 'Договор поставки', category: 'contracts', priority: 'required', description: 'Работа с поставщиками' },
-      { id: 'service', name: 'Договор оказания услуг', category: 'contracts', priority: 'required', description: 'Для клиентов-юрлиц' },
-      { id: 'lease', name: 'Договор аренды', category: 'contracts', priority: 'recommended', description: 'Расширение площадей' },
-      { id: 'loan', name: 'Договор займа', category: 'contracts', priority: 'optional', description: 'Привлечение средств' },
-      { id: 'contractor_agreement', name: 'Договор ГПХ', category: 'hr', priority: 'recommended', description: 'Работа с подрядчиками' },
-      { id: 'leasing', name: 'Договор лизинга', category: 'banking', priority: 'optional', description: 'Приобретение оборудования' },
     ],
   },
   {
@@ -161,13 +140,6 @@ const LIFECYCLE_STAGES: StageInfo[] = [
       'Сертификация качества',
       'Развитие партнерств',
     ],
-    templates: [
-      { id: 'dividend_resolution', name: 'Решение о распределении прибыли', category: 'corporate', priority: 'required', description: 'Выплата дивидендов' },
-      { id: 'shareholder_meeting', name: 'Протокол общего собрания', category: 'corporate', priority: 'required', description: 'Корпоративные решения' },
-      { id: 'quality_manual', name: 'Руководство по качеству', category: 'quality', priority: 'recommended', description: 'Система менеджмента качества' },
-      { id: 'sla_agreement', name: 'SLA (Соглашение об уровне сервиса)', category: 'industry', priority: 'recommended', description: 'Гарантии для клиентов' },
-      { id: 'distribution', name: 'Дистрибьюторский договор', category: 'contracts', priority: 'optional', description: 'Расширение сбыта' },
-    ],
   },
   {
     id: 'expansion',
@@ -184,13 +156,6 @@ const LIFECYCLE_STAGES: StageInfo[] = [
       'Франчайзинг',
       'M&A активность',
       'Международная экспансия',
-    ],
-    templates: [
-      { id: 'franchise', name: 'Договор франчайзинга', category: 'contracts', priority: 'recommended', description: 'Масштабирование бренда' },
-      { id: 'joint_venture', name: 'Договор о совместной деятельности', category: 'contracts', priority: 'recommended', description: 'Партнерство с другими компаниями' },
-      { id: 'licensing', name: 'Лицензионный договор', category: 'contracts', priority: 'recommended', description: 'Монетизация ИС' },
-      { id: 'branch_regulation', name: 'Положение о филиале', category: 'corporate', priority: 'required', description: 'Создание филиала' },
-      { id: 'bank_guarantee', name: 'Банковская гарантия', category: 'banking', priority: 'optional', description: 'Для крупных контрактов' },
     ],
   },
   {
@@ -209,13 +174,6 @@ const LIFECYCLE_STAGES: StageInfo[] = [
       'Оптимизация расходов',
       'Изменение бизнес-модели',
     ],
-    templates: [
-      { id: 'restructuring_plan', name: 'План реструктуризации', category: 'crisis', priority: 'required', description: 'Стратегия изменений' },
-      { id: 'creditor_agreement', name: 'Соглашение с кредиторами', category: 'crisis', priority: 'required', description: 'Урегулирование долгов' },
-      { id: 'debt_restructuring', name: 'Договор реструктуризации долга', category: 'crisis', priority: 'required', description: 'Изменение условий' },
-      { id: 'capital_increase', name: 'Решение об увеличении уставного капитала', category: 'corporate', priority: 'recommended', description: 'Привлечение инвестиций' },
-      { id: 'layoff_order', name: 'Приказ о сокращении', category: 'hr', priority: 'optional', description: 'Оптимизация персонала' },
-    ],
   },
   {
     id: 'exit',
@@ -233,13 +191,6 @@ const LIFECYCLE_STAGES: StageInfo[] = [
       'Due diligence',
       'Оформление сделки',
     ],
-    templates: [
-      { id: 'share_sale', name: 'Договор купли-продажи доли', category: 'corporate', priority: 'required', description: 'Продажа бизнеса' },
-      { id: 'voluntary_liquidation', name: 'Заявление о добровольной ликвидации', category: 'crisis', priority: 'required', description: 'Закрытие компании' },
-      { id: 'liquidation_decision', name: 'Решение о ликвидации', category: 'corporate', priority: 'required', description: 'Корпоративное решение' },
-      { id: 'asset_sale', name: 'Договор продажи активов', category: 'contracts', priority: 'recommended', description: 'Реализация имущества' },
-      { id: 'settlement', name: 'Мировое соглашение', category: 'legal', priority: 'optional', description: 'Урегулирование споров' },
-    ],
   },
 ];
 
@@ -250,15 +201,32 @@ const PRIORITY_COLORS = {
 };
 
 const CompanyLifecycle: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedStage, setSelectedStage] = useState<LifecycleStage>('idea');
   const [showAllTemplates, setShowAllTemplates] = useState(false);
 
   const currentStage = LIFECYCLE_STAGES.find(s => s.id === selectedStage)!;
 
+  // Fetch lifecycle templates from API
+  const { data: lifecycleData, isLoading } = useQuery({
+    queryKey: ['lifecycle-templates'],
+    queryFn: async () => {
+      const response = await russianComplianceApi.lifecycleTemplates.listAll();
+      return response.data as ApiLifecycleStage[];
+    },
+  });
+
+  // Get templates for current stage from API data
+  const apiTemplates = lifecycleData?.find(s => s.stage === selectedStage)?.templates || [];
+
   const handleTemplateClick = (templateId: string) => {
-    // Navigate to template detail or open modal
-    console.log('Opening template:', templateId);
-    // TODO: Integrate with template generation
+    // Navigate to SME templates page with template pre-selected
+    navigate(`/sme-templates?template=${templateId}`);
+  };
+
+  const handleCreateAllDocuments = () => {
+    // Navigate to SME templates with stage filter
+    navigate(`/sme-templates?stage=${selectedStage}`);
   };
 
   return (
@@ -282,6 +250,7 @@ const CompanyLifecycle: React.FC = () => {
             {LIFECYCLE_STAGES.map((stage, index) => {
               const Icon = stage.icon;
               const isSelected = selectedStage === stage.id;
+              const stageTemplates = lifecycleData?.find(s => s.stage === stage.id)?.templates || [];
               return (
                 <React.Fragment key={stage.id}>
                   <button
@@ -298,6 +267,11 @@ const CompanyLifecycle: React.FC = () => {
                     <span className={`mt-1 text-xs font-medium ${isSelected ? stage.color : 'text-gray-500'}`}>
                       {stage.name}
                     </span>
+                    {stageTemplates.length > 0 && (
+                      <span className="mt-0.5 text-[10px] text-gray-400">
+                        {stageTemplates.length} док.
+                      </span>
+                    )}
                   </button>
                   {index < LIFECYCLE_STAGES.length - 1 && (
                     <div className="flex items-center">
@@ -355,13 +329,13 @@ const CompanyLifecycle: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-3 bg-gray-50 rounded-lg">
                   <div className="text-2xl font-bold text-gray-900">
-                    {currentStage.templates.length}
+                    {isLoading ? '...' : apiTemplates.length}
                   </div>
                   <div className="text-xs text-gray-500">Шаблонов</div>
                 </div>
                 <div className="text-center p-3 bg-gray-50 rounded-lg">
                   <div className="text-2xl font-bold text-red-600">
-                    {currentStage.templates.filter(t => t.priority === 'required').length}
+                    {isLoading ? '...' : apiTemplates.filter(t => t.priority === 'required').length}
                   </div>
                   <div className="text-xs text-gray-500">Обязательных</div>
                 </div>
@@ -384,38 +358,54 @@ const CompanyLifecycle: React.FC = () => {
                 </button>
               </div>
 
-              <div className="divide-y divide-gray-200">
-                {currentStage.templates
-                  .filter(t => showAllTemplates || t.priority !== 'optional')
-                  .map((template) => (
-                    <div
-                      key={template.id}
-                      className="px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                      onClick={() => handleTemplateClick(template.id)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start">
-                          <DocumentTextIcon className="h-5 w-5 text-gray-400 mt-0.5 mr-3" />
-                          <div>
-                            <h4 className="font-medium text-gray-900">{template.name}</h4>
-                            <p className="text-sm text-gray-500 mt-0.5">{template.description}</p>
+              {isLoading ? (
+                <div className="p-8 text-center text-gray-500">
+                  Загрузка шаблонов...
+                </div>
+              ) : apiTemplates.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  Нет шаблонов для этого этапа
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200">
+                  {apiTemplates
+                    .filter(t => showAllTemplates || t.priority !== 'optional')
+                    .map((template) => (
+                      <div
+                        key={template.id}
+                        className="px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                        onClick={() => handleTemplateClick(template.id)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start">
+                            <DocumentTextIcon className="h-5 w-5 text-gray-400 mt-0.5 mr-3" />
+                            <div>
+                              <h4 className="font-medium text-gray-900">{template.name}</h4>
+                              <p className="text-sm text-gray-500 mt-0.5">
+                                {template.description || `Категория: ${template.category}`}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span
+                              className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                PRIORITY_COLORS[template.priority]?.bg || 'bg-gray-100'
+                              } ${PRIORITY_COLORS[template.priority]?.text || 'text-gray-700'}`}
+                            >
+                              {PRIORITY_COLORS[template.priority]?.label || template.priority}
+                            </span>
+                            <ArrowDownTrayIcon className="h-4 w-4 text-gray-400" />
                           </div>
                         </div>
-                        <span
-                          className={`ml-4 px-2 py-1 text-xs font-medium rounded-full ${
-                            PRIORITY_COLORS[template.priority].bg
-                          } ${PRIORITY_COLORS[template.priority].text}`}
-                        >
-                          {PRIORITY_COLORS[template.priority].label}
-                        </span>
                       </div>
-                    </div>
-                  ))}
-              </div>
+                    ))}
+                </div>
+              )}
 
               {/* CTA */}
               <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                 <button
+                  onClick={handleCreateAllDocuments}
                   className={`w-full py-2 px-4 rounded-lg font-medium text-white ${
                     currentStage.color.replace('text-', 'bg-')
                   } hover:opacity-90 transition-opacity`}

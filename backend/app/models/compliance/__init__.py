@@ -132,6 +132,14 @@ from app.models.compliance.russian import (
     ThreatType,
 )
 
+# EGRUL Company Registry
+from app.models.compliance.egrul import (
+    CompanyStatus,
+    DataSource,
+    EGRULCompany,
+    EGRULFetchLog,
+)
+
 __all__ = [
     # Frameworks
     "Framework",
@@ -249,4 +257,9 @@ __all__ = [
     "RuComplianceTask",
     "RuRequirement",
     "RuEmailTemplate",
+    # EGRUL
+    "EGRULCompany",
+    "EGRULFetchLog",
+    "CompanyStatus",
+    "DataSource",
 ]

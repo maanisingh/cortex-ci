@@ -20,7 +20,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useLanguage, LANGUAGES, LanguageCode } from "../contexts/LanguageContext";
 
-const frameworks = [
+const internationalFrameworks = [
   { name: "NIST SP 800-53", controls: 1196, category: "Security" },
   { name: "ISO 27001:2022", controls: 93, category: "ISMS" },
   { name: "SOC 2 Type II", controls: 64, category: "Trust Services" },
@@ -29,6 +29,15 @@ const frameworks = [
   { name: "HIPAA", controls: 75, category: "Healthcare" },
   { name: "MITRE ATT&CK", controls: 703, category: "Threat Intel" },
   { name: "CIS Controls v8", controls: 153, category: "Security" },
+];
+
+const russianFrameworks = [
+  { name: "152-ФЗ", controls: 48, category: "Персональные данные", description: "Защита персональных данных" },
+  { name: "187-ФЗ", controls: 85, category: "КИИ", description: "Критическая инфраструктура" },
+  { name: "ГОСТ Р 57580", controls: 150, category: "Финансы", description: "Безопасность банковских операций" },
+  { name: "ФСТЭК №21", controls: 72, category: "ИСПДн", description: "Защита информационных систем" },
+  { name: "683-П ЦБ", controls: 95, category: "Банки", description: "Требования ЦБ РФ" },
+  { name: "ФСБ №378", controls: 60, category: "Крипто", description: "Криптографическая защита" },
 ];
 
 export default function LandingPage() {
@@ -333,7 +342,102 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Frameworks Section */}
+      {/* Russian SME Section */}
+      <div className="bg-gradient-to-b from-red-50 to-white py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl lg:text-center">
+            <div className="flex justify-center items-center gap-2 mb-4">
+              <span className="text-4xl">🇷🇺</span>
+              <h2 className="text-base font-semibold leading-7 text-red-600">
+                {language === "ru" ? "Специально для российского бизнеса" : "Built for Russian Business"}
+              </h2>
+            </div>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              {language === "ru" ? "Полное соответствие российскому законодательству" : "Complete Russian Regulatory Compliance"}
+            </p>
+            <p className="mt-6 text-lg leading-8 text-gray-600">
+              {language === "ru"
+                ? "285+ готовых шаблонов документов для всех этапов жизненного цикла компании. Введите ИНН — получите все документы."
+                : "285+ ready-to-use document templates for every stage of your company lifecycle. Enter your INN — get all documents."}
+            </p>
+          </div>
+
+          {/* Russian Frameworks */}
+          <div className="mx-auto mt-12 max-w-4xl">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {russianFrameworks.map((framework) => (
+                <div
+                  key={framework.name}
+                  className="relative rounded-xl border-2 border-red-200 bg-white p-5 hover:border-red-500 hover:shadow-md transition-all"
+                >
+                  <h3 className="text-lg font-bold text-red-700">
+                    {framework.name}
+                  </h3>
+                  <p className="mt-1 text-xs text-gray-600">
+                    {framework.category}
+                  </p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {framework.description}
+                  </p>
+                  <p className="mt-2 text-xl font-bold text-red-600">
+                    {framework.controls}
+                    <span className="text-xs font-normal text-gray-500 ml-1">
+                      {language === "ru" ? "требований" : "requirements"}
+                    </span>
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* SME Value Props */}
+          <div className="mx-auto mt-16 max-w-5xl">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="text-center p-6 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-all">
+                <div className="text-4xl font-bold text-red-600">285+</div>
+                <div className="mt-2 text-sm text-gray-600">
+                  {language === "ru" ? "Шаблонов документов" : "Document Templates"}
+                </div>
+              </div>
+              <div className="text-center p-6 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-all">
+                <div className="text-4xl font-bold text-red-600">8</div>
+                <div className="mt-2 text-sm text-gray-600">
+                  {language === "ru" ? "Этапов жизненного цикла" : "Lifecycle Stages"}
+                </div>
+              </div>
+              <div className="text-center p-6 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-all">
+                <div className="text-4xl font-bold text-red-600">30</div>
+                <div className="mt-2 text-sm text-gray-600">
+                  {language === "ru" ? "Дней до полного соответствия" : "Days to Full Compliance"}
+                </div>
+              </div>
+              <div className="text-center p-6 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-all">
+                <div className="text-4xl font-bold text-red-600">6</div>
+                <div className="mt-2 text-sm text-gray-600">
+                  {language === "ru" ? "Российских стандартов" : "Russian Standards"}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="mt-12 text-center">
+            <Link
+              to="/login"
+              className="rounded-md bg-red-600 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:bg-red-500 transition-all"
+            >
+              {language === "ru" ? "Начать бесплатно →" : "Start Free →"}
+            </Link>
+            <p className="mt-4 text-sm text-gray-500">
+              {language === "ru"
+                ? "Бесплатный тариф для МСП. Без банковской карты."
+                : "Free tier for SMEs. No credit card required."}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* International Frameworks Section */}
       <div className="bg-gray-50 py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:text-center">
@@ -349,7 +453,7 @@ export default function LandingPage() {
           </div>
           <div className="mx-auto mt-16 max-w-2xl lg:max-w-none">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {frameworks.map((framework) => (
+              {internationalFrameworks.map((framework) => (
                 <div
                   key={framework.name}
                   className="relative rounded-xl border border-gray-200 bg-white p-5 hover:border-primary-500 hover:shadow-sm transition-all"

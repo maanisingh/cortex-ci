@@ -350,6 +350,96 @@ EMAIL_TEMPLATES = {
 </html>
         """,
     },
+    "document_expiry": {
+        "subject": "📄 Срок действия документа истекает: {{document_title}}",
+        "body_html": """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #f59e0b; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9fafb; }
+        .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 15px 0; }
+        .btn { display: inline-block; background: #f59e0b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
+        .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Срок действия документа истекает</h1>
+        </div>
+        <div class="content">
+            <p>Уважаемый(ая) {{recipient_name}},</p>
+
+            <div class="warning">
+                <strong>Документ:</strong> {{document_title}}<br>
+                <strong>Срок действия до:</strong> {{expiry_date}}<br>
+                <strong>Осталось дней:</strong> {{days_remaining}}
+            </div>
+
+            <p>Пожалуйста, обновите или продлите документ до истечения срока.</p>
+
+            <p><a href="{{document_url}}" class="btn">Открыть документ</a></p>
+        </div>
+        <div class="footer">
+            <p>Cortex GRC — Система управления соответствием</p>
+        </div>
+    </div>
+</body>
+</html>
+        """,
+    },
+    "weekly_digest": {
+        "subject": "📊 Еженедельный отчет по комплаенсу ({{week_start}} - {{week_end}})",
+        "body_html": """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #2563eb; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9fafb; }
+        .summary { background: white; border: 1px solid #e5e7eb; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .task-list { background: #f0f9ff; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .btn { display: inline-block; background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
+        .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Еженедельный отчет</h1>
+            <p>{{week_start}} - {{week_end}}</p>
+        </div>
+        <div class="content">
+            <p>Уважаемый(ая) {{recipient_name}},</p>
+
+            <div class="summary">
+                <h3>Ваши задачи на неделю</h3>
+                <p>Всего задач: <strong>{{task_count}}</strong></p>
+            </div>
+
+            <div class="task-list">
+                <h4>Предстоящие задачи:</h4>
+                <pre>{{task_list}}</pre>
+            </div>
+
+            <p><a href="/compliance-tasks" class="btn">Открыть список задач</a></p>
+        </div>
+        <div class="footer">
+            <p>Cortex GRC — Система управления соответствием</p>
+        </div>
+    </div>
+</body>
+</html>
+        """,
+    },
     "incident_alert": {
         "subject": "🚨 ВНИМАНИЕ: Зарегистрирован инцидент ИБ",
         "body_html": """
@@ -508,28 +598,224 @@ class EmailService:
 class NotificationScheduler:
     """Schedules and manages notifications."""
 
-    def __init__(self):
+    def __init__(self, db_session=None):
         self.email_service = EmailService()
+        self.db = db_session
 
-    def send_deadline_reminders(self, days_before: list[int] = [7, 3, 1]):
-        """Send reminders for upcoming deadlines."""
-        # In production would query database for upcoming deadlines
-        # and send reminders based on days_before list
-        pass
+    async def send_deadline_reminders(
+        self,
+        days_before: list[int] = [7, 3, 1],
+        db=None,
+    ) -> dict[str, int]:
+        """
+        Send reminders for upcoming task deadlines.
+
+        Args:
+            days_before: List of days before deadline to send reminders
+            db: Database session
+
+        Returns:
+            Dict with count of reminders sent for each day threshold
+        """
+        from sqlalchemy import select, and_
+        from app.models.compliance.russian import RuComplianceTask, TaskStatus
+        from app.models.user import User
+
+        if db is None and self.db is None:
+            return {"error": "No database session provided"}
+
+        session = db or self.db
+        results = {}
+
+        try:
+            for days in days_before:
+                target_date = datetime.now().date() + timedelta(days=days)
+
+                # Find tasks due on target date that are not completed
+                query = select(RuComplianceTask).where(
+                    and_(
+                        RuComplianceTask.due_date == target_date,
+                        RuComplianceTask.status.notin_([
+                            TaskStatus.COMPLETED,
+                            TaskStatus.CANCELLED,
+                        ]),
+                    )
+                )
+
+                result = await session.execute(query)
+                tasks = result.scalars().all()
+
+                sent_count = 0
+                for task in tasks:
+                    # Get assigned user
+                    if task.assigned_to:
+                        user = await session.get(User, task.assigned_to)
+                        if user and user.email:
+                            success = self.email_service.send_notification(
+                                "deadline_reminder",
+                                [user.email],
+                                {
+                                    "recipient_name": user.full_name or user.email,
+                                    "task_title": task.title,
+                                    "due_date": target_date.strftime("%d.%m.%Y"),
+                                    "days_remaining": days,
+                                    "task_url": f"/compliance-tasks/{task.id}",
+                                },
+                            )
+                            if success:
+                                sent_count += 1
+
+                results[f"days_{days}"] = sent_count
+
+            return results
+
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def send_document_expiry_alerts(
+        self,
+        days_before: int = 30,
+        db=None,
+    ) -> dict[str, int]:
+        """
+        Send alerts for documents expiring soon.
+
+        Args:
+            days_before: Days before expiry to send alert
+            db: Database session
+
+        Returns:
+            Dict with count of alerts sent
+        """
+        from sqlalchemy import select, and_
+        from app.models.compliance.russian import RuComplianceDocument, DocumentStatus
+
+        if db is None and self.db is None:
+            return {"error": "No database session provided"}
+
+        session = db or self.db
+        target_date = datetime.now().date() + timedelta(days=days_before)
+
+        try:
+            # Find documents expiring around target date
+            query = select(RuComplianceDocument).where(
+                and_(
+                    RuComplianceDocument.due_date <= target_date,
+                    RuComplianceDocument.due_date >= datetime.now().date(),
+                    RuComplianceDocument.status != DocumentStatus.APPROVED,
+                )
+            )
+
+            result = await session.execute(query)
+            documents = result.scalars().all()
+
+            sent_count = 0
+            for doc in documents:
+                # Get responsible persons
+                company = doc.company
+                if company and hasattr(company, "responsible_persons"):
+                    for person in company.responsible_persons:
+                        if person.email:
+                            days_left = (doc.due_date - datetime.now().date()).days
+                            success = self.email_service.send_notification(
+                                "document_expiry",
+                                [person.email],
+                                {
+                                    "recipient_name": person.full_name,
+                                    "document_title": doc.title,
+                                    "expiry_date": doc.due_date.strftime("%d.%m.%Y"),
+                                    "days_remaining": days_left,
+                                    "document_url": f"/documents/{doc.id}",
+                                },
+                            )
+                            if success:
+                                sent_count += 1
+
+            return {"alerts_sent": sent_count}
+
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def send_weekly_digest(self, db=None) -> dict[str, int]:
+        """
+        Send weekly compliance digest to all users.
+
+        Returns:
+            Dict with count of digests sent
+        """
+        from sqlalchemy import select, func
+        from app.models.compliance.russian import RuComplianceTask, RuComplianceDocument, TaskStatus
+        from app.models.user import User
+
+        if db is None and self.db is None:
+            return {"error": "No database session provided"}
+
+        session = db or self.db
+
+        try:
+            # Get all active users
+            users_query = select(User).where(User.is_active == True)
+            users_result = await session.execute(users_query)
+            users = users_result.scalars().all()
+
+            sent_count = 0
+            week_start = datetime.now().date()
+            week_end = week_start + timedelta(days=7)
+
+            for user in users:
+                if not user.email:
+                    continue
+
+                # Get user's tasks due this week
+                tasks_query = select(RuComplianceTask).where(
+                    and_(
+                        RuComplianceTask.assigned_to == user.id,
+                        RuComplianceTask.due_date >= week_start,
+                        RuComplianceTask.due_date <= week_end,
+                        RuComplianceTask.status.notin_([
+                            TaskStatus.COMPLETED,
+                            TaskStatus.CANCELLED,
+                        ]),
+                    )
+                )
+                tasks_result = await session.execute(tasks_query)
+                tasks = tasks_result.scalars().all()
+
+                if not tasks:
+                    continue
+
+                task_list = [
+                    f"- {t.title} (до {t.due_date.strftime('%d.%m.%Y')})"
+                    for t in tasks
+                ]
+
+                success = self.email_service.send_notification(
+                    "weekly_digest",
+                    [user.email],
+                    {
+                        "recipient_name": user.full_name or user.email,
+                        "week_start": week_start.strftime("%d.%m.%Y"),
+                        "week_end": week_end.strftime("%d.%m.%Y"),
+                        "task_count": len(tasks),
+                        "task_list": "\n".join(task_list),
+                    },
+                )
+                if success:
+                    sent_count += 1
+
+            return {"digests_sent": sent_count}
+
+        except Exception as e:
+            return {"error": str(e)}
 
     def send_training_reminders(self):
         """Send reminders for incomplete training."""
-        # In production would query database for incomplete training
+        # TODO: Implement when training module is fully integrated
         pass
 
     def send_consent_reminders(self):
         """Send reminders for unsigned consents."""
-        # In production would query database for pending consents
-        pass
-
-    def send_document_expiry_alerts(self, days_before: int = 30):
-        """Send alerts for documents expiring soon."""
-        # In production would query database for expiring documents
+        # TODO: Implement when consent module is fully integrated
         pass
 
 

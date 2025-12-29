@@ -911,6 +911,30 @@ export const russianComplianceApi = {
       }),
   },
 
+  // Lifecycle Templates (company stage recommendations)
+  lifecycleTemplates: {
+    listAll: () => api.get("/compliance/russian/lifecycle-templates"),
+
+    getStage: (stage: string) =>
+      api.get(`/compliance/russian/lifecycle-templates/${stage}`),
+  },
+
+  // SME Templates (285+ business document templates)
+  smeTemplates: {
+    list: (params?: { category?: string; search?: string }) =>
+      api.get("/compliance/russian/sme-templates", { params }),
+
+    getCategories: () => api.get("/compliance/russian/sme-templates/categories"),
+
+    getStatistics: () => api.get("/compliance/russian/sme-templates/statistics"),
+
+    generate: (templateId: string, companyData: Record<string, unknown> = {}) =>
+      api.post("/compliance/russian/sme-templates/generate", {
+        template_id: templateId,
+        company_data: companyData,
+      }),
+  },
+
   // Compliance Documents
   documents: {
     list: (companyId: string, params?: { framework?: string; status?: string }) =>
