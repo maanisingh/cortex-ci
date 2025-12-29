@@ -28,6 +28,7 @@ class EntityType(str, Enum):
     VENDOR = "VENDOR"
     APPLICATION = "APPLICATION"
     DATASET = "DATASET"
+    ASSET = "ASSET"
 
 
 class Entity(Base, TimestampMixin, TenantMixin):
