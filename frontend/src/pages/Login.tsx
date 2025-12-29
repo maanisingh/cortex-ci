@@ -11,8 +11,8 @@ export default function Login() {
   const [tenantSlug, setTenantSlug] = useState("default");
 
   const fillDemoCredentials = () => {
-    setEmail("admin@cortex.io");
-    setPassword("Admin123!");
+    setEmail("demo@cortex.ai");
+    setPassword("demo1234");
     setTenantSlug("default");
   };
 
