@@ -29,6 +29,13 @@ class EntityType(str, Enum):
     APPLICATION = "APPLICATION"
     DATASET = "DATASET"
     ASSET = "ASSET"
+    SYSTEM = "SYSTEM"
+    SERVICE = "SERVICE"
+    DEPARTMENT = "DEPARTMENT"
+    PROJECT = "PROJECT"
+    CONTRACT = "CONTRACT"
+    DOCUMENT = "DOCUMENT"
+    OTHER = "OTHER"
 
 
 class Entity(Base, TimestampMixin, TenantMixin):
