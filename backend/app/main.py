@@ -62,7 +62,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    redirect_slashes=False,  # Prevent 307 redirects through reverse proxy
+    redirect_slashes=True,  # Automatically redirect /path to /path/ for consistency
     description="""
     ## CORTEX-CI: Government-grade Constraint Intelligence Platform
 

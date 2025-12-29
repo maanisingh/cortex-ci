@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from sqlalchemy import func, select
 
 from app.api.v1.deps import DB, CurrentTenant, CurrentUser
-from app.models import AuditLog, Constraint, Dependency, Entity, RiskScore
+from app.models import AuditLog, Constraint, ConstraintSeverity, Dependency, Entity, RiskScore
 
 router = APIRouter()
 
@@ -65,11 +65,11 @@ async def get_dashboard_stats(
     )
     high_risk_count = (await db.execute(high_risk_query)).scalar() or 0
 
-    # Critical constraints (severity = CRITICAL)
+    # Critical constraints (severity = critical)
     critical_query = select(func.count(Constraint.id)).where(
         Constraint.tenant_id == tenant.id,
-        Constraint.severity == "CRITICAL",
-        Constraint.is_active,
+        Constraint.severity == ConstraintSeverity.CRITICAL,
+        Constraint.is_active == True,
     )
     critical_constraints = (await db.execute(critical_query)).scalar() or 0
 
